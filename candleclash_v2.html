@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CandleClash</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#1E2329',bull:'#00C853',bear:'#FF3D00',tick:'#FFD700',textmain:'#EAECEF',muted:'#848E9C'},fontFamily:{sans:['Inter','sans-serif'],mono:['Space Mono','monospace']}}}}
+</script>
+<style>
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:#181A20}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+.ticker-wrap{overflow:hidden;white-space:nowrap;width:100%}
+.ticker-inner{display:inline-block;animation:tick 25s linear infinite}
+@keyframes tick{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+.rarity-Cobre{box-shadow:0 0 10px rgba(205,127,50,.35);border-color:#CD7F32!important}
+.rarity-Bronce{box-shadow:0 0 14px rgba(205,127,50,.55);border-color:#CD7F32!important}
+.rarity-Plata{box-shadow:0 0 16px rgba(192,192,192,.45);border-color:#C0C0C0!important}
+.rarity-Oro{box-shadow:0 0 20px rgba(255,215,0,.45);border-color:#FFD700!important}
+.rarity-Diamante{box-shadow:0 0 24px rgba(100,200,255,.55);border-color:#64C8FF!important}
+.rarity-Legendario{box-shadow:0 0 32px rgba(255,50,255,.6);border-color:#FF32FF!important;animation:lpulse 2s ease-in-out infinite}
+@keyframes lpulse{0%,100%{box-shadow:0 0 20px rgba(255,50,255,.4)}50%{box-shadow:0 0 45px rgba(255,50,255,.9)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes reveal{from{transform:scale(0) rotate(-12deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+@keyframes vin{from{opacity:0}to{opacity:1}}
+@keyframes hpAnim{from{width:100%}to{width:var(--target)}}
+.view{animation:vin .18s ease}
+.nft-reveal{animation:reveal .5s cubic-bezier(.34,1.56,.64,1) forwards}
+.log-entry{animation:fadeUp .25s ease}
+.login-bg{background:radial-gradient(ellipse at 30% 40%,rgba(0,200,83,.07) 0%,transparent 55%),radial-gradient(ellipse at 70% 60%,rgba(255,61,0,.06) 0%,transparent 55%),#0B0E11}
+.hp-fill{transition:width .6s ease}
+.forge-slot{transition:all .2s}
+.forge-slot:hover{border-color:#FF3D00!important}
+.battle-hp{background:#1E2329;height:8px;border-radius:4px;overflow:hidden}
+.arena-glow{box-shadow:0 0 40px rgba(0,200,83,.18)}
+</style>
+</head>
+<body class="bg-main text-textmain font-sans h-screen flex flex-col overflow-hidden">
+
+<!-- HEADER -->
+<header id="app-header" class="hidden fixed top-0 w-full h-16 bg-panel border-b border-gray-800/60 z-50 flex items-center justify-between px-3">
+  <div class="flex items-center gap-2">
+    <div id="hdr-avatar" class="w-10 h-10 rounded-full border border-gray-600 overflow-hidden bg-gray-800 flex items-center justify-center"></div>
+    <div class="flex flex-col leading-tight">
+      <span id="hdr-league" class="text-[10px] text-muted font-bold">LIGA PLATA</span>
+      <span id="hdr-trophies" class="text-xs font-mono font-bold text-white">🏆 1,250</span>
+    </div>
+  </div>
+  <div class="flex-1 mx-3 ticker-wrap text-[10px] font-mono font-bold bg-black/30 rounded px-2 py-1">
+    <div class="ticker-inner text-gray-300" id="crypto-ticker">BTC <span class="text-bull">+2.4%</span> &nbsp;|&nbsp; ETH <span class="text-bear">-0.8%</span> &nbsp;|&nbsp; SOL <span class="text-bull">+4.1%</span> &nbsp;|&nbsp; BNB <span class="text-bear">-1.2%</span> &nbsp;|&nbsp; DOGE <span class="text-bull">+6.3%</span> &nbsp;|&nbsp; ADA <span class="text-bull">+0.9%</span> &nbsp;|&nbsp; XRP <span class="text-bear">-2.1%</span></div>
+  </div>
+  <div class="flex flex-col items-end leading-tight">
+    <div class="flex items-center gap-2">
+      <span id="hdr-tick" class="text-xs font-mono font-bold text-tick">50 $TICK</span>
+      <span id="hdr-usdt" class="text-xs font-mono font-bold text-bull">15 USDT</span>
+    </div>
+    <span class="text-[10px] text-muted">Billetera</span>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="flex-1 mt-16 mb-20 overflow-y-auto" id="main-content">
+
+  <!-- ===== LOGIN ===== -->
+  <div id="view-login" class="view login-bg h-full flex flex-col items-center justify-between py-10 px-6 mt-0" style="min-height:calc(100vh - 0px)">
+    <div class="flex flex-col items-center mt-8">
+      <div class="text-5xl mb-3">⚔️</div>
+      <h1 class="text-4xl font-extrabold tracking-tight" style="background:linear-gradient(135deg,#00C853,#FFD700);-webkit-background-clip:text;-webkit-text-fill-color:transparent">CandleClash</h1>
+      <p class="text-muted text-xs font-mono mt-1 tracking-widest">WEB3 AUTO-BATTLER</p>
+    </div>
+    <div class="w-full max-w-xs flex flex-col gap-3">
+      <div class="bg-panel2 border border-gray-700 rounded-xl p-4 text-center">
+        <p class="text-xs text-muted mb-1">Precios en vivo</p>
+        <div class="flex justify-around text-xs font-mono">
+          <span>BTC <span class="text-bull">+2.4%</span></span>
+          <span>ETH <span class="text-bear">-0.8%</span></span>
+          <span>SOL <span class="text-bull">+4.1%</span></span>
+        </div>
+      </div>
+      <button onclick="connectWallet()" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base shadow-[0_0_20px_rgba(0,200,83,.35)] flex items-center justify-center gap-2">
+        <span>🦊</span> CONECTAR WALLET
+      </button>
+      <button onclick="connectWallet()" class="w-full bg-panel2 border border-gray-700 text-textmain font-semibold py-3 rounded-xl text-sm">
+        Jugar como Invitado
+      </button>
+      <p class="text-center text-[10px] text-muted">Al conectar, aceptas los Términos de Uso</p>
+    </div>
+    <div class="text-center">
+      <p class="text-xs text-muted">225 combinaciones · 15 razas · 15 linajes cripto</p>
+    </div>
+  </div>
+
+  <!-- ===== LOBBY ===== -->
+  <div id="view-lobby" class="hidden view p-4 space-y-4">
+    <div class="bg-panel2 rounded-xl p-3 flex items-center gap-3">
+      <div id="lobby-avatar" class="w-12 h-12 rounded-full overflow-hidden border-2 border-bull"></div>
+      <div>
+        <p class="font-bold text-sm">Jugador_001</p>
+        <p class="text-xs text-muted font-mono">Liga Plata · 1,250 🏆</p>
+      </div>
+      <div class="ml-auto text-right">
+        <p class="text-xs font-mono text-tick font-bold" id="lobby-tick">50 $TICK</p>
+        <p class="text-xs font-mono text-bull font-bold" id="lobby-usdt">15 USDT</p>
+      </div>
+    </div>
+
+    <!-- MISIONES DIARIAS -->
+    <div class="bg-panel border border-gray-800 rounded-xl p-3">
+      <h3 class="text-xs font-bold text-muted mb-2 tracking-widest">MISIONES DIARIAS</h3>
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2"><span class="text-lg">⚔️</span><div><p class="text-xs font-semibold">Ganar 3 batallas</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div class="h-full bg-bull rounded" style="width:33%"></div></div></div></div>
+          <span class="text-xs font-mono text-tick">+10 $TICK</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2"><span class="text-lg">📦</span><div><p class="text-xs font-semibold">Abrir 1 caja</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div class="h-full bg-bull rounded" style="width:0%"></div></div></div></div>
+          <span class="text-xs font-mono text-tick">+5 $TICK</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2"><span class="text-lg">🔥</span><div><p class="text-xs font-semibold">Usar la Forja</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div class="h-full bg-bull rounded" style="width:0%"></div></div></div></div>
+          <span class="text-xs font-mono text-tick">+15 $TICK</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TORNEOS -->
+    <div class="bg-panel border border-tick rounded-xl p-4 relative overflow-hidden shadow-[0_0_12px_rgba(255,215,0,.15)]">
+      <div class="absolute top-0 right-0 bg-tick text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">REQ: LVL 3+</div>
+      <h3 class="text-tick font-bold text-sm mb-1">🏆 Gran Torneo Semanal</h3>
+      <p class="text-xs text-muted mb-1">Premio: <span class="text-bull font-bold">500 USDT</span></p>
+      <p class="text-xs text-muted mb-3">Participantes: 128/256 · Termina en 2d 14h</p>
+      <button class="w-full bg-gray-800 text-muted font-bold py-2 rounded-lg cursor-not-allowed text-sm">🔒 BLOQUEADO</button>
+    </div>
+
+    <div class="bg-panel border border-gray-800 rounded-xl p-4">
+      <h3 class="text-white font-bold text-sm mb-1">⚔️ Torneo de Liga</h3>
+      <p class="text-xs text-muted mb-1">Premio: <span class="text-bull font-bold">50 USDT</span></p>
+      <p class="text-xs text-muted mb-3">Clasificatorio diario · Lvl 1+</p>
+      <button onclick="showView('view-arena')" class="w-full bg-bull text-black font-bold py-2 rounded-lg text-sm shadow-[0_0_10px_rgba(0,200,83,.2)]">ENTRAR AL TORNEO</button>
+    </div>
+
+    <!-- ÚLTIMAS BATALLAS -->
+    <div class="bg-panel border border-gray-800 rounded-xl p-3">
+      <h3 class="text-xs font-bold text-muted mb-2 tracking-widest">HISTORIAL RECIENTE</h3>
+      <div id="lobby-history" class="space-y-2"></div>
+    </div>
+
+    <!-- IR AL MERCADO -->
+    <button onclick="showView('view-market')" class="w-full bg-panel2 border border-gray-700 font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2">
+      📦 Comprar Cajas de Botín
+    </button>
+  </div>
+
+  <!-- ===== BARRACAS ===== -->
+  <div id="view-barracks" class="hidden view p-4">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-bold text-base">Mis Gladiadores</h2>
+      <span id="barracks-count" class="text-xs text-muted font-mono"></span>
+    </div>
+    <div class="flex gap-2 mb-3 overflow-x-auto pb-1">
+      <button onclick="filterRarity('all')" id="filter-all" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-bull text-black">TODOS</button>
+      <button onclick="filterRarity('Legendario')" id="filter-Legendario" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">LEGENDARIO</button>
+      <button onclick="filterRarity('Oro')" id="filter-Oro" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">ORO</button>
+      <button onclick="filterRarity('Plata')" id="filter-Plata" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">PLATA</button>
+      <button onclick="filterRarity('Cobre')" id="filter-Cobre" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">COBRE</button>
+    </div>
+    <div id="barracks-grid" class="grid grid-cols-2 gap-3"></div>
+  </div>
+
+  <!-- ===== FORJA ===== -->
+  <div id="view-forge" class="hidden view p-4 flex flex-col items-center">
+    <h2 class="text-bear font-bold text-xl drop-shadow-[0_0_8px_rgba(255,61,0,.7)] mb-1">🔥 LA FORJA</h2>
+    <p class="text-xs text-muted mb-5 text-center">Funde 4 NFTs idénticos para ascender en rareza</p>
+
+    <!-- SLOT PRINCIPAL -->
+    <div class="mb-4 text-center">
+      <p class="text-[10px] text-muted font-bold mb-1 tracking-widest">GLADIADOR PRINCIPAL</p>
+      <div id="forge-main" onclick="openForgeSelect('main')" class="forge-slot w-36 h-36 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer relative overflow-hidden">
+        <span class="text-gray-500 text-4xl">+</span>
+      </div>
+    </div>
+
+    <!-- SLOTS DE SACRIFICIO -->
+    <div class="mb-5 text-center w-full">
+      <p class="text-[10px] text-muted font-bold mb-2 tracking-widest">SACRIFICIOS (×3 idénticos)</p>
+      <div class="flex justify-center gap-3">
+        <div id="forge-s1" onclick="openForgeSelect('s1')" class="forge-slot w-24 h-24 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer relative overflow-hidden"><span class="text-gray-600 text-2xl">+</span></div>
+        <div id="forge-s2" onclick="openForgeSelect('s2')" class="forge-slot w-24 h-24 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer relative overflow-hidden"><span class="text-gray-600 text-2xl">+</span></div>
+        <div id="forge-s3" onclick="openForgeSelect('s3')" class="forge-slot w-24 h-24 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer relative overflow-hidden"><span class="text-gray-600 text-2xl">+</span></div>
+      </div>
+    </div>
+
+    <!-- RESULTADO PREVIEW -->
+    <div id="forge-preview" class="hidden mb-4 p-3 bg-panel2 border border-gray-700 rounded-xl text-center w-full max-w-xs">
+      <p class="text-[10px] text-muted font-bold mb-1">RESULTADO</p>
+      <p id="forge-result-text" class="text-sm font-bold text-bull"></p>
+    </div>
+
+    <div id="forge-cost" class="text-xs text-muted mb-4 text-center hidden">Costo: <span class="text-tick font-bold">50 $TICK</span></div>
+
+    <button id="forge-btn" onclick="executeForge()" class="w-full max-w-xs bg-bear text-white font-bold py-4 rounded-xl text-base opacity-40 cursor-not-allowed shadow-[0_0_15px_rgba(255,61,0,.2)]" disabled>
+      FUNDIR EN LA FORJA
+    </button>
+
+    <p class="text-[10px] text-muted mt-3 text-center">Los 4 NFTs de sacrificio serán destruidos permanentemente</p>
+  </div>
+
+  <!-- ===== ARENA ===== -->
+  <div id="view-arena" class="hidden view p-4 flex flex-col">
+    <!-- SELECTOR DE LUCHADOR -->
+    <div id="arena-select" class="">
+      <h2 class="font-bold text-base mb-3 text-center">⚔️ Selecciona tu Gladiador</h2>
+      <div id="arena-fighter-grid" class="grid grid-cols-2 gap-3 mb-4"></div>
+      <button onclick="startBattle()" id="arena-fight-btn" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base shadow-[0_0_20px_rgba(0,200,83,.3)] opacity-40 cursor-not-allowed" disabled>
+        BUSCAR OPONENTE
+      </button>
+    </div>
+
+    <!-- BATALLA -->
+    <div id="arena-battle" class="hidden flex flex-col">
+      <!-- HP BARS -->
+      <div class="flex justify-between items-center mb-4 gap-4">
+        <div class="flex-1">
+          <div class="flex justify-between text-xs font-mono mb-1">
+            <span id="p1-name" class="text-bull font-bold text-[10px]">TÚ</span>
+            <span id="p1-hp" class="text-bull">100</span>
+          </div>
+          <div class="battle-hp"><div id="p1-bar" class="hp-fill h-full bg-bull rounded" style="width:100%"></div></div>
+        </div>
+        <span class="text-xl">⚔️</span>
+        <div class="flex-1">
+          <div class="flex justify-between text-xs font-mono mb-1">
+            <span id="p2-hp" class="text-bear">100</span>
+            <span id="p2-name" class="text-bear font-bold text-[10px]">RIVAL</span>
+          </div>
+          <div class="battle-hp"><div id="p2-bar" class="hp-fill h-full bg-bear rounded" style="width:100%"></div></div>
+        </div>
+      </div>
+      <!-- FIGHTERS DISPLAY -->
+      <div class="flex justify-between items-center mb-4 gap-2">
+        <div id="battle-p1-art" class="w-28 h-28 rounded-xl overflow-hidden border-2 border-bull"></div>
+        <div class="text-center flex-1">
+          <p id="battle-round" class="text-xs font-mono text-muted">RONDA 1</p>
+          <p id="battle-status" class="text-sm font-bold text-white mt-1">En combate...</p>
+        </div>
+        <div id="battle-p2-art" class="w-28 h-28 rounded-xl overflow-hidden border-2 border-bear"></div>
+      </div>
+      <!-- LOG -->
+      <div id="battle-log" class="bg-panel2 rounded-xl p-3 h-40 overflow-y-auto space-y-1 text-xs font-mono"></div>
+      <button id="arena-next-btn" onclick="battleNextStep()" class="mt-3 w-full bg-bull text-black font-bold py-3 rounded-xl text-sm">
+        ▶ SIGUIENTE
+      </button>
+    </div>
+
+    <!-- RESULTADO -->
+    <div id="arena-result" class="hidden flex flex-col items-center py-6">
+      <div id="result-icon" class="text-6xl mb-3"></div>
+      <h2 id="result-title" class="text-2xl font-extrabold mb-1"></h2>
+      <p id="result-sub" class="text-muted text-sm mb-4"></p>
+      <div id="result-rewards" class="bg-panel2 rounded-xl p-4 w-full max-w-xs mb-4 space-y-2"></div>
+      <button onclick="resetArena()" class="w-full max-w-xs bg-bull text-black font-bold py-3 rounded-xl">PELEAR DE NUEVO</button>
+    </div>
+  </div>
+
+  <!-- ===== MERCADO ===== -->
+  <div id="view-market" class="hidden view p-4 space-y-4">
+    <h2 class="font-bold text-base">📦 Mercado de Cajas</h2>
+    <div class="bg-panel2 rounded-xl p-3 text-center text-xs text-muted">225 combinaciones posibles · 15 razas × 15 linajes cripto</div>
+
+    <!-- PACK RECLUTA (primera vez) -->
+    <div class="bg-panel border-2 border-tick rounded-xl p-4 relative shadow-[0_0_15px_rgba(255,215,0,.15)]">
+      <div class="absolute top-0 right-0 bg-tick text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">PRIMERA VEZ</div>
+      <div class="flex items-center gap-3 mb-3">
+        <span class="text-3xl">🎖️</span>
+        <div><h3 class="font-bold text-tick">Paquete Recluta</h3><p class="text-xs text-muted">Tu mejor inicio en CandleClash</p></div>
+      </div>
+      <ul class="text-xs space-y-1 mb-3 text-gray-300">
+        <li>✅ 5 Cajas de Gladiador</li>
+        <li>✅ 100 $TICK de bienvenida</li>
+        <li>✅ 1 NFT asegurado Lvl 3</li>
+        <li>✅ Acceso inmediato a torneos</li>
+      </ul>
+      <button onclick="openPackModal('recluta')" class="w-full bg-tick text-black font-bold py-3 rounded-xl text-sm shadow-[0_0_10px_rgba(255,215,0,.3)]">COMPRAR · 15 USDT</button>
+    </div>
+
+    <!-- CAJAS INDIVIDUALES -->
+    <div class="space-y-3">
+      <div class="bg-panel border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3"><span class="text-2xl">📦</span><div><h3 class="font-bold text-sm">Caja Básica</h3><p class="text-xs text-muted">1 Gladiador · Raza y linaje aleatorios</p></div></div>
+        <button onclick="openPackModal('basica')" class="bg-bull text-black font-bold py-2 px-4 rounded-lg text-sm shadow-[0_0_8px_rgba(0,200,83,.2)]">2.50 USDT</button>
+      </div>
+
+      <div class="bg-panel border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3"><span class="text-2xl">🎁</span><div><h3 class="font-bold text-sm">Escuadrón</h3><p class="text-xs text-muted">5 Gladiadores · Mejor tasa de drop</p></div></div>
+        <button onclick="openPackModal('escuadron')" class="bg-bull text-black font-bold py-2 px-4 rounded-lg text-sm shadow-[0_0_8px_rgba(0,200,83,.2)]">10 USDT</button>
+      </div>
+
+      <div class="bg-panel border border-[#C0C0C0] rounded-xl p-4 flex items-center justify-between shadow-[0_0_10px_rgba(192,192,192,.15)]">
+        <div class="flex items-center gap-3"><span class="text-2xl">💎</span><div><h3 class="font-bold text-sm text-[#C0C0C0]">Batallón</h3><p class="text-xs text-muted">10 NFTs · 1 Épico garantizado</p></div></div>
+        <button onclick="openPackModal('batallon')" class="bg-[#C0C0C0] text-black font-bold py-2 px-4 rounded-lg text-sm shadow-[0_0_10px_rgba(192,192,192,.3)]">20 USDT</button>
+      </div>
+    </div>
+
+    <!-- TASAS DE DROP -->
+    <div class="bg-panel2 border border-gray-800 rounded-xl p-3">
+      <h3 class="text-xs font-bold text-muted mb-2 tracking-widest">TASAS DE DROP POR LINAJE</h3>
+      <div class="space-y-1">
+        <div class="flex justify-between text-xs"><span class="text-gray-400">🟫 Común (ADA/XAG/XMR/LTC...)</span><span class="text-white font-mono">65%</span></div>
+        <div class="flex justify-between text-xs"><span class="text-purple-400">🟣 Épico (SOL/BNB/AVAX...)</span><span class="text-white font-mono">25%</span></div>
+        <div class="flex justify-between text-xs"><span class="text-tick">⭐ Legendario (BTC/ETH)</span><span class="text-white font-mono">10%</span></div>
+      </div>
+    </div>
+
+    <!-- MERCADO SECUNDARIO -->
+    <div class="bg-panel border border-gray-800 rounded-xl p-3">
+      <h3 class="text-xs font-bold text-muted mb-2 tracking-widest">MERCADO SECUNDARIO</h3>
+      <p class="text-xs text-gray-400 mb-2">Intercambia gladiadores con otros jugadores</p>
+      <button onclick="alert('🚧 Mercado secundario disponible en v2.0 con backend')" class="w-full border border-gray-700 text-muted font-bold py-2 rounded-lg text-xs">VER MERCADO P2P →</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<nav id="app-nav" class="hidden fixed bottom-0 w-full h-20 bg-panel border-t border-gray-800/80 z-50 px-2 pb-2">
+  <ul class="flex justify-around items-center h-full">
+    <li onclick="showView('view-lobby')" id="nav-lobby" class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer">
+      <span class="text-2xl mb-0.5">🏠</span><span class="text-[10px] font-bold">LOBBY</span>
+    </li>
+    <li onclick="showView('view-barracks')" id="nav-barracks" class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer">
+      <span class="text-2xl mb-0.5">🛡️</span><span class="text-[10px] font-bold">BARRACAS</span>
+    </li>
+    <li onclick="showView('view-forge')" id="nav-forge" class="nav-item flex-1 flex flex-col items-center justify-center cursor-pointer" style="color:#FF3D00">
+      <span class="text-2xl mb-0.5">🔥</span><span class="text-[10px] font-bold">FORJA</span>
+    </li>
+    <li onclick="showView('view-arena')" id="nav-arena" class="nav-item flex-1 flex flex-col items-center justify-center cursor-pointer -translate-y-2">
+      <div class="bg-main border-2 border-bull w-14 h-14 rounded-full flex items-center justify-center arena-glow"><span class="text-2xl">⚔️</span></div>
+      <span class="text-[10px] font-bold text-bull mt-0.5">ARENA</span>
+    </li>
+    <li onclick="showView('view-market')" id="nav-market" class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer">
+      <span class="text-2xl mb-0.5">📦</span><span class="text-[10px] font-bold">MERCADO</span>
+    </li>
+  </ul>
+</nav>
+
+<!-- ===== MODALES ===== -->
+
+<!-- MODAL: UNBOXING -->
+<div id="modal-unbox" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4">
+  <div id="unbox-cards" class="flex flex-col items-center w-full max-w-xs"></div>
+  <button id="unbox-accept" onclick="closeModal('modal-unbox');renderBarracks()" class="mt-6 bg-panel2 border border-gray-700 text-white font-bold py-3 px-10 rounded-xl hidden">ACEPTAR →</button>
+</div>
+
+<!-- MODAL: NFT DETAIL -->
+<div id="modal-nft" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4 overflow-y-auto">
+  <div id="nft-detail-content" class="w-full max-w-xs"></div>
+  <button onclick="closeModal('modal-nft')" class="mt-4 bg-panel2 border border-gray-700 text-white font-bold py-3 px-10 rounded-xl w-full max-w-xs">CERRAR</button>
+</div>
+
+<!-- MODAL: FORGE SELECT -->
+<div id="modal-forge-select" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col p-4 overflow-y-auto">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="font-bold">Selecciona NFT</h3>
+    <button onclick="closeModal('modal-forge-select')" class="text-muted text-2xl leading-none">×</button>
+  </div>
+  <div id="forge-select-grid" class="grid grid-cols-2 gap-3"></div>
+</div>
+
+<!-- MODAL: RESULT PACK -->
+<div id="modal-pack-result" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4">
+  <h2 class="text-tick font-extrabold text-xl mb-2 animate-pulse">¡PAQUETE ABIERTO!</h2>
+  <div id="pack-result-cards" class="flex flex-wrap justify-center gap-3 mb-6 max-w-sm"></div>
+  <button onclick="closeModal('modal-pack-result');renderBarracks()" class="bg-bull text-black font-bold py-3 px-10 rounded-xl">IR A BARRACAS</button>
+</div>
+
+<script>
+// =============================================
+// CONSTANTES
+// =============================================
+const LINEAGES = {
+  BTC: {color:'#F7931A',tier:'Legendario',attr:'Ataque Físico'},
+  ETH: {color:'#627EEA',tier:'Legendario',attr:'Vida'},
+  SOL: {color:'#9945FF',tier:'Epico',attr:'Vel. Ataque'},
+  BNB: {color:'#F3BA2F',tier:'Epico',attr:'Defensa'},
+  XRP: {color:'#00AAE4',tier:'Epico',attr:'Prioridad'},
+  DOGE:{color:'#C2A633',tier:'Epico',attr:'Recuperación'},
+  ADA: {color:'#0033AD',tier:'Comun',attr:'Prob. Crítico'},
+  LINK:{color:'#2A5ADA',tier:'Comun',attr:'Crítico'},
+  AVAX:{color:'#E84142',tier:'Epico',attr:'Ataque Mágico'},
+  TRX: {color:'#EF0027',tier:'Comun',attr:'Def. Mágica'},
+  SHIB:{color:'#FF8C00',tier:'Comun',attr:'Reflejo'},
+  LTC: {color:'#BFBBBB',tier:'Comun',attr:'Vel. Recuperación'},
+  XMR: {color:'#FF6600',tier:'Comun',attr:'Prob. Reflejo'},
+  XAG: {color:'#C0C0C0',tier:'Comun',attr:'Prob. Bloqueo'},
+  XAU: {color:'#FFD700',tier:'Comun',attr:'Bloqueo'},
+};
+
+const RARITIES = {
+  Cobre:    {color:'#CD7F32',mult:1.0,label:'COBRE'},
+  Bronce:   {color:'#CD7F32',mult:1.4,label:'BRONCE'},
+  Plata:    {color:'#C0C0C0',mult:1.8,label:'PLATA'},
+  Oro:      {color:'#FFD700',mult:2.4,label:'ORO'},
+  Diamante: {color:'#64C8FF',mult:3.2,label:'DIAMANTE'},
+  Legendario:{color:'#FF32FF',mult:4.5,label:'LEGENDARIO'},
+};
+
+const RACES = ['Humano','Elfo','Enano','Orco','Goblin','Mediano','Gnomo','Dracónido','Tiefling','H.Lagarto','Tabaxi','Minotauro','Forjado','Cíborg','Alienígena'];
+
+const LINEAGE_KEYS = Object.keys(LINEAGES);
+
+// Configuración visual por raza
+const RACE_CFG = {
+  'Humano':    {bg:'#1A3A5C',skin:'#C68642',hair:'#4A2800',eye:'#4169E1',feat:'knight'},
+  'Elfo':      {bg:'#1A3A28',skin:'#F0E0C0',hair:'#D4AF37',eye:'#00CED1',feat:'elf'},
+  'Enano':     {bg:'#2A1A0A',skin:'#B87333',hair:'#8B0000',eye:'#FF8C00',feat:'dwarf'},
+  'Orco':      {bg:'#0A2A0A',skin:'#4A7C59',hair:'#1A1A1A',eye:'#FF4500',feat:'orc'},
+  'Goblin':    {bg:'#1A2A0A',skin:'#78C850',hair:'#2D5A0E',eye:'#FFD700',feat:'goblin'},
+  'Mediano':   {bg:'#2A1A3A',skin:'#FDBCB4',hair:'#8B4513',eye:'#228B22',feat:'halfling'},
+  'Gnomo':     {bg:'#1A1A3A',skin:'#F0C090',hair:'#F5F5F5',eye:'#9932CC',feat:'gnome'},
+  'Dracónido': {bg:'#2A0A0A',skin:'#8B0000',hair:null,eye:'#FF8C00',feat:'dracon'},
+  'Tiefling':  {bg:'#1A0A2A',skin:'#7B5EA7',hair:'#1A0A3A',eye:'#FF0000',feat:'tiefling'},
+  'H.Lagarto': {bg:'#0A2A15',skin:'#2E8B57',hair:null,eye:'#FFD700',feat:'lizard'},
+  'Tabaxi':    {bg:'#2A1A0A',skin:'#D2691E',hair:'#FF8C00',eye:'#228B22',feat:'tabaxi'},
+  'Minotauro': {bg:'#1A0A00',skin:'#8B4513',hair:'#3D1A00',eye:'#FF4500',feat:'minotaur'},
+  'Forjado':   {bg:'#0A1A2A',skin:'#708090',hair:null,eye:'#00FFFF',feat:'forged'},
+  'Cíborg':    {bg:'#0A0A1A',skin:'#C8A87A',hair:'#2A2A2A',eye:'#FF0000',feat:'cyborg'},
+  'Alienígena':{bg:'#051015',skin:'#7EB8D4',hair:null,eye:'#000000',feat:'alien'},
+};
+
+// =============================================
+// GENERADOR DE SVG NFT
+// =============================================
+function nftSVG(race, lineage, rarity='Cobre', level=1) {
+  const cfg = RACE_CFG[race] || RACE_CFG['Humano'];
+  const lg = LINEAGES[lineage] || LINEAGES['BTC'];
+  const rr = RARITIES[rarity] || RARITIES['Cobre'];
+  const s = cfg.skin, h = cfg.hair, e = cfg.eye, bg = cfg.bg;
+  const lc = lg.color, rc = rr.color;
+
+  const common = `
+    <defs>
+      <radialGradient id="bg${race.replace(/[^a-z]/gi,'')}" cx="50%" cy="30%" r="80%">
+        <stop offset="0%" stop-color="${lc}22"/>
+        <stop offset="100%" stop-color="${bg}"/>
+      </radialGradient>
+    </defs>
+    <rect width="200" height="200" fill="url(#bg${race.replace(/[^a-z]/gi,'')})"/>
+    <rect x="2" y="2" width="196" height="196" fill="none" stroke="${rc}" stroke-width="2.5" rx="6"/>
+    <rect x="0" y="0" width="200" height="200" fill="none" stroke="${rc}44" stroke-width="6" rx="7"/>
+    <rect x="2" y="178" width="196" height="20" fill="#0B0E1199" rx="0"/>
+    <text x="10" y="192" fill="${lc}" font-family="Space Mono" font-size="9" font-weight="700">${lineage}</text>
+    <text x="190" y="192" text-anchor="end" fill="#EAECEF99" font-family="Space Mono" font-size="9">LVL ${level}</text>
+    <rect x="2" y="2" width="36" height="16" fill="#0B0E11CC" rx="3"/>
+    <text x="20" y="13" text-anchor="middle" fill="${rc}" font-family="Space Mono" font-size="8" font-weight="700">${rarity.toUpperCase().slice(0,4)}</text>
+  `;
+
+  const faces = {
+    knight: `
+      <path d="M35 200 Q100 180 165 200 L165 155 Q100 140 35 155Z" fill="#2A3A5A" stroke="#111" stroke-width="2"/>
+      <rect x="80" y="148" width="40" height="35" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <path d="M55 155 Q100 145 145 155 L150 145 Q100 132 50 145Z" fill="#3A4A6A" stroke="#111" stroke-width="2"/>
+      <ellipse cx="100" cy="92" rx="48" ry="55" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <ellipse cx="52" cy="93" rx="7" ry="10" fill="${s}" stroke="#111" stroke-width="2"/>
+      <ellipse cx="148" cy="93" rx="7" ry="10" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M58 46 Q100 28 142 46 Q135 22 100 18 Q65 22 58 46Z" fill="${h}" stroke="#111" stroke-width="1.5"/>
+      <path d="M52 70 Q100 55 148 70" stroke="${h}" stroke-width="8" fill="none"/>
+      <ellipse cx="83" cy="85" rx="10" ry="9" fill="white" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="117" cy="85" rx="10" ry="9" fill="white" stroke="#111" stroke-width="1.5"/>
+      <circle cx="85" cy="86" r="6" fill="${e}"/><circle cx="119" cy="86" r="6" fill="${e}"/>
+      <circle cx="86" cy="85" r="2.5" fill="#111"/><circle cx="120" cy="85" r="2.5" fill="#111"/>
+      <circle cx="87" cy="84" r="1" fill="#fff9"/><circle cx="121" cy="84" r="1" fill="#fff9"/>
+      <ellipse cx="100" cy="103" rx="9" ry="6" fill="${s}cc" stroke="#11111155" stroke-width="1"/>
+      <circle cx="94" cy="103" r="3.5" fill="#11111144"/><circle cx="106" cy="103" r="3.5" fill="#11111144"/>
+      <path d="M86 118 Q100 127 114 118" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M67 115 Q100 132 133 115" stroke="${s}66" stroke-width="4" fill="none"/>
+      <path d="M40 155 Q55 132 80 140 L75 200" fill="#3A4A7A" stroke="#111" stroke-width="2"/>
+      <path d="M160 155 Q145 132 120 140 L125 200" fill="#3A4A7A" stroke="#111" stroke-width="2"/>
+    `,
+    elf: `
+      <path d="M40 200 Q100 182 160 200 L155 158 Q100 146 45 158Z" fill="#1A4A2A" stroke="#111" stroke-width="2"/>
+      <rect x="83" y="148" width="34" height="30" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="100" cy="88" rx="44" ry="52" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M56 68 L42 42 L62 62 Z" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M144 68 L158 42 L138 62 Z" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M60 36 Q100 18 140 36 Q125 16 100 14 Q75 16 60 36Z" fill="${h}" stroke="#111" stroke-width="1.5"/>
+      <path d="M56 60 Q100 48 144 60" stroke="${h}" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <path d="M62 110 Q80 124 100 120 Q120 124 138 110" stroke="${h}" stroke-width="4" fill="none" opacity="0.6"/>
+      <ellipse cx="82" cy="82" rx="9" ry="10" fill="white" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="118" cy="82" rx="9" ry="10" fill="white" stroke="#111" stroke-width="1.5"/>
+      <circle cx="83" cy="83" r="6" fill="${e}"/><circle cx="119" cy="83" r="6" fill="${e}"/>
+      <circle cx="84" cy="82" r="2.5" fill="#111"/><circle cx="120" cy="82" r="2.5" fill="#111"/>
+      <circle cx="85" cy="81" r="1" fill="#fff9"/><circle cx="121" cy="81" r="1" fill="#fff9"/>
+      <path d="M96 100 L90 108 Q100 114 110 108 L104 100Z" fill="${s}cc"/>
+      <path d="M87 116 Q100 124 113 116" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M70 118 L80 114 L82 120 L78 122Z" fill="#FFD70055"/>
+      <path d="M130 118 L120 114 L118 120 L122 122Z" fill="#FFD70055"/>
+      <path d="M45 158 Q55 140 78 148" fill="#2A6A3A" stroke="#111" stroke-width="2"/>
+      <path d="M155 158 Q145 140 122 148" fill="#2A6A3A" stroke="#111" stroke-width="2"/>
+    `,
+    dwarf: `
+      <path d="M20 200 Q100 175 180 200 L175 148 Q100 135 25 148Z" fill="#3A2A1A" stroke="#111" stroke-width="2"/>
+      <path d="M40 148 Q100 132 160 148 L155 140 Q100 126 45 140Z" fill="#4A3A2A" stroke="#111" stroke-width="2"/>
+      <ellipse cx="100" cy="82" rx="52" ry="50" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <ellipse cx="48" cy="82" rx="9" ry="11" fill="${s}" stroke="#111" stroke-width="2"/>
+      <ellipse cx="152" cy="82" rx="9" ry="11" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M50 40 Q100 16 150 40 Q140 18 100 14 Q60 18 50 40Z" fill="${h}" stroke="#111" stroke-width="2"/>
+      <path d="M48 54 Q100 38 152 54" stroke="${h}" stroke-width="9" fill="none"/>
+      <ellipse cx="82" cy="76" rx="11" ry="9" fill="white" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="118" cy="76" rx="11" ry="9" fill="white" stroke="#111" stroke-width="1.5"/>
+      <circle cx="83" cy="77" r="7" fill="${e}"/><circle cx="119" cy="77" r="7" fill="${e}"/>
+      <circle cx="84" cy="76" r="3" fill="#111"/><circle cx="120" cy="76" r="3" fill="#111"/>
+      <circle cx="85" cy="75" r="1.2" fill="#fff9"/><circle cx="121" cy="75" r="1.2" fill="#fff9"/>
+      <ellipse cx="100" cy="92" rx="11" ry="8" fill="${s}cc" stroke="#11111155" stroke-width="1.2"/>
+      <circle cx="93" cy="92" r="4" fill="#11111144"/><circle cx="107" cy="92" r="4" fill="#11111144"/>
+      <path d="M55 106 Q100 125 145 106 Q130 140 100 145 Q70 140 55 106Z" fill="${h}" stroke="#111" stroke-width="2"/>
+      <path d="M62 108 L68 150 Q100 160 132 150 L138 108" fill="${h}" stroke="#111" stroke-width="1.5"/>
+      <path d="M70 108 Q100 118 130 108 Q120 126 100 128 Q80 126 70 108Z" fill="${h}dd"/>
+      <path d="M25 148 Q40 122 72 140" fill="#4A3A2A" stroke="#111" stroke-width="2"/>
+      <path d="M175 148 Q160 122 128 140" fill="#4A3A2A" stroke="#111" stroke-width="2"/>
+    `,
+    orc: `
+      <path d="M30 200 Q100 178 170 200 L165 152 Q100 138 35 152Z" fill="#2D5930" stroke="#111" stroke-width="2"/>
+      <rect x="80" y="144" width="40" height="30" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="100" cy="88" rx="52" ry="58" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <ellipse cx="48" cy="88" rx="8" ry="12" fill="${s}" stroke="#111" stroke-width="2"/>
+      <ellipse cx="152" cy="88" rx="8" ry="12" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M76 40 Q66 14 54 8 Q62 32 68 46Z" fill="#1A2A1A" stroke="#111" stroke-width="2"/>
+      <path d="M124 40 Q134 14 146 8 Q138 32 132 46Z" fill="#1A2A1A" stroke="#111" stroke-width="2"/>
+      <path d="M78 28 Q100 8 122 28 L118 36 Q100 18 82 36Z" fill="#1A1A1A"/>
+      <path d="M60 72 L88 78" stroke="#8B0000" stroke-width="3" opacity="0.8"/>
+      <path d="M112 78 L140 72" stroke="#8B0000" stroke-width="3" opacity="0.8"/>
+      <path d="M62 80 L82 84" stroke="#8B000088" stroke-width="2"/>
+      <path d="M118 84 L138 80" stroke="#8B000088" stroke-width="2"/>
+      <path d="M56 68 Q100 56 144 68" stroke="#111" stroke-width="3.5" fill="none"/>
+      <ellipse cx="82" cy="80" rx="11" ry="9" fill="#0A0A0A" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="118" cy="80" rx="11" ry="9" fill="#0A0A0A" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="83" cy="80" rx="7" ry="6" fill="#CC2200"/>
+      <ellipse cx="119" cy="80" rx="7" ry="6" fill="#CC2200"/>
+      <circle cx="84" cy="79" r="3" fill="#FF4400"/><circle cx="120" cy="79" r="3" fill="#FF4400"/>
+      <circle cx="85" cy="78" r="1" fill="#fff9"/><circle cx="121" cy="78" r="1" fill="#fff9"/>
+      <ellipse cx="100" cy="100" rx="11" ry="7" fill="#3A6B45" stroke="#111" stroke-width="1.5"/>
+      <circle cx="93" cy="100" r="4" fill="#11111166"/><circle cx="107" cy="100" r="4" fill="#11111166"/>
+      <path d="M60 110 Q100 128 140 110 L134 138 Q100 148 66 138Z" fill="#3D6B4A" stroke="#111" stroke-width="2"/>
+      <path d="M78 130 L73 157 Q77 160 81 157 L82 130Z" fill="#FFFFF0" stroke="#C8C870" stroke-width="1.5"/>
+      <path d="M122 130 L127 157 Q123 160 119 157 L118 130Z" fill="#FFFFF0" stroke="#C8C870" stroke-width="1.5"/>
+      <path d="M86 120 Q100 128 114 120" stroke="#111" stroke-width="2" fill="none"/>
+      <path d="M88 62 L92 92" stroke="#8B000077" stroke-width="2.5" stroke-linecap="round"/>
+    `,
+    goblin: `
+      <path d="M35 200 Q100 182 165 200 L162 158 Q100 148 38 158Z" fill="#2A4A1A" stroke="#111" stroke-width="2"/>
+      <rect x="83" y="150" width="34" height="28" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="100" cy="90" rx="46" ry="50" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <path d="M54 80 L30 55 Q48 72 58 85Z" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M146 80 L170 55 Q152 72 142 85Z" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M62 46 Q100 26 138 46 Q130 22 100 18 Q70 22 62 46Z" fill="#2D5A0E" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="80" cy="82" rx="14" ry="13" fill="white" stroke="#111" stroke-width="2"/>
+      <ellipse cx="120" cy="82" rx="14" ry="13" fill="white" stroke="#111" stroke-width="2"/>
+      <circle cx="81" cy="83" r="9" fill="${e}"/><circle cx="121" cy="83" r="9" fill="${e}"/>
+      <circle cx="82" cy="82" r="4" fill="#111"/><circle cx="122" cy="82" r="4" fill="#111"/>
+      <circle cx="83" cy="81" r="1.5" fill="#fff9"/><circle cx="123" cy="81" r="1.5" fill="#fff9"/>
+      <path d="M88 100 Q100 115 112 100" fill="${s}cc" stroke="#11111155" stroke-width="1"/>
+      <path d="M78 112 Q88 124 100 120 Q112 124 122 112" stroke="#111" stroke-width="2" fill="none"/>
+      <path d="M82 120 L78 125 L84 126 L86 121Z" fill="#fff8"/><path d="M118 120 L122 125 L116 126 L114 121Z" fill="#fff8"/>
+      <path d="M88 114 L90 118 L86 118Z" fill="#FF8C00" opacity="0.7"/>
+      <path d="M112 114 L110 118 L114 118Z" fill="#FF8C00" opacity="0.7"/>
+    `,
+    halfling: `
+      <path d="M40 200 Q100 184 160 200 L157 160 Q100 150 43 160Z" fill="#3A2A1A" stroke="#111" stroke-width="2"/>
+      <rect x="82" y="150" width="36" height="28" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="100" cy="89" rx="50" ry="54" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <ellipse cx="50" cy="89" rx="8" ry="11" fill="${s}" stroke="#111" stroke-width="2"/>
+      <ellipse cx="150" cy="89" rx="8" ry="11" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M55 48 Q100 28 145 48 Q135 24 100 20 Q65 24 55 48Z" fill="${h}" stroke="#111" stroke-width="1.5"/>
+      <path d="M52 65 Q100 50 148 65" stroke="${h}" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <path d="M50 90 Q48 82 50 76 Q56 72 60 78 Q58 90 52 96Z" fill="${h}" opacity="0.7"/>
+      <path d="M150 90 Q152 82 150 76 Q144 72 140 78 Q142 90 148 96Z" fill="${h}" opacity="0.7"/>
+      <ellipse cx="82" cy="86" rx="12" ry="11" fill="white" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="118" cy="86" rx="12" ry="11" fill="white" stroke="#111" stroke-width="1.5"/>
+      <circle cx="83" cy="87" r="8" fill="${e}"/><circle cx="119" cy="87" r="8" fill="${e}"/>
+      <circle cx="84" cy="86" r="3.5" fill="#111"/><circle cx="120" cy="86" r="3.5" fill="#111"/>
+      <circle cx="85" cy="85" r="1.2" fill="#fff9"/><circle cx="121" cy="85" r="1.2" fill="#fff9"/>
+      <circle cx="100" cy="108" r="5" fill="${s}cc" stroke="#11111144" stroke-width="1"/>
+      <circle cx="82" cy="100" r="4" fill="#FFB6C155"/><circle cx="118" cy="100" r="4" fill="#FFB6C155"/>
+      <path d="M84 120 Q100 130 116 120" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M86 124 L88 128 L90 124 L92 128 L94 124 L96 128 L98 124 L100 128 L102 124 L104 128 L106 124 L108 128 L110 124 L112 128 L114 124" stroke="#111" stroke-width="0.8" fill="none" opacity="0.4"/>
+    `,
+    gnome: `
+      <path d="M38 200 Q100 183 162 200 L160 160 Q100 150 40 160Z" fill="#2A2A4A" stroke="#111" stroke-width="2"/>
+      <rect x="82" y="150" width="36" height="28" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="100" cy="86" rx="50" ry="55" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <ellipse cx="50" cy="86" rx="7" ry="10" fill="${s}" stroke="#111" stroke-width="2"/>
+      <ellipse cx="150" cy="86" rx="7" ry="10" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M56 42 Q100 18 144 42 Q136 16 100 12 Q64 16 56 42Z" fill="#F5F5F5" stroke="#ccc" stroke-width="1.5"/>
+      <path d="M52 60 Q100 42 148 60" stroke="#F5F5F5" stroke-width="8" fill="none"/>
+      <ellipse cx="78" cy="83" rx="18" ry="15" fill="#1A1A2A" stroke="${e}" stroke-width="2.5"/>
+      <ellipse cx="122" cy="83" rx="18" ry="15" fill="#1A1A2A" stroke="${e}" stroke-width="2.5"/>
+      <circle cx="79" cy="83" r="10" fill="#2A2A3A"/><circle cx="123" cy="83" r="10" fill="#2A2A3A"/>
+      <ellipse cx="80" cy="82" rx="6" ry="7" fill="${e}"/><ellipse cx="124" cy="82" rx="6" ry="7" fill="${e}"/>
+      <circle cx="81" cy="81" r="2.5" fill="#111"/><circle cx="125" cy="81" r="2.5" fill="#111"/>
+      <circle cx="82" cy="80" r="1" fill="#fff9"/><circle cx="126" cy="80" r="1" fill="#fff9"/>
+      <path d="M96 100 Q100 108 104 100" stroke="${s}aa" stroke-width="2" fill="none"/>
+      <path d="M82 116 Q100 128 118 116" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M82 116 L84 120 L86 116 L88 120 L90 116 L92 120 L94 116 L96 120 L98 116" stroke="#111" stroke-width="0.8" fill="none"/>
+      <path d="M96 64 Q100 56 104 64" stroke="${e}88" stroke-width="1.5" fill="none"/>
+    `,
+    dracon: `
+      <path d="M35 200 Q100 176 165 200 L162 150 Q100 136 38 150Z" fill="#3A0A0A" stroke="#111" stroke-width="2"/>
+      <rect x="80" y="142" width="40" height="32" fill="${s}" stroke="#111" stroke-width="2"/>
+      <ellipse cx="100" cy="88" rx="50" ry="56" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <path d="M72 34 Q66 6 58 2 L66 32 Q70 38 76 42Z" fill="#5A0000" stroke="#111" stroke-width="2"/>
+      <path d="M128 34 Q134 6 142 2 L134 32 Q130 38 124 42Z" fill="#5A0000" stroke="#111" stroke-width="2"/>
+      <path d="M56 80 Q60 75 64 82" stroke="#5A0000" stroke-width="3" fill="none"/>
+      <path d="M136 82 Q140 75 144 80" stroke="#5A0000" stroke-width="3" fill="none"/>
+      <ellipse cx="82" cy="80" rx="14" ry="11" fill="#0A0000" stroke="#5A0000" stroke-width="2"/>
+      <ellipse cx="118" cy="80" rx="14" ry="11" fill="#0A0000" stroke="#5A0000" stroke-width="2"/>
+      <path d="M78 78 L86 80 L78 82Z" fill="${e}"/><path d="M122 78 L114 80 L122 82Z" fill="${e}"/>
+      <circle cx="83" cy="80" r="2" fill="#fff9"/><circle cx="119" cy="80" r="2" fill="#fff9"/>
+      <path d="M58 85 Q56 90 60 96" stroke="#5A0000" stroke-width="2.5" fill="none"/>
+      <path d="M142 85 Q144 90 140 96" stroke="#5A0000" stroke-width="2.5" fill="none"/>
+      <path d="M70 100 Q100 130 130 100 L126 138 Q100 155 74 138Z" fill="${s}cc" stroke="#5A0000" stroke-width="1.5"/>
+      <path d="M80 115 Q100 128 120 115" stroke="#5A0000" stroke-width="1.5" fill="none"/>
+      <path d="M76 105 L80 108 L76 111 M124 105 L120 108 L124 111" stroke="#5A0000" stroke-width="1.5" fill="none"/>
+      <path d="M90 140 L94 158 Q100 163 106 158 L110 140" fill="#5A0000" stroke="#111" stroke-width="1.5"/>
+    `,
+    tiefling: `
+      <path d="M38 200 Q100 180 162 200 L160 155 Q100 142 40 155Z" fill="#1A0A2A" stroke="#111" stroke-width="2"/>
+      <rect x="82" y="146" width="36" height="30" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="100" cy="88" rx="47" ry="54" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <path d="M75 38 Q62 12 70 2 Q72 22 78 44Z" fill="#2A0A3A" stroke="#111" stroke-width="2"/>
+      <path d="M125 38 Q138 12 130 2 Q128 22 122 44Z" fill="#2A0A3A" stroke="#111" stroke-width="2"/>
+      <ellipse cx="82" cy="82" rx="11" ry="12" fill="${e}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="118" cy="82" rx="11" ry="12" fill="${e}" stroke="#111" stroke-width="1.5"/>
+      <circle cx="83" cy="83" r="4.5" fill="#111"/><circle cx="119" cy="83" r="4.5" fill="#111"/>
+      <circle cx="84" cy="82" r="1.5" fill="#fff9"/><circle cx="120" cy="82" r="1.5" fill="#fff9"/>
+      <path d="M58 68 Q100 55 142 68" stroke="${s}99" stroke-width="3" fill="none"/>
+      <path d="M96 104 L90 112 Q100 118 110 112 L104 104Z" fill="${s}cc"/>
+      <path d="M82 120 Q100 130 118 120" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M88 124 L86 128 L90 127Z" fill="#FFFFF088"/>
+      <path d="M112 124 L114 128 L110 127Z" fill="#FFFFF088"/>
+      <path d="M75 80 Q70 85 73 90" stroke="#5A0A7A" stroke-width="2" fill="none" opacity="0.6"/>
+      <path d="M125 80 Q130 85 127 90" stroke="#5A0A7A" stroke-width="2" fill="none" opacity="0.6"/>
+      <path d="M95 140 Q100 148 105 140" stroke="${s}" stroke-width="4" fill="none"/>
+      <path d="M90 148 Q100 162 110 148" stroke="${s}88" stroke-width="3" fill="none"/>
+    `,
+    lizard: `
+      <path d="M35 200 Q100 178 165 200 L162 152 Q100 138 38 152Z" fill="#0A2A15" stroke="#111" stroke-width="2"/>
+      <rect x="80" y="143" width="40" height="32" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="100" cy="86" rx="50" ry="55" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <path d="M56 80 Q52 72 56 66 Q62 68 64 76Z" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <path d="M144 80 Q148 72 144 66 Q138 68 136 76Z" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <path d="M80 60 Q100 52 120 60 Q110 46 100 44 Q90 46 80 60Z" fill="#1A5C38" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="82" cy="79" rx="14" ry="10" fill="#0A0A0A" stroke="#1A5C38" stroke-width="2"/>
+      <ellipse cx="118" cy="79" rx="14" ry="10" fill="#0A0A0A" stroke="#1A5C38" stroke-width="2"/>
+      <path d="M78 77 L86 79 L78 81Z" fill="${e}"/><path d="M122 77 L114 79 L122 81Z" fill="${e}"/>
+      <circle cx="83" cy="79" r="1.8" fill="#fff9"/><circle cx="119" cy="79" r="1.8" fill="#fff9"/>
+      <path d="M60 88 Q58 94 62 100" stroke="#1A5C38" stroke-width="2.5" fill="none"/>
+      <path d="M140 88 Q142 94 138 100" stroke="#1A5C38" stroke-width="2.5" fill="none"/>
+      <path d="M68 100 Q100 128 132 100 L128 135 Q100 150 72 135Z" fill="${s}cc" stroke="#1A5C38" stroke-width="1.5"/>
+      <path d="M96 108 Q100 120 104 108" stroke="#1A5C38" stroke-width="2" fill="none"/>
+      <path d="M60 110 Q70 105 74 112" stroke="#1A5C38" stroke-width="1.5" fill="none"/>
+      <path d="M140 110 Q130 105 126 112" stroke="#1A5C38" stroke-width="1.5" fill="none"/>
+    `,
+    tabaxi: `
+      <path d="M38 200 Q100 180 162 200 L160 155 Q100 143 40 155Z" fill="#2A1A0A" stroke="#111" stroke-width="2"/>
+      <rect x="82" y="146" width="36" height="30" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="100" cy="87" rx="48" ry="53" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <path d="M65 42 L55 10 L78 40Z" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M135 42 L145 10 L122 40Z" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M66 46 L56 14 L76 44 Q71 45 66 46Z" fill="#FF8C00" opacity="0.6"/>
+      <path d="M134 46 L144 14 L124 44 Q129 45 134 46Z" fill="#FF8C00" opacity="0.6"/>
+      <ellipse cx="82" cy="81" rx="12" ry="10" fill="white" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="118" cy="81" rx="12" ry="10" fill="white" stroke="#111" stroke-width="1.5"/>
+      <path d="M78 79 L86 81 L78 83Z" fill="${e}"/><path d="M122 79 L114 81 L122 83Z" fill="${e}"/>
+      <circle cx="82" cy="80" r="2" fill="#111"/><circle cx="120" cy="80" r="2" fill="#111"/>
+      <circle cx="83" cy="79" r="0.8" fill="#fff9"/><circle cx="121" cy="79" r="0.8" fill="#fff9"/>
+      <ellipse cx="100" cy="105" rx="10" ry="7" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <circle cx="93" cy="105" r="3.5" fill="#11111155"/><circle cx="107" cy="105" r="3.5" fill="#11111155"/>
+      <path d="M62 96 L52 95 M62 100 L50 101 M62 104 L52 105" stroke="${h}" stroke-width="1.5" opacity="0.8"/>
+      <path d="M138 96 L148 95 M138 100 L150 101 M138 104 L148 105" stroke="${h}" stroke-width="1.5" opacity="0.8"/>
+      <path d="M85 118 Q100 126 115 118" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M78 80 L100 68 L122 80 Q114 64 100 60 Q86 64 78 80Z" fill="${h}" stroke="#111" stroke-width="1.5" opacity="0.7"/>
+      <path d="M88 72 Q100 65 112 72" stroke="#FF8C0055" stroke-width="8" fill="none"/>
+    `,
+    minotaur: `
+      <path d="M25 200 Q100 172 175 200 L170 148 Q100 132 30 148Z" fill="#1A0A00" stroke="#111" stroke-width="2"/>
+      <rect x="78" y="140" width="44" height="36" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="100" cy="85" rx="55" ry="60" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <path d="M56 52 Q28 10 20 5 Q38 30 52 58Z" fill="#5A3010" stroke="#111" stroke-width="2.5"/>
+      <path d="M144 52 Q172 10 180 5 Q162 30 148 58Z" fill="#5A3010" stroke="#111" stroke-width="2.5"/>
+      <ellipse cx="56" cy="80" rx="10" ry="14" fill="${s}" stroke="#111" stroke-width="2"/>
+      <ellipse cx="144" cy="80" rx="10" ry="14" fill="${s}" stroke="#111" stroke-width="2"/>
+      <path d="M55 58 Q50 48 54 42 Q60 44 62 52Z" fill="${h}" opacity="0.8"/>
+      <path d="M145 58 Q150 48 146 42 Q140 44 138 52Z" fill="${h}" opacity="0.8"/>
+      <ellipse cx="82" cy="76" rx="12" ry="11" fill="white" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="118" cy="76" rx="12" ry="11" fill="white" stroke="#111" stroke-width="1.5"/>
+      <circle cx="83" cy="77" r="8" fill="${e}"/><circle cx="119" cy="77" r="8" fill="${e}"/>
+      <circle cx="84" cy="76" r="3.5" fill="#111"/><circle cx="120" cy="76" r="3.5" fill="#111"/>
+      <circle cx="85" cy="75" r="1.2" fill="#fff9"/><circle cx="121" cy="75" r="1.2" fill="#fff9"/>
+      <path d="M58 68 Q100 50 142 68" stroke="#111" stroke-width="3.5" fill="none"/>
+      <ellipse cx="100" cy="104" rx="18" ry="12" fill="${s}cc" stroke="#111" stroke-width="2"/>
+      <path d="M90 102 Q100 112 110 102" stroke="#111" stroke-width="2" fill="none"/>
+      <circle cx="93" cy="104" r="6" fill="#11111155"/><circle cx="107" cy="104" r="6" fill="#11111155"/>
+      <ellipse cx="100" cy="110" rx="6" ry="4" fill="#C0C0C0" stroke="#999" stroke-width="1.5"/>
+      <path d="M82 124 Q100 132 118 124" stroke="#111" stroke-width="2" fill="none"/>
+    `,
+    forged: `
+      <path d="M32 200 Q100 176 168 200 L165 150 Q100 136 35 150Z" fill="#1A2A3A" stroke="#111" stroke-width="2"/>
+      <rect x="78" y="142" width="44" height="34" fill="#708090" stroke="#111" stroke-width="2"/>
+      <rect x="56" y="38" width="88" height="90" rx="6" fill="#4A5A6A" stroke="#708090" stroke-width="2.5"/>
+      <rect x="60" y="42" width="80" height="82" rx="4" fill="#384858"/>
+      <rect x="56" y="85" width="6" height="30" rx="2" fill="#4A5A6A" stroke="#111" stroke-width="1.5"/>
+      <rect x="138" y="85" width="6" height="30" rx="2" fill="#4A5A6A" stroke="#111" stroke-width="1.5"/>
+      <rect x="66" y="60" width="30" height="20" rx="3" fill="#1A2A3A" stroke="${e}" stroke-width="2"/>
+      <rect x="104" y="60" width="30" height="20" rx="3" fill="#1A2A3A" stroke="${e}" stroke-width="2"/>
+      <rect x="70" y="63" width="22" height="14" rx="2" fill="${e}"/>
+      <rect x="108" y="63" width="22" height="14" rx="2" fill="${e}"/>
+      <rect x="75" y="66" width="12" height="8" rx="1" fill="#fff" opacity="0.8"/>
+      <rect x="113" y="66" width="12" height="8" rx="1" fill="#fff" opacity="0.8"/>
+      <circle cx="100" cy="98" r="10" fill="#1A2A3A" stroke="${e}" stroke-width="2"/>
+      <circle cx="100" cy="98" r="5" fill="${e}" opacity="0.6"/>
+      <circle cx="100" cy="98" r="2.5" fill="${e}"/>
+      <rect x="68" y="104" width="64" height="16" rx="3" fill="#1A2A3A" stroke="#4A5A6A" stroke-width="1.5"/>
+      <path d="M75 112 L78 109 L84 115 L90 108 L94 115 L100 108 L106 115 L110 108 L116 112 L120 108 L124 112" stroke="${e}" stroke-width="1.5" fill="none"/>
+      <rect x="60" y="125" width="80" height="5" rx="1" fill="#5A6A7A"/>
+      <text x="100" y="140" text-anchor="middle" fill="${e}" font-family="Space Mono" font-size="7" opacity="0.6">UNIT-${Math.floor(Math.random()*999).toString().padStart(3,'0')}</text>
+    `,
+    cyborg: `
+      <path d="M36 200 Q100 178 164 200 L161 153 Q100 140 39 153Z" fill="#0A0A1A" stroke="#111" stroke-width="2"/>
+      <rect x="80" y="145" width="40" height="31" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="100" cy="88" rx="49" ry="55" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <rect x="100" y="35" width="49" height="53" rx="0" fill="#2A2A4A" opacity="0.95"/>
+      <rect x="100" y="35" width="49" height="53" rx="0" fill="none" stroke="#444" stroke-width="1.5"/>
+      <path d="M100 35 L149 35 L149 88 L100 88Z" fill="#1A1A3A" opacity="0.6"/>
+      <ellipse cx="81" cy="82" rx="11" ry="10" fill="white" stroke="#111" stroke-width="1.5"/>
+      <circle cx="82" cy="82" r="7" fill="${h}"/><circle cx="83" cy="81" r="3" fill="#111"/><circle cx="84" cy="80" r="1" fill="#fff9"/>
+      <rect x="106" y="74" width="22" height="16" rx="3" fill="#0A0A1A" stroke="#FF0000" stroke-width="2"/>
+      <rect x="110" y="77" width="14" height="10" rx="2" fill="#FF0000" opacity="0.8"/>
+      <circle cx="117" cy="82" r="3" fill="#fff" opacity="0.9"/>
+      <path d="M100 35 L100 88" stroke="#333" stroke-width="2"/>
+      <path d="M62 108 L72 104 L74 110 L70 112Z" fill="#FF0000" opacity="0.7"/>
+      <rect x="118" y="100" width="16" height="8" rx="2" fill="#1A1A3A" stroke="#FF0000" stroke-width="1"/>
+      <path d="M82 122 Q100 130 118 122" stroke="#111" stroke-width="2" fill="none"/>
+      <path d="M112 40 L130 40" stroke="#FF0000" stroke-width="1.5" opacity="0.6"/>
+      <path d="M112 46 L136 46" stroke="#FF0000" stroke-width="1.5" opacity="0.5"/>
+      <path d="M112 52 L134 52" stroke="#FF0000" stroke-width="1.5" opacity="0.4"/>
+      <ellipse cx="148" cy="82" rx="6" ry="9" fill="#2A2A4A" stroke="#FF0000" stroke-width="1.5"/>
+      <path d="M55 82 Q50 74 54 68" stroke="#444" stroke-width="2.5" fill="none"/>
+    `,
+    alien: `
+      <path d="M40 200 Q100 184 160 200 L158 160 Q100 150 42 160Z" fill="#051015" stroke="#111" stroke-width="2"/>
+      <rect x="83" y="152" width="34" height="26" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="100" cy="80" rx="46" ry="60" fill="${s}" stroke="#111" stroke-width="2.5"/>
+      <ellipse cx="54" cy="82" rx="6" ry="9" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="146" cy="82" rx="6" ry="9" fill="${s}" stroke="#111" stroke-width="1.5"/>
+      <ellipse cx="78" cy="79" rx="22" ry="19" fill="#000" stroke="#7EB8D4" stroke-width="1.5"/>
+      <ellipse cx="122" cy="79" rx="22" ry="19" fill="#000" stroke="#7EB8D4" stroke-width="1.5"/>
+      <ellipse cx="78" cy="79" rx="16" ry="14" fill="#050A10"/>
+      <ellipse cx="122" cy="79" rx="16" ry="14" fill="#050A10"/>
+      <ellipse cx="78" cy="78" rx="10" ry="9" fill="#0A0A14"/>
+      <ellipse cx="122" cy="78" rx="10" ry="9" fill="#0A0A14"/>
+      <circle cx="80" cy="77" r="3" fill="#7EB8D4" opacity="0.5"/>
+      <circle cx="124" cy="77" r="3" fill="#7EB8D4" opacity="0.5"/>
+      <path d="M92 104 Q100 110 108 104" stroke="#7EB8D4" stroke-width="1.5" fill="none" opacity="0.7"/>
+      <path d="M78 46 Q100 30 122 46" stroke="#7EB8D4" stroke-width="1" fill="none" opacity="0.5"/>
+      <circle cx="65" cy="68" r="3" fill="#7EB8D4" opacity="0.4"/>
+      <circle cx="135" cy="68" r="3" fill="#7EB8D4" opacity="0.4"/>
+      <path d="M56 110 Q54 118 58 124" stroke="#7EB8D4" stroke-width="1.5" fill="none" opacity="0.5"/>
+      <path d="M144 110 Q146 118 142 124" stroke="#7EB8D4" stroke-width="1.5" fill="none" opacity="0.5"/>
+      <path d="M82 130 Q100 138 118 130" stroke="#7EB8D4" stroke-width="1.5" fill="none" opacity="0.5"/>
+      <path d="M88 60 Q90 56 94 58" stroke="#7EB8D4" stroke-width="1" fill="none" opacity="0.4"/>
+      <path d="M112 60 Q110 56 106 58" stroke="#7EB8D4" stroke-width="1" fill="none" opacity="0.4"/>
+    `
+  };
+
+  const faceKey = cfg.feat;
+  const faceContent = faces[faceKey] || faces['knight'];
+
+  return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">${common}${faceContent}</svg>`;
+}
+
+// =============================================
+// GAME STATE
+// =============================================
+const PLAYER = {
+  name: 'Jugador_001',
+  tick: 50,
+  usdt: 15,
+  trophies: 1250,
+  league: 'LIGA PLATA',
+  wins: 1,
+  losses: 1,
+  battleHistory: [
+    {result:'WIN',rival:'Orco/ETH',rarity:'Cobre',reward:'8 $TICK'},
+    {result:'LOSS',rival:'Dracónido/BTC',rarity:'Bronce',reward:''},
+  ]
+};
+
+let inventory = [
+  {id:1,race:'Orco',lineage:'BTC',rarity:'Cobre',level:2,xp:45,hp:130,atq:22,def:12,vel:0},
+  {id:2,race:'Elfo',lineage:'SOL',rarity:'Bronce',level:3,xp:80,hp:160,atq:18,def:18,vel:14},
+  {id:3,race:'Dracónido',lineage:'ETH',rarity:'Plata',level:2,xp:60,hp:195,atq:20,def:14,vel:0},
+  {id:4,race:'Gnomo',lineage:'ADA',rarity:'Cobre',level:1,xp:10,hp:100,atq:15,def:0,vel:0},
+  {id:5,race:'Forjado',lineage:'LINK',rarity:'Cobre',level:1,xp:5,hp:100,atq:15,def:0,vel:0},
+  {id:6,race:'Tabaxi',lineage:'DOGE',rarity:'Cobre',level:1,xp:0,hp:100,atq:15,def:0,vel:0},
+];
+let nextId = 7;
+
+let forgeSlots = {main:null, s1:null, s2:null, s3:null};
+let currentRarityFilter = 'all';
+let selectedFighter = null;
+let battleState = null;
+
+// =============================================
+// GENERADOR NFT CARD HTML
+// =============================================
+function nftCard(nft, opts={}) {
+  const lg = LINEAGES[nft.lineage] || LINEAGES['BTC'];
+  const rr = RARITIES[nft.rarity] || RARITIES['Cobre'];
+  const svg = nftSVG(nft.race, nft.lineage, nft.rarity, nft.level);
+  const b64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+  const onclick = opts.onclick ? `onclick="${opts.onclick}"` : '';
+  const extra = opts.extraClass || '';
+  return `
+    <div ${onclick} class="bg-panel border-2 rarity-${nft.rarity} rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform ${extra}" style="border-color:${rr.color}">
+      <div class="relative">
+        <img src="${b64}" class="w-full aspect-square object-cover"/>
+        <div class="absolute top-0 left-0 bg-black/60 px-1.5 py-0.5 text-[8px] font-mono font-bold" style="color:${lg.color}">${nft.lineage}</div>
+        ${nft.level >= 3 ? '<div class="absolute top-0 right-0 bg-bull text-black text-[8px] font-bold px-1">TORNEO</div>' : ''}
+      </div>
+      <div class="p-2">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-[11px] font-bold text-white">${nft.race}</span>
+          <span class="text-[9px] font-mono" style="color:${rr.color}">${nft.rarity.toUpperCase()}</span>
+        </div>
+        <div class="flex justify-between text-[9px] font-mono text-muted">
+          <span>LVL ${nft.level}</span>
+          <span>XP ${nft.xp}</span>
+        </div>
+        <div class="mt-1.5 space-y-0.5">
+          <div class="flex justify-between text-[9px]"><span class="text-muted">HP</span><span class="text-textmain font-mono">${nft.hp}</span></div>
+          <div class="flex justify-between text-[9px]"><span class="text-bear">ATQ</span><span class="text-textmain font-mono">${nft.atq}</span></div>
+          ${nft.level >= 2 ? `<div class="flex justify-between text-[9px]"><span class="text-bull">DEF</span><span class="text-textmain font-mono">${nft.def}</span></div>` : ''}
+          ${nft.level >= 3 ? `<div class="flex justify-between text-[9px]"><span class="text-tick">VEL</span><span class="text-textmain font-mono">${nft.vel}</span></div>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// =============================================
+// NAVEGACIÓN
+// =============================================
+function showView(viewId) {
+  const views = ['view-login','view-lobby','view-barracks','view-forge','view-arena','view-market'];
+  views.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.classList.add('hidden');
+  });
+  const el = document.getElementById(viewId);
+  if(el) { el.classList.remove('hidden'); el.classList.add('view'); }
+
+  const navMap = {'view-lobby':'nav-lobby','view-barracks':'nav-barracks','view-forge':'nav-forge','view-arena':'nav-arena','view-market':'nav-market'};
+  document.querySelectorAll('.nav-item').forEach(n => { n.style.color=''; });
+  if(navMap[viewId]) {
+    const navEl = document.getElementById(navMap[viewId]);
+    if(navEl && viewId !== 'view-arena') navEl.style.color='#00C853';
+  }
+
+  if(viewId === 'view-barracks') renderBarracks();
+  if(viewId === 'view-lobby') renderLobby();
+  if(viewId === 'view-arena') renderArenaSelect();
+  if(viewId === 'view-forge') resetForge();
+}
+
+// =============================================
+// LOGIN
+// =============================================
+function connectWallet() {
+  document.getElementById('app-header').classList.remove('hidden');
+  document.getElementById('app-nav').classList.remove('hidden');
+  document.getElementById('main-content').classList.remove('mt-0');
+  updateHeader();
+  showView('view-lobby');
+}
+
+function updateHeader() {
+  document.getElementById('hdr-tick').textContent = PLAYER.tick + ' $TICK';
+  document.getElementById('hdr-usdt').textContent = PLAYER.usdt + ' USDT';
+  document.getElementById('hdr-trophies').textContent = '🏆 ' + PLAYER.trophies.toLocaleString();
+  const svg = nftSVG(inventory[0].race, inventory[0].lineage, inventory[0].rarity, inventory[0].level);
+  document.getElementById('hdr-avatar').innerHTML = svg.replace('viewBox="0 0 200 200"','viewBox="0 0 200 200" width="100%" height="100%"');
+}
+
+// =============================================
+// LOBBY
+// =============================================
+function renderLobby() {
+  document.getElementById('lobby-tick').textContent = PLAYER.tick + ' $TICK';
+  document.getElementById('lobby-usdt').textContent = PLAYER.usdt + ' USDT';
+  const svg = nftSVG(inventory[0].race, inventory[0].lineage, inventory[0].rarity, inventory[0].level);
+  document.getElementById('lobby-avatar').innerHTML = svg.replace('viewBox="0 0 200 200"','viewBox="0 0 200 200" width="100%" height="100%"');
+
+  const hist = document.getElementById('lobby-history');
+  hist.innerHTML = PLAYER.battleHistory.map(b => `
+    <div class="flex items-center justify-between text-xs">
+      <span class="${b.result === 'WIN' ? 'text-bull' : 'text-bear'} font-bold font-mono">${b.result === 'WIN' ? '✓' : '✗'} ${b.result}</span>
+      <span class="text-muted">vs ${b.rival} (${b.rarity})</span>
+      <span class="text-tick font-mono">${b.reward || '-'}</span>
+    </div>
+  `).join('');
+}
+
+// =============================================
+// BARRACAS
+// =============================================
+function renderBarracks(filter) {
+  if(filter !== undefined) currentRarityFilter = filter;
+  const filtered = currentRarityFilter === 'all' ? inventory : inventory.filter(n => n.rarity === currentRarityFilter);
+  document.getElementById('barracks-count').textContent = filtered.length + '/' + inventory.length + ' NFTs';
+  document.getElementById('barracks-grid').innerHTML = filtered.map(nft => nftCard(nft, {onclick:`openNFTDetail(${nft.id})`})).join('');
+}
+
+function filterRarity(r) {
+  currentRarityFilter = r;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.remove('bg-bull','text-black');
+    b.classList.add('bg-panel2','border','border-gray-700','text-muted');
+  });
+  const btn = document.getElementById('filter-'+r);
+  if(btn) { btn.classList.add('bg-bull','text-black'); btn.classList.remove('bg-panel2','border','border-gray-700','text-muted'); }
+  renderBarracks();
+}
+
+function openNFTDetail(id) {
+  const nft = inventory.find(n => n.id === id);
+  if(!nft) return;
+  const lg = LINEAGES[nft.lineage];
+  const rr = RARITIES[nft.rarity];
+  const svg = nftSVG(nft.race, nft.lineage, nft.rarity, nft.level);
+  document.getElementById('nft-detail-content').innerHTML = `
+    <div class="bg-panel border-2 rounded-xl overflow-hidden mb-3" style="border-color:${rr.color}">
+      <div class="relative">${svg.replace('viewBox="0 0 200 200"','viewBox="0 0 200 200" width="100%"')}</div>
+    </div>
+    <div class="bg-panel2 rounded-xl p-3 space-y-2 mb-3">
+      <div class="flex justify-between"><span class="text-xs text-muted">Raza</span><span class="text-xs font-bold">${nft.race}</span></div>
+      <div class="flex justify-between"><span class="text-xs text-muted">Linaje</span><span class="text-xs font-bold" style="color:${lg.color}">${nft.lineage} (${lg.attr})</span></div>
+      <div class="flex justify-between"><span class="text-xs text-muted">Rareza</span><span class="text-xs font-bold" style="color:${rr.color}">${nft.rarity}</span></div>
+      <div class="flex justify-between"><span class="text-xs text-muted">Nivel</span><span class="text-xs font-bold">${nft.level} / 3</span></div>
+      <div class="flex justify-between"><span class="text-xs text-muted">XP</span><span class="text-xs font-mono">${nft.xp} / 100</span></div>
+    </div>
+    <div class="bg-panel2 rounded-xl p-3 space-y-2">
+      <p class="text-[10px] text-muted font-bold tracking-widest mb-2">ATRIBUTOS</p>
+      ${statBar('HP',nft.hp,300,'#00C853')}
+      ${statBar('ATQ',nft.atq,100,'#FF3D00')}
+      ${nft.level >= 2 ? statBar('DEF',nft.def,80,'#00C853') : '<p class="text-[10px] text-muted">🔒 DEF · Requiere Lvl 2</p>'}
+      ${nft.level >= 3 ? statBar('VEL',nft.vel,50,'#FFD700') : '<p class="text-[10px] text-muted">🔒 VEL ATQ · Requiere Lvl 3</p>'}
+    </div>
+  `;
+  openModal('modal-nft');
+}
+
+function statBar(label, val, max, color) {
+  const pct = Math.min(100, Math.round(val/max*100));
+  return `<div class="flex items-center gap-2"><span class="text-[10px] w-8 text-muted">${label}</span><div class="flex-1 h-1.5 bg-gray-800 rounded"><div class="h-full rounded" style="width:${pct}%;background:${color}"></div></div><span class="text-[10px] font-mono w-8 text-right">${val}</span></div>`;
+}
+
+// =============================================
+// FORJA
+// =============================================
+function resetForge() {
+  forgeSlots = {main:null, s1:null, s2:null, s3:null};
+  ['main','s1','s2','s3'].forEach(slot => {
+    const el = document.getElementById('forge-'+slot);
+    if(slot === 'main') el.innerHTML = '<span class="text-gray-500 text-4xl">+</span>';
+    else el.innerHTML = '<span class="text-gray-600 text-2xl">+</span>';
+  });
+  document.getElementById('forge-preview').classList.add('hidden');
+  document.getElementById('forge-cost').classList.add('hidden');
+  const btn = document.getElementById('forge-btn');
+  btn.disabled = true; btn.classList.add('opacity-40','cursor-not-allowed'); btn.classList.remove('opacity-100','cursor-pointer');
+}
+
+let forgeSelectTarget = null;
+function openForgeSelect(slotId) {
+  forgeSelectTarget = slotId;
+  const grid = document.getElementById('forge-select-grid');
+  grid.innerHTML = inventory.map(nft => nftCard(nft, {onclick:`selectForgeNFT(${nft.id})`})).join('');
+  openModal('modal-forge-select');
+}
+
+function selectForgeNFT(id) {
+  const nft = inventory.find(n => n.id === id);
+  if(!nft) return;
+  forgeSlots[forgeSelectTarget] = nft;
+  renderForgeSlot(forgeSelectTarget, nft);
+  closeModal('modal-forge-select');
+  checkForgeReady();
+}
+
+function renderForgeSlot(slotId, nft) {
+  const el = document.getElementById('forge-' + slotId);
+  const svg = nftSVG(nft.race, nft.lineage, nft.rarity, nft.level);
+  const b64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+  el.innerHTML = `<img src="${b64}" class="w-full h-full object-cover rounded-xl"/>`;
+  const rr = RARITIES[nft.rarity];
+  el.style.borderColor = rr.color;
+  el.style.borderStyle = 'solid';
+}
+
+function checkForgeReady() {
+  const {main, s1, s2, s3} = forgeSlots;
+  const allFilled = main && s1 && s2 && s3;
+  const btn = document.getElementById('forge-btn');
+  if(!allFilled) {
+    btn.disabled = true; btn.classList.add('opacity-40','cursor-not-allowed');
+    document.getElementById('forge-preview').classList.add('hidden');
+    document.getElementById('forge-cost').classList.add('hidden');
+    return;
+  }
+  const sameRace = s1.race === main.race && s2.race === main.race && s3.race === main.race;
+  const sameLineage = s1.lineage === main.lineage && s2.lineage === main.lineage && s3.lineage === main.lineage;
+  const sameRarity = s1.rarity === main.rarity && s2.rarity === main.rarity && s3.rarity === main.rarity;
+  const rarityOrder = ['Cobre','Bronce','Plata','Oro','Diamante','Legendario'];
+  const nextRarity = rarityOrder[rarityOrder.indexOf(main.rarity) + 1];
+
+  document.getElementById('forge-preview').classList.remove('hidden');
+  document.getElementById('forge-cost').classList.remove('hidden');
+
+  if(sameRace && sameLineage && sameRarity && nextRarity) {
+    const nextColor = RARITIES[nextRarity].color;
+    document.getElementById('forge-result-text').innerHTML = `<span style="color:${nextColor}">${main.race}/${main.lineage} ${nextRarity.toUpperCase()}</span>`;
+    btn.disabled = false; btn.classList.remove('opacity-40','cursor-not-allowed'); btn.classList.add('opacity-100','cursor-pointer');
+  } else {
+    document.getElementById('forge-result-text').innerHTML = '<span class="text-bear">⚠ Los sacrificios deben ser idénticos al principal</span>';
+    btn.disabled = true; btn.classList.add('opacity-40','cursor-not-allowed');
+  }
+}
+
+function executeForge() {
+  if(PLAYER.tick < 50) { alert('No tienes suficientes $TICK'); return; }
+  const {main, s1, s2, s3} = forgeSlots;
+  const rarityOrder = ['Cobre','Bronce','Plata','Oro','Diamante','Legendario'];
+  const nextRarity = rarityOrder[rarityOrder.indexOf(main.rarity) + 1];
+  PLAYER.tick -= 50;
+  inventory = inventory.filter(n => n.id !== s1.id && n.id !== s2.id && n.id !== s3.id);
+  const target = inventory.find(n => n.id === main.id);
+  if(target) {
+    target.rarity = nextRarity;
+    const m = RARITIES[nextRarity].mult;
+    target.hp = Math.round(target.hp * 1.3);
+    target.atq = Math.round(target.atq * 1.2);
+    target.def = Math.round(target.def * 1.2);
+  }
+  updateHeader();
+  resetForge();
+  alert(`🔥 ¡FUSIÓN EXITOSA!\n${main.race}/${main.lineage} → ${nextRarity.toUpperCase()}\n-50 $TICK`);
+  showView('view-barracks');
+}
+
+// =============================================
+// ARENA
+// =============================================
+function renderArenaSelect() {
+  selectedFighter = null;
+  document.getElementById('arena-select').classList.remove('hidden');
+  document.getElementById('arena-battle').classList.add('hidden');
+  document.getElementById('arena-result').classList.add('hidden');
+  const btn = document.getElementById('arena-fight-btn');
+  btn.disabled = true; btn.classList.add('opacity-40','cursor-not-allowed');
+
+  const grid = document.getElementById('arena-fighter-grid');
+  grid.innerHTML = inventory.map(nft => {
+    const svg = nftSVG(nft.race, nft.lineage, nft.rarity, nft.level);
+    const b64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+    const rr = RARITIES[nft.rarity];
+    return `
+      <div id="arena-card-${nft.id}" onclick="selectFighter(${nft.id})" class="bg-panel border-2 rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform" style="border-color:${rr.color}">
+        <img src="${b64}" class="w-full aspect-square object-cover"/>
+        <div class="p-1.5 text-center">
+          <p class="text-[10px] font-bold">${nft.race}</p>
+          <p class="text-[9px] font-mono text-muted">Lvl ${nft.level} · ${nft.rarity}</p>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectFighter(id) {
+  selectedFighter = inventory.find(n => n.id === id);
+  document.querySelectorAll('[id^="arena-card-"]').forEach(el => { el.style.borderColor = ''; el.style.boxShadow = ''; });
+  const card = document.getElementById('arena-card-' + id);
+  if(card) { card.style.borderColor = '#00C853'; card.style.boxShadow = '0 0 15px rgba(0,200,83,.5)'; }
+  const btn = document.getElementById('arena-fight-btn');
+  btn.disabled = false; btn.classList.remove('opacity-40','cursor-not-allowed');
+}
+
+function startBattle() {
+  if(!selectedFighter) return;
+  const opponentRaces = RACES.filter(r => r !== selectedFighter.race);
+  const oppRace = opponentRaces[Math.floor(Math.random()*opponentRaces.length)];
+  const oppLineage = LINEAGE_KEYS[Math.floor(Math.random()*LINEAGE_KEYS.length)];
+  const rarities = ['Cobre','Cobre','Cobre','Bronce','Bronce','Plata'];
+  const oppRarity = rarities[Math.floor(Math.random()*rarities.length)];
+  const opp = {id:999, race:oppRace, lineage:oppLineage, rarity:oppRarity, level:selectedFighter.level,
+    hp: Math.round(90 + Math.random()*60), atq: Math.round(12 + Math.random()*15),
+    def: Math.round(8 + Math.random()*12), vel: Math.round(5 + Math.random()*10)};
+
+  battleState = {
+    p1: {...selectedFighter, curHp: selectedFighter.hp},
+    p2: {...opp, curHp: opp.hp},
+    round: 0,
+    log: [],
+    done: false
+  };
+
+  const p1svg = nftSVG(selectedFighter.race, selectedFighter.lineage, selectedFighter.rarity, selectedFighter.level);
+  const p2svg = nftSVG(opp.race, opp.lineage, opp.rarity, opp.level);
+  document.getElementById('battle-p1-art').innerHTML = p1svg.replace('viewBox="0 0 200 200"','viewBox="0 0 200 200" width="100%" height="100%"');
+  document.getElementById('battle-p2-art').innerHTML = p2svg.replace('viewBox="0 0 200 200"','viewBox="0 0 200 200" width="100%" height="100%"');
+  document.getElementById('p1-name').textContent = selectedFighter.race;
+  document.getElementById('p2-name').textContent = opp.race;
+  document.getElementById('p1-hp').textContent = selectedFighter.hp;
+  document.getElementById('p2-hp').textContent = opp.hp;
+  document.getElementById('p1-bar').style.width = '100%';
+  document.getElementById('p2-bar').style.width = '100%';
+  document.getElementById('battle-log').innerHTML = '';
+  document.getElementById('battle-round').textContent = 'RONDA 1';
+  document.getElementById('battle-status').textContent = '¡Que comience la batalla!';
+  document.getElementById('arena-next-btn').textContent = '▶ SIGUIENTE';
+
+  document.getElementById('arena-select').classList.add('hidden');
+  document.getElementById('arena-battle').classList.remove('hidden');
+}
+
+function battleNextStep() {
+  if(!battleState || battleState.done) { showBattleResult(); return; }
+  const {p1, p2} = battleState;
+  battleState.round++;
+  if(battleState.round > 15) { battleState.done = true; battleNextStep(); return; }
+
+  document.getElementById('battle-round').textContent = 'RONDA ' + battleState.round;
+  const log = document.getElementById('battle-log');
+
+  function attack(attacker, defender, isP1) {
+    const critico = Math.random() < 0.15;
+    let dmg = Math.max(1, Math.round((attacker.atq * (0.85 + Math.random()*0.3)) - (defender.def * 0.5)));
+    if(critico) { dmg = Math.round(dmg * 1.8); }
+    const blocked = Math.random() < 0.1;
+    if(blocked) { dmg = 0; }
+    defender.curHp = Math.max(0, defender.curHp - dmg);
+    const pct = Math.round(defender.curHp / defender.hp * 100);
+
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    if(blocked) {
+      entry.innerHTML = `<span class="${isP1?'text-bull':'text-bear'}">${attacker.race}</span> ataca → <span class="text-muted">¡BLOQUEADO!</span>`;
+    } else if(critico) {
+      entry.innerHTML = `<span class="${isP1?'text-bull':'text-bear'}">${attacker.race}</span> → <span class="text-tick font-bold">💥 CRÍTICO! -${dmg}</span> HP`;
+    } else {
+      entry.innerHTML = `<span class="${isP1?'text-bull':'text-bear'}">${attacker.race}</span> → <span class="${isP1?'text-bear':'text-bull'}">-${dmg}</span> HP`;
+    }
+    log.appendChild(entry);
+    log.scrollTop = log.scrollHeight;
+
+    if(isP1) {
+      document.getElementById('p2-hp').textContent = defender.curHp;
+      document.getElementById('p2-bar').style.width = pct + '%';
+    } else {
+      document.getElementById('p1-hp').textContent = defender.curHp;
+      document.getElementById('p1-bar').style.width = pct + '%';
+    }
+    return defender.curHp <= 0;
+  }
+
+  const goFirst = p1.vel >= p2.vel ? 'p1' : 'p2';
+  let ended = false;
+  if(goFirst === 'p1') {
+    ended = attack(p1, p2, true);
+    if(!ended) ended = attack(p2, p1, false);
+  } else {
+    ended = attack(p2, p1, false);
+    if(!ended) ended = attack(p1, p2, true);
+  }
+
+  if(ended || battleState.round >= 15) {
+    battleState.done = true;
+    document.getElementById('arena-next-btn').textContent = '🏁 VER RESULTADO';
+    document.getElementById('battle-status').textContent = p2.curHp <= 0 ? '¡VICTORIA!' : p1.curHp <= 0 ? 'Derrota...' : 'Empate';
+  } else {
+    document.getElementById('battle-status').textContent = 'Combate en curso...';
+  }
+}
+
+function showBattleResult() {
+  const {p1, p2, round} = battleState;
+  const win = p1.curHp > p2.curHp;
+  const draw = p1.curHp === p2.curHp;
+  const tickReward = win ? Math.round(5 + Math.random()*15) : 2;
+  const xpReward = win ? 20 : 10;
+
+  if(win) {
+    PLAYER.wins++; PLAYER.trophies += 25; PLAYER.tick += tickReward;
+    PLAYER.battleHistory.unshift({result:'WIN', rival:`${p2.race}/${p2.lineage}`, rarity:p2.rarity, reward:`+${tickReward} $TICK`});
+  } else {
+    PLAYER.losses++; PLAYER.trophies = Math.max(0, PLAYER.trophies - 10); PLAYER.tick += 2;
+    PLAYER.battleHistory.unshift({result:'LOSS', rival:`${p2.race}/${p2.lineage}`, rarity:p2.rarity, reward:''});
+  }
+  if(PLAYER.battleHistory.length > 5) PLAYER.battleHistory.pop();
+
+  const fighter = inventory.find(n => n.id === p1.id);
+  if(fighter) { fighter.xp = Math.min(100, fighter.xp + xpReward); }
+  updateHeader();
+
+  document.getElementById('arena-battle').classList.add('hidden');
+  document.getElementById('arena-result').classList.remove('hidden');
+  document.getElementById('result-icon').textContent = win ? '🏆' : draw ? '🤝' : '💀';
+  document.getElementById('result-title').textContent = win ? '¡VICTORIA!' : draw ? 'EMPATE' : 'DERROTA';
+  document.getElementById('result-title').className = `text-2xl font-extrabold mb-1 ${win?'text-bull':draw?'text-tick':'text-bear'}`;
+  document.getElementById('result-sub').textContent = `${round} rondas · vs ${p2.race}/${p2.lineage}`;
+  document.getElementById('result-rewards').innerHTML = `
+    <p class="text-[10px] text-muted font-bold tracking-widest mb-2">RECOMPENSAS</p>
+    <div class="flex justify-between text-xs"><span class="text-muted">$TICK ganados</span><span class="text-tick font-mono font-bold">+${tickReward}</span></div>
+    <div class="flex justify-between text-xs"><span class="text-muted">XP obtenido</span><span class="text-bull font-mono">+${xpReward}</span></div>
+    <div class="flex justify-between text-xs"><span class="text-muted">Trofeos</span><span class="${win?'text-bull':'text-bear'} font-mono">${win?'+25':'-10'}</span></div>
+  `;
+}
+
+function resetArena() { renderArenaSelect(); }
+
+// =============================================
+// MERCADO / GACHA
+// =============================================
+function openPackModal(packType) {
+  const packs = {basica:1, escuadron:5, batallon:10, recluta:5};
+  const costs = {basica:{usdt:2.50,tick:0}, escuadron:{usdt:10,tick:0}, batallon:{usdt:20,tick:0}, recluta:{usdt:15,tick:100}};
+  const count = packs[packType];
+  const cost = costs[packType];
+
+  if(PLAYER.usdt < cost.usdt) { alert(`Necesitas ${cost.usdt} USDT`); return; }
+  PLAYER.usdt -= cost.usdt;
+  if(packType === 'recluta') PLAYER.tick += cost.tick;
+
+  const container = document.getElementById('pack-result-cards');
+  container.innerHTML = '';
+
+  for(let i = 0; i < count; i++) {
+    const nft = rollNFT(packType === 'batallon' && i === 0);
+    inventory.push(nft);
+    const svg = nftSVG(nft.race, nft.lineage, nft.rarity, nft.level);
+    const b64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+    const rr = RARITIES[nft.rarity];
+    const delay = i * 0.15;
+    container.innerHTML += `
+      <div class="text-center" style="animation:reveal .5s ${delay}s cubic-bezier(.34,1.56,.64,1) both">
+        <div class="border-2 rounded-xl overflow-hidden w-28 h-28" style="border-color:${rr.color}">
+          <img src="${b64}" class="w-full h-full object-cover"/>
+        </div>
+        <p class="text-[10px] font-bold mt-1" style="color:${rr.color}">${nft.rarity}</p>
+        <p class="text-[10px] text-muted">${nft.race}/${nft.lineage}</p>
+      </div>
+    `;
+  }
+
+  if(packType === 'recluta') {
+    const lvl3 = inventory.find(n => n.level < 3 && n.id > nextId - count - 1);
+    if(lvl3) { lvl3.level = 3; lvl3.vel = 10; lvl3.hp = 160; lvl3.atq = 22; lvl3.def = 15; }
+  }
+
+  updateHeader();
+  openModal('modal-pack-result');
+}
+
+function rollNFT(guaranteeEpic=false) {
+  const roll = guaranteeEpic ? 86 : Math.random() * 100;
+  let tier;
+  if(roll <= 10) tier = 'Legendario';
+  else if(roll <= 35) tier = 'Epico';
+  else tier = 'Comun';
+
+  const eligibleLineages = LINEAGE_KEYS.filter(k => {
+    if(tier === 'Legendario') return LINEAGES[k].tier === 'Legendario';
+    if(tier === 'Epico') return LINEAGES[k].tier === 'Epico';
+    return LINEAGES[k].tier === 'Comun';
+  });
+
+  const lineage = eligibleLineages[Math.floor(Math.random()*eligibleLineages.length)] || 'ADA';
+  const race = RACES[Math.floor(Math.random()*RACES.length)];
+  const rarity = tier === 'Legendario' ? 'Bronce' : 'Cobre';
+
+  const nft = {id: nextId++, race, lineage, rarity, level:1, xp:0, hp:100, atq:15, def:0, vel:0};
+  return nft;
+}
+
+// =============================================
+// MODALES
+// =============================================
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// =============================================
+// INIT
+// =============================================
+window.addEventListener('load', () => {
+  document.getElementById('app-header').classList.add('hidden');
+  document.getElementById('app-nav').classList.add('hidden');
+  showView('view-login');
+  document.getElementById('view-login').classList.remove('mt-16');
+});
+</script>
+</body>
+</html>
