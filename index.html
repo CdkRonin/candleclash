@@ -19,8 +19,26 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
 .rarity-Plata   {box-shadow:0 0 16px rgba(192,192,192,.45);border-color:#C0C0C0!important}
 .rarity-Oro     {box-shadow:0 0 20px rgba(255,215,0,.45);  border-color:#FFD700!important}
 .rarity-Diamante{box-shadow:0 0 24px rgba(100,200,255,.55);border-color:#64C8FF!important}
-.rarity-Legendario{box-shadow:0 0 32px rgba(255,50,255,.6);border-color:#FF32FF!important;animation:lpulse 2s ease-in-out infinite}
-@keyframes lpulse{0%,100%{box-shadow:0 0 20px rgba(255,50,255,.4)}50%{box-shadow:0 0 45px rgba(255,50,255,.9)}}
+.rarity-Legendario{animation:rainbow 2s linear infinite!important}
+@keyframes rainbow{
+  0%  {border-color:#ff0000;box-shadow:0 0 28px #ff000099}
+  16% {border-color:#ff8c00;box-shadow:0 0 28px #ff8c0099}
+  33% {border-color:#ffe600;box-shadow:0 0 28px #ffe60099}
+  50% {border-color:#00e676;box-shadow:0 0 28px #00e67699}
+  66% {border-color:#2979ff;box-shadow:0 0 28px #2979ff99}
+  83% {border-color:#d500f9;box-shadow:0 0 28px #d500f999}
+  100%{border-color:#ff0000;box-shadow:0 0 28px #ff000099}
+}
+.lineage-leg{animation:rainbowText 2s linear infinite}
+@keyframes rainbowText{
+  0%{color:#ff6b6b}25%{color:#ffd93d}50%{color:#6bcb77}75%{color:#4d96ff}100%{color:#ff6b6b}
+}
+@keyframes flashGreen{0%,100%{background:transparent}50%{background:rgba(0,200,83,.15)}}
+@keyframes flashRed{0%,100%{background:transparent}50%{background:rgba(255,61,0,.15)}}
+.flash-green{animation:flashGreen .35s ease}
+.flash-red{animation:flashRed .35s ease}
+.sword-green{color:#00C853;display:inline-block;transform:rotate(45deg);filter:drop-shadow(0 0 4px #00C853)}
+.sword-red  {color:#FF3D00;display:inline-block;transform:rotate(-45deg);filter:drop-shadow(0 0 4px #FF3D00)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes reveal{from{transform:scale(0) rotate(-12deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
 @keyframes vin{from{opacity:0}to{opacity:1}}
@@ -35,7 +53,7 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
 .nft-img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
 </style>
 </head>
-<body class="bg-main text-textmain font-sans h-screen flex flex-col overflow-hidden">
+<body class="bg-main text-textmain font-sans flex flex-col" style="height:100dvh;height:100vh">
 
 <!-- HEADER -->
 <header id="app-header" class="hidden fixed top-0 w-full h-16 bg-panel border-b border-gray-800/60 z-50 flex items-center justify-between px-3">
@@ -61,7 +79,7 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
 </header>
 
 <!-- MAIN -->
-<main class="flex-1 mt-16 mb-20 overflow-y-auto" id="main-content">
+<main class="flex-1 overflow-y-auto" id="main-content" style="margin-top:64px;margin-bottom:80px;-webkit-overflow-scrolling:touch">
 
   <!-- LOGIN -->
   <div id="view-login" class="view login-bg flex flex-col items-center justify-between py-10 px-6" style="min-height:100dvh">
@@ -205,7 +223,7 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
           </div>
           <div class="battle-hp"><div id="p1-bar" class="hp-fill h-full bg-bull rounded" style="width:100%"></div></div>
         </div>
-        <span class="text-xl">⚔️</span>
+        <div class="flex items-center gap-0"><span class="sword-green text-xl">⚔</span><span class="sword-red text-xl">⚔</span></div>
         <div class="flex-1">
           <div class="flex justify-between text-xs font-mono mb-1">
             <span id="p2-hp" class="text-bear">100</span>
@@ -223,7 +241,7 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
         <div id="battle-p2-art" class="w-28 h-28 rounded-xl overflow-hidden border-2 border-bear flex-none"></div>
       </div>
       <div id="battle-log" class="bg-panel2 rounded-xl p-3 h-36 overflow-y-auto space-y-1 text-xs font-mono"></div>
-      <button id="arena-next-btn" onclick="battleNextStep()" class="mt-3 w-full bg-bull text-black font-bold py-3 rounded-xl text-sm">▶ SIGUIENTE</button>
+      <button id="arena-skip-btn" onclick="skipBattle()" class="mt-3 w-full bg-panel2 border border-gray-700 text-muted font-bold py-2 rounded-xl text-xs">⏩ SALTAR AL RESULTADO</button>
     </div>
     <div id="arena-result" class="hidden flex flex-col items-center py-6">
       <div id="result-icon" class="text-6xl mb-3"></div>
@@ -281,7 +299,7 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
     <li onclick="showView('view-barracks')" id="nav-barracks" class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer"><span class="text-2xl mb-0.5">🛡️</span><span class="text-[10px] font-bold">BARRACAS</span></li>
     <li onclick="showView('view-forge')"    id="nav-forge"    class="nav-item flex-1 flex flex-col items-center justify-center cursor-pointer" style="color:#FF3D00"><span class="text-2xl mb-0.5">🔥</span><span class="text-[10px] font-bold">FORJA</span></li>
     <li onclick="showView('view-arena')"    id="nav-arena"    class="nav-item flex-1 flex flex-col items-center justify-center cursor-pointer -translate-y-2">
-      <div class="bg-main border-2 border-bull w-14 h-14 rounded-full flex items-center justify-center arena-glow"><span class="text-2xl">⚔️</span></div>
+      <div class="bg-main border-2 border-bull w-14 h-14 rounded-full flex items-center justify-center arena-glow"><span class="sword-green text-xl">⚔</span><span class="sword-red text-xl">⚔</span></div>
       <span class="text-[10px] font-bold text-bull mt-0.5">ARENA</span>
     </li>
     <li onclick="showView('view-market')"   id="nav-market"   class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer"><span class="text-2xl mb-0.5">📦</span><span class="text-[10px] font-bold">MERCADO</span></li>
@@ -378,7 +396,7 @@ const RARITY_ORDER = ['Cobre','Bronce','Plata','Oro','Diamante','Legendario'];
 // GAME STATE
 // =============================================
 const PLAYER = {
-  tick:50, usdt:15, trophies:1250,
+  tick:1000, usdt:500, trophies:1250,
   wins:1, losses:1,
   battleHistory:[
     {result:'WIN', rival:'Orco/ETH',      rarity:'Cobre',  reward:'+8 $TICK'},
@@ -387,12 +405,12 @@ const PLAYER = {
 };
 
 let inventory = [
-  {id:1,race:'Orco',     lineage:'BTC', rarity:'Cobre',  level:2,xp:45, hp:130,atq:22,def:12,vel:0},
-  {id:2,race:'Elfo',     lineage:'SOL', rarity:'Bronce', level:3,xp:80, hp:160,atq:18,def:18,vel:14},
-  {id:3,race:'Dracónido',lineage:'ETH', rarity:'Plata',  level:2,xp:60, hp:195,atq:20,def:14,vel:0},
-  {id:4,race:'Gnomo',    lineage:'ADA', rarity:'Cobre',  level:1,xp:10, hp:100,atq:15,def:0, vel:0},
-  {id:5,race:'Forjado',  lineage:'LINK',rarity:'Cobre',  level:1,xp:5,  hp:100,atq:15,def:0, vel:0},
-  {id:6,race:'Tabaxi',   lineage:'DOGE',rarity:'Cobre',  level:1,xp:0,  hp:100,atq:15,def:0, vel:0},
+  {id:1,race:'Orco',      lineage:'BTC', rarity:'Legendario',level:3,xp:95, hp:2800,atq:320,def:180,vel:85},
+  {id:2,race:'Elfo',      lineage:'SOL', rarity:'Oro',       level:3,xp:80, hp:1600,atq:240,def:195,vel:140},
+  {id:3,race:'Dracónido', lineage:'ETH', rarity:'Plata',     level:2,xp:60, hp:980, atq:185,def:120,vel:0},
+  {id:4,race:'Minotauro', lineage:'BNB', rarity:'Bronce',    level:3,xp:40, hp:780, atq:155,def:90, vel:60},
+  {id:5,race:'Forjado',   lineage:'LINK',rarity:'Cobre',     level:1,xp:5,  hp:500, atq:95, def:0,  vel:0},
+  {id:6,race:'Tabaxi',    lineage:'DOGE',rarity:'Cobre',     level:1,xp:0,  hp:500, atq:90, def:0,  vel:0},
 ];
 let nextId = 7;
 let forgeSlots = {main:null, s1:null, s2:null, s3:null};
@@ -413,7 +431,7 @@ function nftCard(nft, opts={}) {
     <div ${onclick} class="bg-panel border-2 rarity-${nft.rarity} rounded-xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform ${extraClass}">
       <div class="relative">
         <img src="${img}" class="nft-img" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231E2329%22/><text y=%2250%25%22 x=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2228%22>⚔️</text></svg>'"/>
-        <div class="absolute top-1 left-1 rounded px-1.5 py-0.5 text-[8px] font-mono font-bold" style="background:#0B0E11CC;color:${lg.color}">${nft.lineage}</div>
+        <div class="absolute top-1 left-1 rounded px-1.5 py-0.5 text-[8px] font-mono font-bold ${(nft.lineage==='BTC'||nft.lineage==='ETH')?'lineage-leg':''}" style="background:#0B0E11CC;color:${(nft.lineage==='BTC'||nft.lineage==='ETH')?'#FFD700':lg.color}">${nft.lineage}${(nft.lineage==='BTC'||nft.lineage==='ETH')?' ★':''}</div>
         <div class="absolute top-1 right-1 rounded px-1.5 py-0.5 text-[8px] font-mono font-bold" style="background:#0B0E11CC;color:${rr.color}">LVL ${nft.level}</div>
         ${nft.level>=3?'<div class="absolute bottom-1 right-1 bg-bull text-black text-[7px] font-bold px-1 rounded">TORNEO ✓</div>':''}
       </div>
@@ -628,14 +646,20 @@ function selectFighter(id) {
   btn.disabled=false; btn.classList.remove('opacity-40','cursor-not-allowed');
 }
 
+let battleTimer = null;
+
 function startBattle() {
   if(!selectedFighter) return;
   const oppRace=RACES.filter(r=>r!==selectedFighter.race)[Math.floor(Math.random()*(RACES.length-1))];
   const oppLineage=LINEAGE_KEYS[Math.floor(Math.random()*LINEAGE_KEYS.length)];
-  const rarities=['Cobre','Cobre','Cobre','Bronce','Bronce','Plata'];
+  const rarities=['Cobre','Cobre','Bronce','Bronce','Plata','Plata'];
   const oppRarity=rarities[Math.floor(Math.random()*rarities.length)];
+  const mult=RARITIES[oppRarity]?.mult||1;
   const opp={id:999,race:oppRace,lineage:oppLineage,rarity:oppRarity,level:selectedFighter.level,
-    hp:Math.round(90+Math.random()*60),atq:Math.round(12+Math.random()*15),def:Math.round(8+Math.random()*12),vel:Math.round(5+Math.random()*10)};
+    hp:  Math.round((420+Math.random()*280)*mult),
+    atq: Math.round((80 +Math.random()*40) *mult),
+    def: Math.round((40 +Math.random()*30) *mult),
+    vel: Math.round(10+Math.random()*40)};
   battleState={p1:{...selectedFighter,curHp:selectedFighter.hp},p2:{...opp,curHp:opp.hp},round:0,done:false};
   document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(selectedFighter.race)}" class="w-full h-full object-cover"/>`;
   document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(opp.race)}" class="w-full h-full object-cover"/>`;
@@ -647,43 +671,73 @@ function startBattle() {
   document.getElementById('p2-bar').style.width='100%';
   document.getElementById('battle-log').innerHTML='';
   document.getElementById('battle-round').textContent='RONDA 1';
-  document.getElementById('battle-status').textContent='¡Que comience la batalla!';
-  document.getElementById('arena-next-btn').textContent='▶ SIGUIENTE';
+  document.getElementById('battle-status').textContent='⚔ ¡Que comience la batalla!';
   document.getElementById('arena-select').classList.add('hidden');
   document.getElementById('arena-battle').classList.remove('hidden');
+  if(battleTimer) clearTimeout(battleTimer);
+  battleTimer=setTimeout(autoBattleLoop, 900);
+}
+
+function autoBattleLoop() {
+  if(!battleState||battleState.done){setTimeout(showBattleResult,1200);return;}
+  battleNextStep();
+  if(!battleState.done){
+    const vel=(battleState.p1.vel+battleState.p2.vel);
+    const delay=Math.max(350, 1400-vel*6);
+    battleTimer=setTimeout(autoBattleLoop,delay);
+  } else {
+    setTimeout(showBattleResult,1500);
+  }
+}
+
+function skipBattle() {
+  if(battleTimer) clearTimeout(battleTimer);
+  if(!battleState) return;
+  // Simular rondas restantes instantáneamente
+  while(!battleState.done && battleState.round<25){ battleNextStep(); }
+  showBattleResult();
 }
 
 function battleNextStep() {
-  if(!battleState||battleState.done){showBattleResult();return;}
+  if(!battleState||battleState.done) return;
   const {p1,p2}=battleState;
   battleState.round++;
-  if(battleState.round>15){battleState.done=true;battleNextStep();return;}
+  if(battleState.round>25){battleState.done=true;return;}
   document.getElementById('battle-round').textContent='RONDA '+battleState.round;
   const log=document.getElementById('battle-log');
+  const arena=document.getElementById('arena-battle');
 
   function atk(att,def,isP1){
-    const crit=Math.random()<0.15, blocked=Math.random()<0.1;
-    let dmg=Math.max(1,Math.round((att.atq*(0.85+Math.random()*0.3))-(def.def*0.5)));
-    if(blocked) dmg=0; if(crit) dmg=Math.round(dmg*1.8);
+    const crit=Math.random()<0.18, blocked=Math.random()<0.08;
+    let dmg=Math.max(5,Math.round((att.atq*(0.80+Math.random()*0.45))-(def.def*0.55)));
+    if(blocked){dmg=0;}
+    else if(crit){dmg=Math.round(dmg*2.1);}
     def.curHp=Math.max(0,def.curHp-dmg);
     const pct=Math.round(def.curHp/def.hp*100);
     const e=document.createElement('div'); e.className='log-entry';
-    if(blocked) e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> ataca → <span class="text-muted">BLOQUEADO</span>`;
-    else if(crit) e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> → <span class="text-tick font-bold">💥 CRÍTICO −${dmg} HP</span>`;
-    else e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> → <span class="${isP1?'text-bear':'text-bull'}">−${dmg} HP</span>`;
+    if(blocked){
+      e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> ⚔ <span class="text-muted">🛡 BLOQUEADO</span>`;
+    } else if(crit){
+      e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> ⚔ <span class="text-tick font-bold">💥 CRÍTICO! −${dmg.toLocaleString()} HP</span>`;
+      // Flash en el panel del defensor
+      if(arena) { arena.classList.add(isP1?'flash-red':'flash-green'); setTimeout(()=>arena.classList.remove('flash-red','flash-green'),350); }
+    } else {
+      e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> ⚔ <span class="${isP1?'text-bear':'text-bull'}">−${dmg.toLocaleString()} HP</span>`;
+    }
     log.appendChild(e); log.scrollTop=log.scrollHeight;
-    if(isP1){document.getElementById('p2-hp').textContent=def.curHp;document.getElementById('p2-bar').style.width=pct+'%';}
-    else    {document.getElementById('p1-hp').textContent=def.curHp;document.getElementById('p1-bar').style.width=pct+'%';}
+    if(isP1){document.getElementById('p2-hp').textContent=def.curHp.toLocaleString();document.getElementById('p2-bar').style.width=pct+'%';}
+    else    {document.getElementById('p1-hp').textContent=def.curHp.toLocaleString();document.getElementById('p1-bar').style.width=pct+'%';}
     return def.curHp<=0;
   }
 
+  // Quién ataca primero: mayor VEL va primero
   const firstP1=p1.vel>=p2.vel;
   let ended=firstP1?atk(p1,p2,true):atk(p2,p1,false);
   if(!ended) ended=firstP1?atk(p2,p1,false):atk(p1,p2,true);
-  if(ended||battleState.round>=15){
+  if(ended||battleState.round>=25){
     battleState.done=true;
-    document.getElementById('arena-next-btn').textContent='🏁 VER RESULTADO';
-    document.getElementById('battle-status').textContent=p2.curHp<=0?'¡VICTORIA!':p1.curHp<=0?'Derrota...':'Empate';
+    const status=p2.curHp<=0?'⚔ ¡VICTORIA!':p1.curHp<=0?'💀 Derrota...':'🤝 Empate';
+    document.getElementById('battle-status').textContent=status;
   }
 }
 
@@ -749,7 +803,12 @@ function rollNFT(guaranteeEpic=false) {
   const pool=LINEAGE_KEYS.filter(k=>LINEAGES[k].tier===tier);
   const lineage=pool[Math.floor(Math.random()*pool.length)]||'ADA';
   const race=RACES[Math.floor(Math.random()*RACES.length)];
-  return {id:nextId++,race,lineage,rarity:'Cobre',level:1,xp:0,hp:100,atq:15,def:0,vel:0};
+  // BTC y ETH son Legendario: empiezan en Bronce con más stats
+  const isLegLineage=(lineage==='BTC'||lineage==='ETH');
+  const startRarity=isLegLineage?'Bronce':'Cobre';
+  const baseHp=isLegLineage?700:500;
+  const baseAtq=isLegLineage?120:95;
+  return {id:nextId++,race,lineage,rarity:startRarity,level:1,xp:0,hp:baseHp,atq:baseAtq,def:0,vel:0};
 }
 
 // =============================================
