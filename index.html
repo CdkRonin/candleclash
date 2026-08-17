@@ -6,37 +6,25 @@
 <title>CandleClash</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#1E2329',bull:'#00C853',bear:'#FF3D00',tick:'#FFD700',textmain:'#EAECEF',muted:'#848E9C'},fontFamily:{sans:['Inter','sans-serif'],mono:['Space Mono','monospace']}}}}
-</script>
+<script>tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#1E2329',bull:'#00C853',bear:'#FF3D00',tick:'#FFD700',textmain:'#EAECEF',muted:'#848E9C'},fontFamily:{sans:['Inter','sans-serif'],mono:['Space Mono','monospace']}}}}</script>
 <style>
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:#181A20}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
 .ticker-wrap{overflow:hidden;white-space:nowrap;width:100%}
 .ticker-inner{display:inline-block;animation:tick 25s linear infinite}
 @keyframes tick{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
-.rarity-Cobre   {box-shadow:0 0 10px rgba(205,127,50,.35); border-color:#CD7F32!important}
-.rarity-Bronce  {box-shadow:0 0 14px rgba(205,127,50,.55); border-color:#CD7F32!important}
+.rarity-Cobre   {box-shadow:0 0 10px rgba(205,127,50,.35);border-color:#CD7F32!important}
+.rarity-Bronce  {box-shadow:0 0 14px rgba(205,127,50,.55);border-color:#CD7F32!important}
 .rarity-Plata   {box-shadow:0 0 16px rgba(192,192,192,.45);border-color:#C0C0C0!important}
-.rarity-Oro     {box-shadow:0 0 20px rgba(255,215,0,.45);  border-color:#FFD700!important}
+.rarity-Oro     {box-shadow:0 0 20px rgba(255,215,0,.45);border-color:#FFD700!important}
 .rarity-Diamante{box-shadow:0 0 24px rgba(100,200,255,.55);border-color:#64C8FF!important}
 .rarity-Legendario{animation:rainbow 2s linear infinite!important}
-@keyframes rainbow{
-  0%  {border-color:#ff0000;box-shadow:0 0 28px #ff000099}
-  16% {border-color:#ff8c00;box-shadow:0 0 28px #ff8c0099}
-  33% {border-color:#ffe600;box-shadow:0 0 28px #ffe60099}
-  50% {border-color:#00e676;box-shadow:0 0 28px #00e67699}
-  66% {border-color:#2979ff;box-shadow:0 0 28px #2979ff99}
-  83% {border-color:#d500f9;box-shadow:0 0 28px #d500f999}
-  100%{border-color:#ff0000;box-shadow:0 0 28px #ff000099}
-}
+@keyframes rainbow{0%{border-color:#ff0000;box-shadow:0 0 25px #ff000088}16%{border-color:#ff8c00;box-shadow:0 0 25px #ff8c0088}33%{border-color:#ffe600;box-shadow:0 0 25px #ffe60088}50%{border-color:#00e676;box-shadow:0 0 25px #00e67688}66%{border-color:#2979ff;box-shadow:0 0 25px #2979ff88}83%{border-color:#d500f9;box-shadow:0 0 25px #d500f988}100%{border-color:#ff0000;box-shadow:0 0 25px #ff000088}}
 .lineage-leg{animation:rainbowText 2s linear infinite}
-@keyframes rainbowText{
-  0%{color:#ff6b6b}25%{color:#ffd93d}50%{color:#6bcb77}75%{color:#4d96ff}100%{color:#ff6b6b}
-}
-@keyframes flashGreen{0%,100%{background:transparent}50%{background:rgba(0,200,83,.15)}}
-@keyframes flashRed{0%,100%{background:transparent}50%{background:rgba(255,61,0,.15)}}
+@keyframes rainbowText{0%{color:#ff6b6b}25%{color:#ffd93d}50%{color:#6bcb77}75%{color:#4d96ff}100%{color:#ff6b6b}}
+@keyframes flashGreen{0%,100%{background:transparent}50%{background:rgba(0,200,83,.18)}}
+@keyframes flashRed{0%,100%{background:transparent}50%{background:rgba(255,61,0,.18)}}
 .flash-green{animation:flashGreen .35s ease}
-.flash-red{animation:flashRed .35s ease}
+.flash-red  {animation:flashRed .35s ease}
 .sword-green{color:#00C853;display:inline-block;transform:rotate(45deg);filter:drop-shadow(0 0 4px #00C853)}
 .sword-red  {color:#FF3D00;display:inline-block;transform:rotate(-45deg);filter:drop-shadow(0 0 4px #FF3D00)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -51,28 +39,32 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
 .battle-hp{background:#1E2329;height:8px;border-radius:4px;overflow:hidden}
 .arena-glow{box-shadow:0 0 40px rgba(0,200,83,.18)}
 .nft-img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.tab-active{background:#FF3D00!important;color:white!important}
+.tab-active-bull{background:#00C853!important;color:black!important}
+.xp-bar{height:4px;background:#1E2329;border-radius:2px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,#9945FF,#FFD700);border-radius:2px;transition:width .5s}
 </style>
 </head>
 <body class="bg-main text-textmain font-sans flex flex-col" style="height:100dvh;height:100vh">
 
 <!-- HEADER -->
-<header id="app-header" class="hidden fixed top-0 w-full h-16 bg-panel border-b border-gray-800/60 z-50 flex items-center justify-between px-3">
+<header id="app-header" class="hidden fixed top-0 w-full h-16 bg-panel border-b border-gray-800/60 z-50 flex items-center justify-between px-3 flex-none">
   <div class="flex items-center gap-2">
-    <div id="hdr-avatar" class="w-10 h-10 rounded-full border border-gray-600 overflow-hidden bg-gray-800">
+    <div class="w-10 h-10 rounded-full border border-gray-600 overflow-hidden bg-gray-800 flex-none">
       <img id="hdr-avatar-img" src="" class="w-full h-full object-cover"/>
     </div>
     <div class="flex flex-col leading-tight">
-      <span id="hdr-league" class="text-[10px] text-muted font-bold">LIGA PLATA</span>
+      <span class="text-[10px] text-muted font-bold">LIGA PLATA</span>
       <span id="hdr-trophies" class="text-xs font-mono font-bold text-white">🏆 1,250</span>
     </div>
   </div>
   <div class="flex-1 mx-3 ticker-wrap text-[10px] font-mono font-bold bg-black/30 rounded px-2 py-1">
-    <div class="ticker-inner text-gray-300">BTC <span class="text-bull">+2.4%</span> &nbsp;|&nbsp; ETH <span class="text-bear">-0.8%</span> &nbsp;|&nbsp; SOL <span class="text-bull">+4.1%</span> &nbsp;|&nbsp; BNB <span class="text-bear">-1.2%</span> &nbsp;|&nbsp; DOGE <span class="text-bull">+6.3%</span> &nbsp;|&nbsp; ADA <span class="text-bull">+0.9%</span> &nbsp;|&nbsp; XRP <span class="text-bear">-2.1%</span></div>
+    <div class="ticker-inner text-gray-300">BTC <span class="text-bull">+2.4%</span> &nbsp;|&nbsp; ETH <span class="text-bear">-0.8%</span> &nbsp;|&nbsp; SOL <span class="text-bull">+4.1%</span> &nbsp;|&nbsp; BNB <span class="text-bear">-1.2%</span> &nbsp;|&nbsp; DOGE <span class="text-bull">+6.3%</span> &nbsp;|&nbsp; ADA <span class="text-bull">+0.9%</span></div>
   </div>
   <div class="flex flex-col items-end leading-tight">
     <div class="flex items-center gap-2">
-      <span id="hdr-tick"  class="text-xs font-mono font-bold text-tick">50 $TICK</span>
-      <span id="hdr-usdt"  class="text-xs font-mono font-bold text-bull">15 USDT</span>
+      <span id="hdr-tick" class="text-xs font-mono font-bold text-tick">1000 $TICK</span>
+      <span id="hdr-usdt" class="text-xs font-mono font-bold text-bull">500 USDT</span>
     </div>
     <span class="text-[10px] text-muted">Billetera</span>
   </div>
@@ -82,7 +74,7 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
 <main class="flex-1 overflow-y-auto" id="main-content" style="margin-top:64px;margin-bottom:80px;-webkit-overflow-scrolling:touch">
 
   <!-- LOGIN -->
-  <div id="view-login" class="view login-bg flex flex-col items-center justify-between py-10 px-6" style="min-height:100dvh">
+  <div id="view-login" class="view login-bg flex flex-col items-center justify-between py-10 px-6" style="min-height:calc(100vh - 0px)">
     <div class="flex flex-col items-center mt-8">
       <div class="text-5xl mb-3">⚔️</div>
       <h1 class="text-4xl font-extrabold tracking-tight" style="background:linear-gradient(135deg,#00C853,#FFD700);-webkit-background-clip:text;-webkit-text-fill-color:transparent">CandleClash</h1>
@@ -97,13 +89,8 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
           <span>SOL <span class="text-bull">+4.1%</span></span>
         </div>
       </div>
-      <button onclick="connectWallet()" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base shadow-[0_0_20px_rgba(0,200,83,.35)] flex items-center justify-center gap-2">
-        🦊 CONECTAR WALLET
-      </button>
-      <button onclick="connectWallet()" class="w-full bg-panel2 border border-gray-700 text-textmain font-semibold py-3 rounded-xl text-sm">
-        Jugar como Invitado
-      </button>
-      <p class="text-center text-[10px] text-muted">Al conectar, aceptas los Términos de Uso</p>
+      <button onclick="connectWallet()" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base shadow-[0_0_20px_rgba(0,200,83,.35)] flex items-center justify-center gap-2">🦊 CONECTAR WALLET</button>
+      <button onclick="connectWallet()" class="w-full bg-panel2 border border-gray-700 text-textmain font-semibold py-3 rounded-xl text-sm">Jugar como Invitado</button>
     </div>
     <p class="text-xs text-muted">225 combinaciones · 15 razas · 15 linajes cripto</p>
   </div>
@@ -111,57 +98,36 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
   <!-- LOBBY -->
   <div id="view-lobby" class="hidden view p-4 space-y-4">
     <div class="bg-panel2 rounded-xl p-3 flex items-center gap-3">
-      <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-bull flex-none">
-        <img id="lobby-avatar-img" src="" class="w-full h-full object-cover"/>
-      </div>
-      <div>
-        <p class="font-bold text-sm">Jugador_001</p>
-        <p class="text-xs text-muted font-mono">Liga Plata · <span id="lobby-trophies">1,250</span> 🏆</p>
-      </div>
+      <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-bull flex-none"><img id="lobby-avatar-img" src="" class="w-full h-full object-cover"/></div>
+      <div><p class="font-bold text-sm">Jugador_001</p><p class="text-xs text-muted font-mono">Liga Plata · <span id="lobby-trophies">1,250</span> 🏆</p></div>
       <div class="ml-auto text-right">
-        <p class="text-xs font-mono text-tick font-bold" id="lobby-tick">50 $TICK</p>
-        <p class="text-xs font-mono text-bull font-bold" id="lobby-usdt">15 USDT</p>
+        <p class="text-xs font-mono text-tick font-bold" id="lobby-tick">1000 $TICK</p>
+        <p class="text-xs font-mono text-bull font-bold" id="lobby-usdt">500 USDT</p>
       </div>
     </div>
-    <!-- Misiones -->
     <div class="bg-panel border border-gray-800 rounded-xl p-3">
       <h3 class="text-[10px] font-bold text-muted mb-2 tracking-widest">MISIONES DIARIAS</h3>
       <div class="space-y-2">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2"><span class="text-lg">⚔️</span><div><p class="text-xs font-semibold">Ganar 3 batallas</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div id="m1-bar" class="h-full bg-bull rounded" style="width:33%"></div></div></div></div>
-          <span class="text-xs font-mono text-tick">+10 $TICK</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2"><span class="text-lg">📦</span><div><p class="text-xs font-semibold">Abrir 1 caja</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div id="m2-bar" class="h-full bg-bull rounded" style="width:0%"></div></div></div></div>
-          <span class="text-xs font-mono text-tick">+5 $TICK</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2"><span class="text-lg">🔥</span><div><p class="text-xs font-semibold">Usar la Forja</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div id="m3-bar" class="h-full bg-bull rounded" style="width:0%"></div></div></div></div>
-          <span class="text-xs font-mono text-tick">+15 $TICK</span>
-        </div>
+        <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-lg">⚔️</span><div><p class="text-xs font-semibold">Ganar 3 batallas</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div id="m1-bar" class="h-full bg-bull rounded" style="width:33%"></div></div></div></div><span class="text-xs font-mono text-tick">+10 $TICK</span></div>
+        <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-lg">📦</span><div><p class="text-xs font-semibold">Abrir 1 caja</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div id="m2-bar" class="h-full bg-bull rounded" style="width:0%"></div></div></div></div><span class="text-xs font-mono text-tick">+5 $TICK</span></div>
+        <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-lg">🔥</span><div><p class="text-xs font-semibold">Usar la Forja</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div id="m3-bar" class="h-full bg-bull rounded" style="width:0%"></div></div></div></div><span class="text-xs font-mono text-tick">+15 $TICK</span></div>
       </div>
     </div>
-    <!-- Torneos -->
-    <div class="bg-panel border border-tick rounded-xl p-4 relative overflow-hidden shadow-[0_0_12px_rgba(255,215,0,.15)]">
-      <div class="absolute top-0 right-0 bg-tick text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">REQ: LVL 3+</div>
+    <div class="bg-panel border border-tick rounded-xl p-4 relative shadow-[0_0_12px_rgba(255,215,0,.15)]">
+      <div class="absolute top-0 right-0 bg-tick text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">LVL 25+</div>
       <h3 class="text-tick font-bold text-sm mb-1">🏆 Gran Torneo Semanal</h3>
-      <p class="text-xs text-muted mb-1">Premio: <span class="text-bull font-bold">500 USDT</span></p>
-      <p class="text-xs text-muted mb-3">128/256 participantes · Termina en 2d 14h</p>
+      <p class="text-xs text-muted mb-3">Premio: <span class="text-bull font-bold">500 USDT</span> · 128/256 participantes</p>
       <button class="w-full bg-gray-800 text-muted font-bold py-2 rounded-lg cursor-not-allowed text-sm">🔒 BLOQUEADO</button>
     </div>
     <div class="bg-panel border border-gray-800 rounded-xl p-4">
       <h3 class="text-white font-bold text-sm mb-1">⚔️ Torneo de Liga</h3>
-      <p class="text-xs text-muted mb-1">Premio: <span class="text-bull font-bold">50 USDT</span></p>
-      <p class="text-xs text-muted mb-3">Clasificatorio diario · Lvl 1+</p>
-      <button onclick="showView('view-arena')" class="w-full bg-bull text-black font-bold py-2 rounded-lg text-sm shadow-[0_0_10px_rgba(0,200,83,.2)]">ENTRAR AL TORNEO</button>
+      <p class="text-xs text-muted mb-3">Premio: <span class="text-bull font-bold">50 USDT</span> · Clasificatorio diario</p>
+      <button onclick="showView('view-arena')" class="w-full bg-bull text-black font-bold py-2 rounded-lg text-sm">ENTRAR</button>
     </div>
     <div class="bg-panel border border-gray-800 rounded-xl p-3">
-      <h3 class="text-[10px] font-bold text-muted mb-2 tracking-widest">HISTORIAL RECIENTE</h3>
+      <h3 class="text-[10px] font-bold text-muted mb-2 tracking-widest">HISTORIAL</h3>
       <div id="lobby-history" class="space-y-2"></div>
     </div>
-    <button onclick="showView('view-market')" class="w-full bg-panel2 border border-gray-700 font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2">
-      📦 Comprar Cajas de Botín
-    </button>
   </div>
 
   <!-- BARRACAS -->
@@ -181,30 +147,78 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
   </div>
 
   <!-- FORJA -->
-  <div id="view-forge" class="hidden view p-4 flex flex-col items-center">
-    <h2 class="text-bear font-bold text-xl drop-shadow-[0_0_8px_rgba(255,61,0,.7)] mb-1">🔥 LA FORJA</h2>
-    <p class="text-xs text-muted mb-5 text-center">Funde 4 NFTs idénticos para ascender en rareza</p>
-    <div class="mb-4 text-center">
-      <p class="text-[10px] text-muted font-bold mb-1 tracking-widest">GLADIADOR PRINCIPAL</p>
-      <div id="forge-main" onclick="openForgeSelect('main')" class="forge-slot w-36 h-36 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer relative overflow-hidden">
-        <span class="text-gray-500 text-4xl">+</span>
+  <div id="view-forge" class="hidden view p-4">
+    <h2 class="text-bear font-bold text-xl drop-shadow-[0_0_8px_rgba(255,61,0,.7)] mb-3 text-center">🔥 LA FORJA</h2>
+    <!-- Tabs -->
+    <div class="flex gap-1 bg-panel2 rounded-xl p-1 mb-4">
+      <button id="forge-tab-asc" onclick="switchForgeTab('asc')" class="forge-tab flex-1 text-[10px] font-bold py-2 rounded-lg tab-active">🔥 Ascender</button>
+      <button id="forge-tab-lvl" onclick="switchForgeTab('lvl')" class="forge-tab flex-1 text-[10px] font-bold py-2 rounded-lg text-muted">⬆ Nivel</button>
+      <button id="forge-tab-ren" onclick="switchForgeTab('ren')" class="forge-tab flex-1 text-[10px] font-bold py-2 rounded-lg text-muted">🔄 Renac.</button>
+    </div>
+
+    <!-- PANEL: ASCENDER RAREZA -->
+    <div id="forge-panel-asc" class="flex flex-col items-center">
+      <p class="text-xs text-muted mb-4 text-center">4 NFTs idénticos → sube rareza · Cuesta 50 $TICK</p>
+      <div class="mb-4 text-center">
+        <p class="text-[10px] text-muted font-bold mb-1 tracking-widest">GLADIADOR PRINCIPAL</p>
+        <div id="forge-main" onclick="openForgeSelect('main','asc')" class="forge-slot w-32 h-32 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden mx-auto"><span class="text-gray-500 text-3xl">+</span></div>
       </div>
-    </div>
-    <div class="mb-5 text-center w-full">
-      <p class="text-[10px] text-muted font-bold mb-2 tracking-widest">SACRIFICIOS (×3 idénticos)</p>
-      <div class="flex justify-center gap-3">
-        <div id="forge-s1" onclick="openForgeSelect('s1')" class="forge-slot w-24 h-24 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden"><span class="text-gray-600 text-2xl">+</span></div>
-        <div id="forge-s2" onclick="openForgeSelect('s2')" class="forge-slot w-24 h-24 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden"><span class="text-gray-600 text-2xl">+</span></div>
-        <div id="forge-s3" onclick="openForgeSelect('s3')" class="forge-slot w-24 h-24 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden"><span class="text-gray-600 text-2xl">+</span></div>
+      <div class="mb-4 text-center w-full">
+        <p class="text-[10px] text-muted font-bold mb-2 tracking-widest">SACRIFICIOS (×3 idénticos)</p>
+        <div class="flex justify-center gap-3">
+          <div id="forge-s1" onclick="openForgeSelect('s1','asc')" class="forge-slot w-20 h-20 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden"><span class="text-gray-600 text-xl">+</span></div>
+          <div id="forge-s2" onclick="openForgeSelect('s2','asc')" class="forge-slot w-20 h-20 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden"><span class="text-gray-600 text-xl">+</span></div>
+          <div id="forge-s3" onclick="openForgeSelect('s3','asc')" class="forge-slot w-20 h-20 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden"><span class="text-gray-600 text-xl">+</span></div>
+        </div>
       </div>
+      <div id="forge-preview" class="hidden mb-3 p-3 bg-panel2 border border-gray-700 rounded-xl text-center w-full max-w-xs"><p class="text-[10px] text-muted font-bold mb-1">RESULTADO</p><p id="forge-result-text" class="text-sm font-bold"></p></div>
+      <div id="forge-cost" class="hidden text-xs text-muted mb-3 text-center">Costo: <span class="text-tick font-bold">50 $TICK</span></div>
+      <button id="forge-btn" onclick="executeForge()" class="w-full max-w-xs bg-bear text-white font-bold py-4 rounded-xl opacity-40 cursor-not-allowed" disabled>FUNDIR EN LA FORJA</button>
     </div>
-    <div id="forge-preview" class="hidden mb-3 p-3 bg-panel2 border border-gray-700 rounded-xl text-center w-full max-w-xs">
-      <p class="text-[10px] text-muted font-bold mb-1">RESULTADO</p>
-      <p id="forge-result-text" class="text-sm font-bold text-bull"></p>
+
+    <!-- PANEL: SUBIR NIVEL -->
+    <div id="forge-panel-lvl" class="hidden flex flex-col items-center">
+      <p class="text-xs text-muted mb-4 text-center">Usa NFTs como alimento para dar XP a tu gladiador</p>
+      <div class="mb-4 text-center">
+        <p class="text-[10px] text-muted font-bold mb-1 tracking-widest">GLADIADOR A SUBIR</p>
+        <div id="lvl-main" onclick="openForgeSelect('lvl-main','lvl')" class="forge-slot w-32 h-32 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden mx-auto"><span class="text-gray-500 text-3xl">+</span></div>
+        <div id="lvl-main-info" class="hidden mt-2 text-center"></div>
+      </div>
+      <div class="mb-4 text-center w-full">
+        <p class="text-[10px] text-muted font-bold mb-2 tracking-widest">ALIMENTO (hasta 4 NFTs)</p>
+        <div class="grid grid-cols-4 gap-2 max-w-xs mx-auto">
+          <div id="lvl-f1" onclick="openForgeSelect('lvl-f1','lvl')" class="forge-slot w-full aspect-square border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden"><span class="text-gray-600 text-lg">+</span></div>
+          <div id="lvl-f2" onclick="openForgeSelect('lvl-f2','lvl')" class="forge-slot w-full aspect-square border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden"><span class="text-gray-600 text-lg">+</span></div>
+          <div id="lvl-f3" onclick="openForgeSelect('lvl-f3','lvl')" class="forge-slot w-full aspect-square border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden"><span class="text-gray-600 text-lg">+</span></div>
+          <div id="lvl-f4" onclick="openForgeSelect('lvl-f4','lvl')" class="forge-slot w-full aspect-square border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden"><span class="text-gray-600 text-lg">+</span></div>
+        </div>
+      </div>
+      <div id="lvl-preview" class="hidden mb-3 p-3 bg-panel2 border border-gray-700 rounded-xl text-center w-full max-w-xs">
+        <p class="text-[10px] text-muted font-bold mb-1">PREVISUALIZACIÓN</p>
+        <div id="lvl-preview-text" class="space-y-1 text-xs"></div>
+      </div>
+      <button id="lvl-btn" onclick="executeFeed()" class="w-full max-w-xs bg-purple-600 text-white font-bold py-4 rounded-xl opacity-40 cursor-not-allowed" disabled>⬆ ALIMENTAR Y SUBIR NIVEL</button>
     </div>
-    <div id="forge-cost" class="text-xs text-muted mb-4 text-center hidden">Costo: <span class="text-tick font-bold">50 $TICK</span></div>
-    <button id="forge-btn" onclick="executeForge()" class="w-full max-w-xs bg-bear text-white font-bold py-4 rounded-xl text-base opacity-40 cursor-not-allowed" disabled>FUNDIR EN LA FORJA</button>
-    <p class="text-[10px] text-muted mt-3 text-center">Los NFTs de sacrificio serán destruidos permanentemente</p>
+
+    <!-- PANEL: RENACIMIENTO -->
+    <div id="forge-panel-ren" class="hidden flex flex-col items-center">
+      <div class="bg-panel2 border border-gray-700 rounded-xl p-3 mb-4 w-full max-w-xs text-xs space-y-1">
+        <p class="text-tick font-bold text-center mb-2">🔄 ¿Qué es el Renacimiento?</p>
+        <p class="text-muted">Un NFT en <span class="text-white font-bold">Nivel 50</span> puede renacer sacrificando una copia idéntica (misma raza + linaje) también al <span class="text-white font-bold">Nivel 50</span>.</p>
+        <p class="text-muted">El NFT vuelve al <span class="text-bull font-bold">Nivel 1</span> conservando un <span class="text-tick font-bold">+20% permanente</span> en todos sus stats. ¡Puede hacerse hasta 5 veces!</p>
+        <p class="text-muted">Costo: <span class="text-tick font-bold">100 $TICK</span></p>
+      </div>
+      <div class="mb-4 text-center">
+        <p class="text-[10px] text-muted font-bold mb-1 tracking-widest">GLADIADOR (LVL 50)</p>
+        <div id="ren-main" onclick="openForgeSelect('ren-main','ren')" class="forge-slot w-32 h-32 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden mx-auto"><span class="text-gray-500 text-3xl">+</span></div>
+      </div>
+      <div class="mb-4 text-center">
+        <p class="text-[10px] text-muted font-bold mb-1 tracking-widest">SACRIFICIO IDÉNTICO (LVL 50)</p>
+        <div id="ren-sac" onclick="openForgeSelect('ren-sac','ren')" class="forge-slot w-32 h-32 border-2 border-dashed border-red-900 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden mx-auto"><span class="text-red-800 text-3xl">+</span></div>
+      </div>
+      <div id="ren-preview" class="hidden mb-3 p-3 bg-panel2 border border-gray-700 rounded-xl text-center w-full max-w-xs"><p id="ren-preview-text" class="text-sm font-bold text-tick"></p></div>
+      <button id="ren-btn" onclick="executeRebirth()" class="w-full max-w-xs bg-purple-700 text-white font-bold py-4 rounded-xl opacity-40 cursor-not-allowed" disabled>🔄 RENACER · 100 $TICK</button>
+    </div>
   </div>
 
   <!-- ARENA -->
@@ -212,36 +226,21 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
     <div id="arena-select">
       <h2 class="font-bold text-base mb-3 text-center">⚔️ Selecciona tu Gladiador</h2>
       <div id="arena-fighter-grid" class="grid grid-cols-2 gap-3 mb-4"></div>
-      <button onclick="startBattle()" id="arena-fight-btn" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base shadow-[0_0_20px_rgba(0,200,83,.3)] opacity-40 cursor-not-allowed" disabled>BUSCAR OPONENTE</button>
+      <button onclick="startBattle()" id="arena-fight-btn" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base opacity-40 cursor-not-allowed" disabled>BUSCAR OPONENTE</button>
     </div>
     <div id="arena-battle" class="hidden flex flex-col">
       <div class="flex justify-between items-center mb-3 gap-4">
-        <div class="flex-1">
-          <div class="flex justify-between text-xs font-mono mb-1">
-            <span id="p1-name" class="text-bull font-bold text-[10px]">TÚ</span>
-            <span id="p1-hp" class="text-bull">100</span>
-          </div>
-          <div class="battle-hp"><div id="p1-bar" class="hp-fill h-full bg-bull rounded" style="width:100%"></div></div>
-        </div>
-        <div class="flex items-center gap-0"><span class="sword-green text-xl">⚔</span><span class="sword-red text-xl">⚔</span></div>
-        <div class="flex-1">
-          <div class="flex justify-between text-xs font-mono mb-1">
-            <span id="p2-hp" class="text-bear">100</span>
-            <span id="p2-name" class="text-bear font-bold text-[10px]">RIVAL</span>
-          </div>
-          <div class="battle-hp"><div id="p2-bar" class="hp-fill h-full bg-bear rounded" style="width:100%"></div></div>
-        </div>
+        <div class="flex-1"><div class="flex justify-between text-xs font-mono mb-1"><span id="p1-name" class="text-bull font-bold text-[10px]">TÚ</span><span id="p1-hp" class="text-bull">100</span></div><div class="battle-hp"><div id="p1-bar" class="hp-fill h-full bg-bull rounded" style="width:100%"></div></div></div>
+        <div class="flex items-center gap-0.5"><span class="sword-green text-xl">⚔</span><span class="sword-red text-xl">⚔</span></div>
+        <div class="flex-1"><div class="flex justify-between text-xs font-mono mb-1"><span id="p2-hp" class="text-bear">100</span><span id="p2-name" class="text-bear font-bold text-[10px]">RIVAL</span></div><div class="battle-hp"><div id="p2-bar" class="hp-fill h-full bg-bear rounded" style="width:100%"></div></div></div>
       </div>
       <div class="flex justify-between items-center mb-3 gap-2">
         <div id="battle-p1-art" class="w-28 h-28 rounded-xl overflow-hidden border-2 border-bull flex-none"></div>
-        <div class="text-center flex-1">
-          <p id="battle-round" class="text-xs font-mono text-muted">RONDA 1</p>
-          <p id="battle-status" class="text-sm font-bold text-white mt-1">En combate...</p>
-        </div>
+        <div class="text-center flex-1"><p id="battle-round" class="text-xs font-mono text-muted">RONDA 1</p><p id="battle-status" class="text-sm font-bold text-white mt-1">En combate...</p></div>
         <div id="battle-p2-art" class="w-28 h-28 rounded-xl overflow-hidden border-2 border-bear flex-none"></div>
       </div>
       <div id="battle-log" class="bg-panel2 rounded-xl p-3 h-36 overflow-y-auto space-y-1 text-xs font-mono"></div>
-      <button id="arena-skip-btn" onclick="skipBattle()" class="mt-3 w-full bg-panel2 border border-gray-700 text-muted font-bold py-2 rounded-xl text-xs">⏩ SALTAR AL RESULTADO</button>
+      <button onclick="skipBattle()" class="mt-3 w-full bg-panel2 border border-gray-700 text-muted font-bold py-2 rounded-xl text-xs">⏩ SALTAR AL RESULTADO</button>
     </div>
     <div id="arena-result" class="hidden flex flex-col items-center py-6">
       <div id="result-icon" class="text-6xl mb-3"></div>
@@ -253,21 +252,22 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
   </div>
 
   <!-- MERCADO -->
-  <div id="view-market" class="hidden view p-4 space-y-4">
-    <h2 class="font-bold text-base">📦 Mercado de Cajas</h2>
-    <div class="bg-panel2 rounded-xl p-3 text-center text-xs text-muted">225 combinaciones · 15 razas × 15 linajes cripto</div>
-    <div class="bg-panel border-2 border-tick rounded-xl p-4 relative shadow-[0_0_15px_rgba(255,215,0,.15)]">
-      <div class="absolute top-0 right-0 bg-tick text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">PRIMERA VEZ</div>
-      <div class="flex items-center gap-3 mb-3"><span class="text-3xl">🎖️</span><div><h3 class="font-bold text-tick">Paquete Recluta</h3><p class="text-xs text-muted">Tu mejor inicio</p></div></div>
-      <ul class="text-xs space-y-1 mb-3 text-gray-300">
-        <li>✅ 5 Cajas de Gladiador</li>
-        <li>✅ 100 $TICK de bienvenida</li>
-        <li>✅ 1 NFT garantizado Lvl 3</li>
-        <li>✅ Acceso inmediato a torneos</li>
-      </ul>
-      <button onclick="openPackModal('recluta')" class="w-full bg-tick text-black font-bold py-3 rounded-xl text-sm">COMPRAR · 15 USDT</button>
+  <div id="view-market" class="hidden view p-4">
+    <h2 class="font-bold text-base mb-3">Mercado</h2>
+    <div class="flex gap-1 bg-panel2 rounded-xl p-1 mb-4">
+      <button id="mkt-tab-shop" onclick="switchMarketTab('shop')" class="mkt-tab flex-1 text-[10px] font-bold py-2 rounded-lg tab-active-bull">📦 Tienda</button>
+      <button id="mkt-tab-p2p"  onclick="switchMarketTab('p2p')"  class="mkt-tab flex-1 text-[10px] font-bold py-2 rounded-lg text-muted">⚔️ P2P</button>
+      <button id="mkt-tab-tick" onclick="switchMarketTab('tick')" class="mkt-tab flex-1 text-[10px] font-bold py-2 rounded-lg text-muted">💱 $TICK</button>
     </div>
-    <div class="space-y-3">
+
+    <!-- TIENDA -->
+    <div id="mkt-panel-shop" class="space-y-3">
+      <div class="bg-panel2 rounded-xl p-3 text-center text-xs text-muted">225 combinaciones · 15 razas × 15 linajes</div>
+      <div class="bg-panel border-2 border-tick rounded-xl p-4 relative shadow-[0_0_15px_rgba(255,215,0,.15)]">
+        <div class="absolute top-0 right-0 bg-tick text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">PRIMERA VEZ</div>
+        <div class="flex items-center gap-3 mb-3"><span class="text-3xl">🎖️</span><div><h3 class="font-bold text-tick">Paquete Recluta</h3><p class="text-xs text-muted">5 cajas + 100 $TICK + 1 NFT Lvl 25</p></div></div>
+        <button onclick="openPackModal('recluta')" class="w-full bg-tick text-black font-bold py-3 rounded-xl text-sm">COMPRAR · 15 USDT</button>
+      </div>
       <div class="bg-panel border border-gray-800 rounded-xl p-4 flex items-center justify-between">
         <div class="flex items-center gap-3"><span class="text-2xl">📦</span><div><h3 class="font-bold text-sm">Caja Básica</h3><p class="text-xs text-muted">1 Gladiador · RNG</p></div></div>
         <button onclick="openPackModal('basica')" class="bg-bull text-black font-bold py-2 px-4 rounded-lg text-sm">2.50 USDT</button>
@@ -280,22 +280,78 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
         <div class="flex items-center gap-3"><span class="text-2xl">💎</span><div><h3 class="font-bold text-sm text-[#C0C0C0]">Batallón</h3><p class="text-xs text-muted">10 NFTs · 1 Épico garantizado</p></div></div>
         <button onclick="openPackModal('batallon')" class="bg-[#C0C0C0] text-black font-bold py-2 px-4 rounded-lg text-sm">20 USDT</button>
       </div>
+      <div class="bg-panel2 border border-gray-800 rounded-xl p-3">
+        <h3 class="text-[10px] font-bold text-muted mb-2 tracking-widest">TASAS DE DROP</h3>
+        <div class="space-y-1">
+          <div class="flex justify-between text-xs"><span class="text-gray-400">Común (ADA, XAG, XMR…)</span><span class="font-mono">65%</span></div>
+          <div class="flex justify-between text-xs"><span class="text-purple-400">Épico (SOL, BNB, AVAX…)</span><span class="font-mono">25%</span></div>
+          <div class="flex justify-between text-xs"><span class="text-tick">Legendario ★ (BTC, ETH)</span><span class="font-mono">10%</span></div>
+        </div>
+      </div>
     </div>
-    <div class="bg-panel2 border border-gray-800 rounded-xl p-3">
-      <h3 class="text-[10px] font-bold text-muted mb-2 tracking-widest">TASAS DE DROP</h3>
-      <div class="space-y-1">
-        <div class="flex justify-between text-xs"><span class="text-gray-400">Común (ADA, XAG, XMR…)</span><span class="font-mono">65%</span></div>
-        <div class="flex justify-between text-xs"><span class="text-purple-400">Épico (SOL, BNB, AVAX…)</span><span class="font-mono">25%</span></div>
-        <div class="flex justify-between text-xs"><span class="text-tick">Legendario (BTC, ETH)</span><span class="font-mono">10%</span></div>
+
+    <!-- P2P -->
+    <div id="mkt-panel-p2p" class="hidden space-y-4">
+      <div class="flex gap-2">
+        <button onclick="showP2PTab('buy')" id="p2p-buy-tab" class="flex-1 text-[10px] font-bold py-2 rounded-lg bg-bull text-black">COMPRAR</button>
+        <button onclick="showP2PTab('sell')" id="p2p-sell-tab" class="flex-1 text-[10px] font-bold py-2 rounded-lg bg-panel2 border border-gray-700 text-muted">VENDER</button>
+      </div>
+      <div id="p2p-buy-panel">
+        <p class="text-[10px] text-muted font-bold tracking-widest mb-2">ANUNCIOS ACTIVOS</p>
+        <div id="p2p-listings" class="space-y-2"></div>
+      </div>
+      <div id="p2p-sell-panel" class="hidden">
+        <p class="text-[10px] text-muted font-bold tracking-widest mb-2">SELECCIONA NFT A VENDER</p>
+        <div id="p2p-my-nfts" class="grid grid-cols-2 gap-3 mb-3"></div>
+        <div id="p2p-price-section" class="hidden bg-panel2 border border-gray-700 rounded-xl p-3">
+          <p class="text-xs font-bold mb-2">Precio de venta:</p>
+          <div class="flex gap-2 items-center">
+            <input id="p2p-price-input" type="number" min="0.1" step="0.1" placeholder="0.00 USDT" class="flex-1 bg-panel border border-gray-600 rounded-lg px-3 py-2 text-sm font-mono text-white focus:border-bull outline-none"/>
+            <button onclick="listNFTForSale()" class="bg-bull text-black font-bold py-2 px-4 rounded-lg text-sm">PUBLICAR</button>
+          </div>
+        </div>
+        <div id="p2p-my-listings" class="mt-3 space-y-2"></div>
+      </div>
+    </div>
+
+    <!-- TICK EXCHANGE -->
+    <div id="mkt-panel-tick" class="hidden space-y-4">
+      <div class="bg-panel2 border border-gray-700 rounded-xl p-3 text-center">
+        <p class="text-xs text-muted">Tu saldo actual</p>
+        <p class="text-2xl font-mono font-bold text-tick mt-1" id="tick-balance-display">1000 $TICK</p>
+        <p class="text-xs text-muted">≈ <span id="tick-usdt-equiv">100</span> USDT en valor</p>
+      </div>
+      <div class="bg-panel2 border border-gray-700 rounded-xl p-3 text-xs space-y-1">
+        <p class="text-tick font-bold mb-2">💡 Precio fijo anti-inflación</p>
+        <div class="flex justify-between"><span class="text-muted">Comprar $TICK:</span><span class="text-white font-mono">1 USDT = <span class="text-bull font-bold">10 $TICK</span></span></div>
+        <div class="flex justify-between"><span class="text-muted">Vender $TICK:</span><span class="text-white font-mono">10 $TICK = <span class="text-bull font-bold">0.80 USDT</span></span></div>
+        <p class="text-muted pt-1">El 20% de comisión de venta mantiene el valor estable.</p>
+      </div>
+      <div class="bg-panel border border-gray-800 rounded-xl p-4">
+        <p class="text-xs font-bold mb-3 text-bull">COMPRAR $TICK</p>
+        <div class="flex gap-2 mb-2">
+          <input id="buy-tick-input" type="number" min="1" step="1" placeholder="USDT a gastar" class="flex-1 bg-panel2 border border-gray-600 rounded-lg px-3 py-2 text-sm font-mono text-white focus:border-bull outline-none" oninput="updateBuyPreview()"/>
+          <button onclick="buyTick()" class="bg-bull text-black font-bold py-2 px-4 rounded-lg text-sm">COMPRAR</button>
+        </div>
+        <p id="buy-tick-preview" class="text-xs text-muted font-mono">→ Recibirás 0 $TICK</p>
+      </div>
+      <div class="bg-panel border border-gray-800 rounded-xl p-4">
+        <p class="text-xs font-bold mb-3 text-bear">VENDER $TICK</p>
+        <div class="flex gap-2 mb-2">
+          <input id="sell-tick-input" type="number" min="10" step="10" placeholder="$TICK a vender" class="flex-1 bg-panel2 border border-gray-600 rounded-lg px-3 py-2 text-sm font-mono text-white focus:border-bear outline-none" oninput="updateSellPreview()"/>
+          <button onclick="sellTick()" class="bg-bear text-white font-bold py-2 px-4 rounded-lg text-sm">VENDER</button>
+        </div>
+        <p id="sell-tick-preview" class="text-xs text-muted font-mono">→ Recibirás 0.00 USDT</p>
       </div>
     </div>
   </div>
+
 </main>
 
 <!-- NAV -->
-<nav id="app-nav" class="hidden fixed bottom-0 w-full h-20 bg-panel border-t border-gray-800/80 z-50 px-2 pb-2">
+<nav id="app-nav" class="hidden fixed bottom-0 w-full h-20 bg-panel border-t border-gray-800/80 z-50 px-2 pb-2 flex-none">
   <ul class="flex justify-around items-center h-full">
-    <li onclick="showView('view-lobby')"    id="nav-lobby"   class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer"><span class="text-2xl mb-0.5">🏠</span><span class="text-[10px] font-bold">LOBBY</span></li>
+    <li onclick="showView('view-lobby')"    id="nav-lobby"    class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer"><span class="text-2xl mb-0.5">🏠</span><span class="text-[10px] font-bold">LOBBY</span></li>
     <li onclick="showView('view-barracks')" id="nav-barracks" class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer"><span class="text-2xl mb-0.5">🛡️</span><span class="text-[10px] font-bold">BARRACAS</span></li>
     <li onclick="showView('view-forge')"    id="nav-forge"    class="nav-item flex-1 flex flex-col items-center justify-center cursor-pointer" style="color:#FF3D00"><span class="text-2xl mb-0.5">🔥</span><span class="text-[10px] font-bold">FORJA</span></li>
     <li onclick="showView('view-arena')"    id="nav-arena"    class="nav-item flex-1 flex flex-col items-center justify-center cursor-pointer -translate-y-2">
@@ -307,12 +363,6 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
 </nav>
 
 <!-- MODALES -->
-<div id="modal-unbox" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4">
-  <h2 class="text-tick font-extrabold text-xl mb-4 animate-pulse">¡CAJA ABIERTA!</h2>
-  <div id="unbox-cards" class="flex flex-col items-center w-full max-w-xs gap-4"></div>
-  <button id="unbox-accept" onclick="closeModal('modal-unbox');renderBarracks()" class="mt-6 bg-panel2 border border-gray-700 text-white font-bold py-3 px-10 rounded-xl hidden">ACEPTAR →</button>
-</div>
-
 <div id="modal-nft" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4 overflow-y-auto">
   <div id="nft-detail-content" class="w-full max-w-xs"></div>
   <button onclick="closeModal('modal-nft')" class="mt-4 bg-panel2 border border-gray-700 text-white font-bold py-3 px-10 rounded-xl w-full max-w-xs">CERRAR</button>
@@ -320,77 +370,90 @@ tailwind.config={theme:{extend:{colors:{main:'#0B0E11',panel:'#181A20',panel2:'#
 
 <div id="modal-forge-select" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col p-4 overflow-y-auto">
   <div class="flex items-center justify-between mb-4">
-    <h3 class="font-bold">Selecciona NFT</h3>
+    <h3 id="forge-select-title" class="font-bold">Selecciona NFT</h3>
     <button onclick="closeModal('modal-forge-select')" class="text-muted text-2xl leading-none">×</button>
   </div>
   <div id="forge-select-grid" class="grid grid-cols-2 gap-3"></div>
 </div>
 
-<div id="modal-pack-result" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4">
-  <h2 class="text-tick font-extrabold text-xl mb-2 animate-pulse">¡PAQUETE ABIERTO!</h2>
-  <div id="pack-result-cards" class="flex flex-wrap justify-center gap-3 mb-6 max-w-sm"></div>
-  <button onclick="closeModal('modal-pack-result');renderBarracks()" class="bg-bull text-black font-bold py-3 px-10 rounded-xl">IR A BARRACAS</button>
+<div id="modal-pack-result" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center p-4 overflow-y-auto">
+  <div class="w-full max-w-md flex flex-col items-center pt-6">
+    <h2 class="text-tick font-extrabold text-xl mb-4 animate-pulse">¡PAQUETE ABIERTO!</h2>
+    <div id="pack-result-cards" class="flex flex-wrap justify-center gap-3 mb-6 w-full"></div>
+    <button onclick="closeModal('modal-pack-result');renderBarracks()" class="bg-bull text-black font-bold py-3 px-10 rounded-xl w-full max-w-xs mb-8">IR A BARRACAS →</button>
+  </div>
 </div>
 
 <script>
 // =============================================
-// MAPA DE IMÁGENES NFT
-// =============================================
-const RACE_IMAGES = {
-  'Humano':    '/nfts/humano.png',
-  'Elfo':      '/nfts/elfo.png',
-  'Enano':     '/nfts/enano.png',
-  'Orco':      '/nfts/orco.png',
-  'Goblin':    '/nfts/goblin.png',
-  'Mediano':   '/nfts/halflings.png',
-  'Gnomo':     '/nfts/gnomo.png',
-  'Dracónido': '/nfts/dragonborn.png',
-  'Tiefling':  '/nfts/tieflings.png',
-  'H.Lagarto': '/nfts/argoniano.png',
-  'Tabaxi':    '/nfts/tabaxi.png',
-  'Minotauro': '/nfts/minotauro.png',
-  'Forjado':   '/nfts/warforged.png',
-  'Cíborg':    '/nfts/ciborg.png',
-  'Alienígena':'/nfts/alien.png',
-};
-
-function raceImg(race) {
-  return RACE_IMAGES[race] || '/nfts/humano.png';
-}
-
-// =============================================
 // CONSTANTES
 // =============================================
+const RACE_IMAGES = {
+  'Humano':'/nfts/humano.png','Elfo':'/nfts/elfo.png','Enano':'/nfts/enano.png',
+  'Orco':'/nfts/orco.png','Goblin':'/nfts/goblin.png','Mediano':'/nfts/halflings.png',
+  'Gnomo':'/nfts/gnomo.png','Dracónido':'/nfts/dragonborn.png','Tiefling':'/nfts/tieflings.png',
+  'H.Lagarto':'/nfts/argoniano.png','Tabaxi':'/nfts/tabaxi.png','Minotauro':'/nfts/minotauro.png',
+  'Forjado':'/nfts/warforged.png','Cíborg':'/nfts/ciborg.png','Alienígena':'/nfts/alien.png',
+};
+function raceImg(r){return RACE_IMAGES[r]||'/nfts/humano.png';}
+
 const LINEAGES = {
-  BTC: {color:'#F7931A',tier:'Legendario',attr:'Ataque Físico'},
-  ETH: {color:'#627EEA',tier:'Legendario',attr:'Vida'},
-  SOL: {color:'#9945FF',tier:'Epico',attr:'Vel. Ataque'},
-  BNB: {color:'#F3BA2F',tier:'Epico',attr:'Defensa'},
-  XRP: {color:'#00AAE4',tier:'Epico',attr:'Prioridad'},
-  DOGE:{color:'#C2A633',tier:'Epico',attr:'Recuperación'},
-  ADA: {color:'#0033AD',tier:'Comun',attr:'Prob. Crítico'},
-  LINK:{color:'#2A5ADA',tier:'Comun',attr:'Crítico'},
-  AVAX:{color:'#E84142',tier:'Epico',attr:'Ataque Mágico'},
-  TRX: {color:'#EF0027',tier:'Comun',attr:'Def. Mágica'},
-  SHIB:{color:'#FF8C00',tier:'Comun',attr:'Reflejo'},
-  LTC: {color:'#BFBBBB',tier:'Comun',attr:'Vel. Recuperación'},
-  XMR: {color:'#FF6600',tier:'Comun',attr:'Prob. Reflejo'},
-  XAG: {color:'#C0C0C0',tier:'Comun',attr:'Prob. Bloqueo'},
-  XAU: {color:'#FFD700',tier:'Comun',attr:'Bloqueo'},
+  BTC:{color:'#F7931A',tier:'Legendario',attr:'Ataque Físico'},ETH:{color:'#627EEA',tier:'Legendario',attr:'Vida'},
+  SOL:{color:'#9945FF',tier:'Epico',attr:'Vel. Ataque'},BNB:{color:'#F3BA2F',tier:'Epico',attr:'Defensa'},
+  XRP:{color:'#00AAE4',tier:'Epico',attr:'Prioridad'},DOGE:{color:'#C2A633',tier:'Epico',attr:'Recuperación'},
+  ADA:{color:'#0033AD',tier:'Comun',attr:'Prob. Crítico'},LINK:{color:'#2A5ADA',tier:'Comun',attr:'Crítico'},
+  AVAX:{color:'#E84142',tier:'Epico',attr:'Ataque Mágico'},TRX:{color:'#EF0027',tier:'Comun',attr:'Def. Mágica'},
+  SHIB:{color:'#FF8C00',tier:'Comun',attr:'Reflejo'},LTC:{color:'#BFBBBB',tier:'Comun',attr:'Vel. Recuperación'},
+  XMR:{color:'#FF6600',tier:'Comun',attr:'Prob. Reflejo'},XAG:{color:'#C0C0C0',tier:'Comun',attr:'Prob. Bloqueo'},
+  XAU:{color:'#FFD700',tier:'Comun',attr:'Bloqueo'},
 };
-
 const RARITIES = {
-  Cobre:     {color:'#CD7F32',mult:1.0},
-  Bronce:    {color:'#CD7F32',mult:1.4},
-  Plata:     {color:'#C0C0C0',mult:1.8},
-  Oro:       {color:'#FFD700',mult:2.4},
-  Diamante:  {color:'#64C8FF',mult:3.2},
-  Legendario:{color:'#FF32FF',mult:4.5},
+  Cobre:{color:'#CD7F32',mult:1.0},Bronce:{color:'#CD7F32',mult:1.4},Plata:{color:'#C0C0C0',mult:1.8},
+  Oro:{color:'#FFD700',mult:2.4},Diamante:{color:'#64C8FF',mult:3.2},Legendario:{color:'#FF32FF',mult:4.5},
 };
-
+// XP que da cada raza sacrificada (base × nivel del NFT)
+const RARITY_XP = {Cobre:40,Bronce:90,Plata:200,Oro:420,Diamante:850,Legendario:1800};
 const RACES = ['Humano','Elfo','Enano','Orco','Goblin','Mediano','Gnomo','Dracónido','Tiefling','H.Lagarto','Tabaxi','Minotauro','Forjado','Cíborg','Alienígena'];
 const LINEAGE_KEYS = Object.keys(LINEAGES);
 const RARITY_ORDER = ['Cobre','Bronce','Plata','Oro','Diamante','Legendario'];
+const MAX_LEVEL = 50;
+const MAX_REBIRTHS = 5;
+
+// =============================================
+// XP / NIVEL SYSTEM
+// =============================================
+function xpToNextLevel(lvl) {
+  if(lvl>=MAX_LEVEL) return Infinity;
+  return Math.floor(80 * Math.pow(lvl, 1.35));
+}
+function xpFromNFT(nft) {
+  const base = RARITY_XP[nft.rarity] || 40;
+  return Math.floor(base * Math.max(1, nft.level * 0.6));
+}
+function getStats(nft) {
+  const rMult = RARITIES[nft.rarity]?.mult || 1;
+  const lMult = 1 + (nft.level - 1) * 0.07;
+  const rebBonus = 1 + (nft.rebirths || 0) * 0.20;
+  const m = rMult * lMult * rebBonus;
+  return {
+    hp:  Math.round((nft.baseHp  || 500) * m),
+    atq: Math.round((nft.baseAtq || 95)  * m),
+    def: nft.level >= 10 ? Math.round((nft.baseDef || 45) * m) : 0,
+    vel: nft.level >= 25 ? Math.round((nft.baseVel || 30) * m) : 0,
+  };
+}
+function addXP(nft, xpGained) {
+  // Returns {levelsGained, leveledUp}
+  let leveled = 0;
+  nft.xp += xpGained;
+  while(nft.level < MAX_LEVEL && nft.xp >= xpToNextLevel(nft.level)) {
+    nft.xp -= xpToNextLevel(nft.level);
+    nft.level++;
+    leveled++;
+  }
+  if(nft.level >= MAX_LEVEL) nft.xp = 0;
+  return leveled;
+}
 
 // =============================================
 // GAME STATE
@@ -399,51 +462,84 @@ const PLAYER = {
   tick:1000, usdt:500, trophies:1250,
   wins:1, losses:1,
   battleHistory:[
-    {result:'WIN', rival:'Orco/ETH',      rarity:'Cobre',  reward:'+8 $TICK'},
-    {result:'LOSS',rival:'Dracónido/BTC', rarity:'Bronce', reward:''},
+    {result:'WIN',rival:'Orco/ETH',rarity:'Cobre',reward:'+8 $TICK'},
+    {result:'LOSS',rival:'Dracónido/BTC',rarity:'Bronce',reward:''},
   ]
 };
 
 let inventory = [
-  {id:1,race:'Orco',      lineage:'BTC', rarity:'Legendario',level:3,xp:95, hp:2800,atq:320,def:180,vel:85},
-  {id:2,race:'Elfo',      lineage:'SOL', rarity:'Oro',       level:3,xp:80, hp:1600,atq:240,def:195,vel:140},
-  {id:3,race:'Dracónido', lineage:'ETH', rarity:'Plata',     level:2,xp:60, hp:980, atq:185,def:120,vel:0},
-  {id:4,race:'Minotauro', lineage:'BNB', rarity:'Bronce',    level:3,xp:40, hp:780, atq:155,def:90, vel:60},
-  {id:5,race:'Forjado',   lineage:'LINK',rarity:'Cobre',     level:1,xp:5,  hp:500, atq:95, def:0,  vel:0},
-  {id:6,race:'Tabaxi',    lineage:'DOGE',rarity:'Cobre',     level:1,xp:0,  hp:500, atq:90, def:0,  vel:0},
+  {id:1,race:'Orco',     lineage:'BTC', rarity:'Legendario',level:42,xp:650, rebirths:1,baseHp:500,baseAtq:95,baseDef:45,baseVel:30},
+  {id:2,race:'Elfo',     lineage:'SOL', rarity:'Oro',       level:28,xp:200, rebirths:0,baseHp:500,baseAtq:95,baseDef:45,baseVel:30},
+  {id:3,race:'Dracónido',lineage:'ETH', rarity:'Plata',     level:15,xp:80,  rebirths:0,baseHp:500,baseAtq:95,baseDef:45,baseVel:30},
+  {id:4,race:'Minotauro',lineage:'BNB', rarity:'Bronce',    level:8, xp:120, rebirths:0,baseHp:500,baseAtq:95,baseDef:45,baseVel:30},
+  {id:5,race:'Forjado',  lineage:'LINK',rarity:'Cobre',     level:1, xp:0,   rebirths:0,baseHp:500,baseAtq:95,baseDef:45,baseVel:30},
+  {id:6,race:'Tabaxi',   lineage:'DOGE',rarity:'Cobre',     level:1, xp:0,   rebirths:0,baseHp:500,baseAtq:95,baseDef:45,baseVel:30},
 ];
 let nextId = 7;
-let forgeSlots = {main:null, s1:null, s2:null, s3:null};
+
+// Forja state
+let forgeSlots = {main:null,s1:null,s2:null,s3:null};
+let forgeMode = 'asc'; // 'asc' | 'lvl' | 'ren'
+let lvlSlots = {'lvl-main':null,'lvl-f1':null,'lvl-f2':null,'lvl-f3':null,'lvl-f4':null};
+let renSlots = {'ren-main':null,'ren-sac':null};
+let forgeSelectSlot = null;
+
 let currentRarityFilter = 'all';
 let selectedFighter = null;
 let battleState = null;
+let battleTimer = null;
+let selectedP2PNFT = null;
+
+// Mercado P2P
+let playerListings = []; // {id, nft, price}
+let p2pListings = generateSimulatedListings();
+
+function generateSimulatedListings() {
+  const sellers = ['DarkOrco_88','CryptoWarrior','NightElf_Sol','GoblinKing','ForgedOne'];
+  const r = [];
+  for(let i=0;i<8;i++){
+    const race=RACES[Math.floor(Math.random()*RACES.length)];
+    const lineage=LINEAGE_KEYS[Math.floor(Math.random()*LINEAGE_KEYS.length)];
+    const rar=RARITY_ORDER[Math.floor(Math.random()*4)];
+    const lvl=Math.floor(Math.random()*30)+5;
+    const basePrice={Cobre:1.5,Bronce:3.5,Plata:8,Oro:20,Diamante:55,Legendario:150}[rar]||2;
+    const price=+(basePrice*(0.8+Math.random()*0.8)).toFixed(2);
+    r.push({id:'sim'+i,seller:sellers[Math.floor(Math.random()*sellers.length)],
+      nft:{id:'sim'+i,race,lineage,rarity:rar,level:lvl,xp:0,rebirths:0,baseHp:500,baseAtq:95,baseDef:45,baseVel:30},price});
+  }
+  return r;
+}
 
 // =============================================
 // NFT CARD
 // =============================================
 function nftCard(nft, opts={}) {
-  const lg = LINEAGES[nft.lineage] || LINEAGES.BTC;
-  const rr = RARITIES[nft.rarity]  || RARITIES.Cobre;
+  const lg = LINEAGES[nft.lineage]||LINEAGES.BTC;
+  const rr = RARITIES[nft.rarity]||RARITIES.Cobre;
   const img = raceImg(nft.race);
+  const isLegLine = nft.lineage==='BTC'||nft.lineage==='ETH';
   const onclick = opts.onclick ? `onclick="${opts.onclick}"` : '';
-  const extraClass = opts.extraClass || '';
+  const s = getStats(nft);
+  const xpPct = nft.level>=MAX_LEVEL ? 100 : Math.round(nft.xp/xpToNextLevel(nft.level)*100);
   return `
-    <div ${onclick} class="bg-panel border-2 rarity-${nft.rarity} rounded-xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform ${extraClass}">
+    <div ${onclick} class="bg-panel border-2 rarity-${nft.rarity} rounded-xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform ${opts.extraClass||''}">
       <div class="relative">
         <img src="${img}" class="nft-img" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231E2329%22/><text y=%2250%25%22 x=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2228%22>⚔️</text></svg>'"/>
-        <div class="absolute top-1 left-1 rounded px-1.5 py-0.5 text-[8px] font-mono font-bold ${(nft.lineage==='BTC'||nft.lineage==='ETH')?'lineage-leg':''}" style="background:#0B0E11CC;color:${(nft.lineage==='BTC'||nft.lineage==='ETH')?'#FFD700':lg.color}">${nft.lineage}${(nft.lineage==='BTC'||nft.lineage==='ETH')?' ★':''}</div>
-        <div class="absolute top-1 right-1 rounded px-1.5 py-0.5 text-[8px] font-mono font-bold" style="background:#0B0E11CC;color:${rr.color}">LVL ${nft.level}</div>
-        ${nft.level>=3?'<div class="absolute bottom-1 right-1 bg-bull text-black text-[7px] font-bold px-1 rounded">TORNEO ✓</div>':''}
+        <div class="absolute top-1 left-1 rounded px-1.5 py-0.5 text-[8px] font-mono font-bold ${isLegLine?'lineage-leg':''}" style="background:#0B0E11CC;color:${isLegLine?'#FFD700':lg.color}">${nft.lineage}${isLegLine?' ★':''}</div>
+        <div class="absolute top-1 right-1 rounded px-1.5 py-0.5 text-[8px] font-mono font-bold" style="background:#0B0E11CC;color:${rr.color}">Lv${nft.level}</div>
+        ${nft.rebirths?`<div class="absolute bottom-1 left-1 bg-purple-900/80 text-purple-300 text-[7px] font-bold px-1 rounded">🔄×${nft.rebirths}</div>`:''}
+        ${nft.level>=25?'<div class="absolute bottom-1 right-1 bg-bull text-black text-[7px] font-bold px-1 rounded">TORNEO ✓</div>':''}
       </div>
       <div class="p-2">
         <div class="flex justify-between items-center mb-1">
           <span class="text-[11px] font-bold text-white truncate">${nft.race}</span>
           <span class="text-[8px] font-mono font-bold flex-none ml-1" style="color:${rr.color}">${nft.rarity.slice(0,4).toUpperCase()}</span>
         </div>
+        <div class="xp-bar mb-1.5"><div class="xp-fill" style="width:${xpPct}%"></div></div>
         <div class="space-y-0.5">
-          <div class="flex justify-between text-[9px]"><span class="text-bear">ATQ</span><span class="font-mono">${nft.atq}</span></div>
-          ${nft.level>=2?`<div class="flex justify-between text-[9px]"><span class="text-bull">DEF</span><span class="font-mono">${nft.def}</span></div>`:''}
-          ${nft.level>=3?`<div class="flex justify-between text-[9px]"><span class="text-tick">VEL</span><span class="font-mono">${nft.vel}</span></div>`:''}
+          <div class="flex justify-between text-[9px]"><span class="text-bear">ATQ</span><span class="font-mono">${s.atq.toLocaleString()}</span></div>
+          ${nft.level>=10?`<div class="flex justify-between text-[9px]"><span class="text-bull">DEF</span><span class="font-mono">${s.def.toLocaleString()}</span></div>`:''}
+          ${nft.level>=25?`<div class="flex justify-between text-[9px]"><span class="text-tick">VEL</span><span class="font-mono">${s.vel.toLocaleString()}</span></div>`:''}
         </div>
       </div>
     </div>`;
@@ -456,18 +552,15 @@ function showView(id) {
   ['view-login','view-lobby','view-barracks','view-forge','view-arena','view-market'].forEach(v=>{
     document.getElementById(v)?.classList.add('hidden');
   });
-  const el=document.getElementById(id);
-  if(el){el.classList.remove('hidden');el.classList.add('view');}
-  const navMap={'view-lobby':'nav-lobby','view-barracks':'nav-barracks','view-forge':'nav-forge','view-arena':'nav-arena','view-market':'nav-market'};
+  document.getElementById(id)?.classList.remove('hidden');
   document.querySelectorAll('.nav-item').forEach(n=>n.style.color='');
-  if(navMap[id]&&id!=='view-arena'){
-    const nav=document.getElementById(navMap[id]);
-    if(nav) nav.style.color='#00C853';
-  }
+  const map={'view-lobby':'nav-lobby','view-barracks':'nav-barracks','view-forge':'nav-forge','view-arena':'nav-arena','view-market':'nav-market'};
+  if(map[id]&&id!=='view-arena') document.getElementById(map[id]).style.color='#00C853';
   if(id==='view-barracks') renderBarracks();
   if(id==='view-lobby')    renderLobby();
   if(id==='view-arena')    renderArenaSelect();
-  if(id==='view-forge')    resetForge();
+  if(id==='view-forge')    resetAllForge();
+  if(id==='view-market')   renderMarket();
 }
 
 // =============================================
@@ -479,11 +572,10 @@ function connectWallet() {
   updateHeader();
   showView('view-lobby');
 }
-
 function updateHeader() {
-  document.getElementById('hdr-tick').textContent   = PLAYER.tick+' $TICK';
-  document.getElementById('hdr-usdt').textContent   = PLAYER.usdt+' USDT';
-  document.getElementById('hdr-trophies').textContent = '🏆 '+PLAYER.trophies.toLocaleString();
+  document.getElementById('hdr-tick').textContent    = PLAYER.tick.toLocaleString()+' $TICK';
+  document.getElementById('hdr-usdt').textContent    = PLAYER.usdt.toLocaleString()+' USDT';
+  document.getElementById('hdr-trophies').textContent= '🏆 '+PLAYER.trophies.toLocaleString();
   document.getElementById('hdr-avatar-img').src = raceImg(inventory[0]?.race||'Humano');
 }
 
@@ -491,14 +583,14 @@ function updateHeader() {
 // LOBBY
 // =============================================
 function renderLobby() {
-  document.getElementById('lobby-tick').textContent     = PLAYER.tick+' $TICK';
-  document.getElementById('lobby-usdt').textContent     = PLAYER.usdt+' USDT';
+  document.getElementById('lobby-tick').textContent     = PLAYER.tick.toLocaleString()+' $TICK';
+  document.getElementById('lobby-usdt').textContent     = PLAYER.usdt.toLocaleString()+' USDT';
   document.getElementById('lobby-trophies').textContent = PLAYER.trophies.toLocaleString();
   document.getElementById('lobby-avatar-img').src = raceImg(inventory[0]?.race||'Humano');
   document.getElementById('lobby-history').innerHTML = PLAYER.battleHistory.map(b=>`
     <div class="flex items-center justify-between text-xs">
       <span class="${b.result==='WIN'?'text-bull':'text-bear'} font-bold font-mono">${b.result==='WIN'?'✓ WIN':'✗ LOSS'}</span>
-      <span class="text-muted">vs ${b.rival} (${b.rarity})</span>
+      <span class="text-muted">vs ${b.rival}</span>
       <span class="text-tick font-mono">${b.reward||'-'}</span>
     </div>`).join('');
 }
@@ -511,100 +603,146 @@ function renderBarracks() {
   document.getElementById('barracks-count').textContent = list.length+'/'+inventory.length+' NFTs';
   document.getElementById('barracks-grid').innerHTML = list.map(n=>nftCard(n,{onclick:`openNFTDetail(${n.id})`})).join('');
 }
-
 function filterRarity(r) {
   currentRarityFilter=r;
-  document.querySelectorAll('.filter-btn').forEach(b=>{
-    b.classList.remove('bg-bull','text-black');
-    b.classList.add('bg-panel2','border','border-gray-700','text-muted');
-  });
+  document.querySelectorAll('.filter-btn').forEach(b=>{b.classList.remove('bg-bull','text-black');b.classList.add('bg-panel2','border','border-gray-700','text-muted');});
   const btn=document.getElementById('filter-'+r);
   if(btn){btn.classList.add('bg-bull','text-black');btn.classList.remove('bg-panel2','border','border-gray-700','text-muted');}
   renderBarracks();
 }
-
 function openNFTDetail(id) {
   const nft=inventory.find(n=>n.id===id); if(!nft) return;
-  const lg=LINEAGES[nft.lineage]||LINEAGES.BTC;
-  const rr=RARITIES[nft.rarity]||RARITIES.Cobre;
+  const lg=LINEAGES[nft.lineage]||LINEAGES.BTC, rr=RARITIES[nft.rarity]||RARITIES.Cobre;
+  const s=getStats(nft);
+  const xpNeed=nft.level>=MAX_LEVEL?'MAX':xpToNextLevel(nft.level);
+  const xpPct=nft.level>=MAX_LEVEL?100:Math.round(nft.xp/xpToNextLevel(nft.level)*100);
   document.getElementById('nft-detail-content').innerHTML=`
     <div class="border-2 rounded-xl overflow-hidden mb-3" style="border-color:${rr.color}">
-      <img src="${raceImg(nft.race)}" class="w-full object-cover" style="max-height:240px"/>
+      <img src="${raceImg(nft.race)}" class="w-full object-cover" style="max-height:220px"/>
     </div>
-    <div class="bg-panel2 rounded-xl p-3 space-y-2 mb-3">
+    <div class="bg-panel2 rounded-xl p-3 space-y-1.5 mb-3">
       <div class="flex justify-between"><span class="text-xs text-muted">Raza</span><span class="text-xs font-bold">${nft.race}</span></div>
       <div class="flex justify-between"><span class="text-xs text-muted">Linaje</span><span class="text-xs font-bold" style="color:${lg.color}">${nft.lineage} — ${lg.attr}</span></div>
       <div class="flex justify-between"><span class="text-xs text-muted">Rareza</span><span class="text-xs font-bold" style="color:${rr.color}">${nft.rarity}</span></div>
-      <div class="flex justify-between"><span class="text-xs text-muted">Nivel</span><span class="text-xs font-bold">${nft.level} / 3</span></div>
-      <div class="flex justify-between"><span class="text-xs text-muted">XP</span><span class="text-xs font-mono">${nft.xp} / 100</span></div>
+      <div class="flex justify-between"><span class="text-xs text-muted">Nivel</span><span class="text-xs font-bold">${nft.level} / ${MAX_LEVEL} ${nft.rebirths?`· 🔄×${nft.rebirths}`:''}</span></div>
+      <div><div class="flex justify-between text-xs mb-1"><span class="text-muted">XP</span><span class="font-mono">${nft.xp} / ${xpNeed}</span></div><div class="xp-bar"><div class="xp-fill" style="width:${xpPct}%"></div></div></div>
     </div>
-    <div class="bg-panel2 rounded-xl p-3 space-y-2">
-      <p class="text-[10px] text-muted font-bold tracking-widest mb-1">ATRIBUTOS</p>
-      ${sbar('HP', nft.hp,300,'#00C853')}
-      ${sbar('ATQ',nft.atq,100,'#FF3D00')}
-      ${nft.level>=2?sbar('DEF',nft.def,80,'#00C853'):'<p class="text-[10px] text-muted">🔒 DEF — Requiere Lvl 2</p>'}
-      ${nft.level>=3?sbar('VEL',nft.vel,50,'#FFD700'):'<p class="text-[10px] text-muted">🔒 VEL — Requiere Lvl 3</p>'}
+    <div class="bg-panel2 rounded-xl p-3 space-y-1.5">
+      <p class="text-[10px] text-muted font-bold tracking-widest mb-1">STATS ACTUALES</p>
+      ${sbar('HP', s.hp,15000,'#00C853')}
+      ${sbar('ATQ',s.atq,5000,'#FF3D00')}
+      ${nft.level>=10?sbar('DEF',s.def,3000,'#00C853'):'<p class="text-[10px] text-muted">🔒 DEF — Requiere Lv10</p>'}
+      ${nft.level>=25?sbar('VEL',s.vel,2000,'#FFD700'):'<p class="text-[10px] text-muted">🔒 VEL — Requiere Lv25</p>'}
     </div>`;
   openModal('modal-nft');
 }
-
 function sbar(label,val,max,color){
   const pct=Math.min(100,Math.round(val/max*100));
-  return `<div class="flex items-center gap-2"><span class="text-[10px] w-8 text-muted">${label}</span><div class="flex-1 h-1.5 bg-gray-800 rounded"><div class="h-full rounded" style="width:${pct}%;background:${color}"></div></div><span class="text-[10px] font-mono w-8 text-right">${val}</span></div>`;
+  return `<div class="flex items-center gap-2"><span class="text-[10px] w-8 text-muted">${label}</span><div class="flex-1 h-1.5 bg-gray-800 rounded"><div class="h-full rounded" style="width:${pct}%;background:${color}"></div></div><span class="text-[9px] font-mono w-10 text-right">${val.toLocaleString()}</span></div>`;
 }
 
 // =============================================
-// FORJA
+// FORJA — GENERAL
 // =============================================
-function resetForge() {
+function switchForgeTab(tab) {
+  forgeMode=tab;
+  ['asc','lvl','ren'].forEach(t=>{
+    document.getElementById('forge-panel-'+t)?.classList.add('hidden');
+    const btn=document.getElementById('forge-tab-'+t);
+    if(btn){btn.classList.remove('tab-active');btn.classList.add('text-muted');}
+  });
+  document.getElementById('forge-panel-'+tab)?.classList.remove('hidden');
+  const activeBtn=document.getElementById('forge-tab-'+tab);
+  if(activeBtn){activeBtn.classList.add('tab-active');activeBtn.classList.remove('text-muted');}
+  resetAllForge();
+}
+
+function resetAllForge() {
+  // Reset Ascender
   forgeSlots={main:null,s1:null,s2:null,s3:null};
   ['main','s1','s2','s3'].forEach(s=>{
-    const el=document.getElementById('forge-'+s);
-    if(el) el.innerHTML=s==='main'?'<span class="text-gray-500 text-4xl">+</span>':'<span class="text-gray-600 text-2xl">+</span>';
+    const el=document.getElementById('forge-'+s); if(!el) return;
+    el.innerHTML=s==='main'?'<span class="text-gray-500 text-3xl">+</span>':'<span class="text-gray-600 text-xl">+</span>';
+    el.style.borderColor=''; el.style.borderStyle='dashed';
   });
-  document.getElementById('forge-preview').classList.add('hidden');
-  document.getElementById('forge-cost').classList.add('hidden');
-  const btn=document.getElementById('forge-btn');
-  btn.disabled=true; btn.classList.add('opacity-40','cursor-not-allowed');
+  document.getElementById('forge-preview')?.classList.add('hidden');
+  document.getElementById('forge-cost')?.classList.add('hidden');
+  const fb=document.getElementById('forge-btn');
+  if(fb){fb.disabled=true;fb.classList.add('opacity-40','cursor-not-allowed');}
+  // Reset Level
+  lvlSlots={'lvl-main':null,'lvl-f1':null,'lvl-f2':null,'lvl-f3':null,'lvl-f4':null};
+  ['lvl-main','lvl-f1','lvl-f2','lvl-f3','lvl-f4'].forEach(s=>{
+    const el=document.getElementById(s); if(!el) return;
+    el.innerHTML=s==='lvl-main'?'<span class="text-gray-500 text-3xl">+</span>':'<span class="text-gray-600 text-lg">+</span>';
+    el.style.borderColor=''; el.style.borderStyle='dashed';
+  });
+  document.getElementById('lvl-main-info')?.classList.add('hidden');
+  document.getElementById('lvl-preview')?.classList.add('hidden');
+  const lb=document.getElementById('lvl-btn');
+  if(lb){lb.disabled=true;lb.classList.add('opacity-40','cursor-not-allowed');}
+  // Reset Renacimiento
+  renSlots={'ren-main':null,'ren-sac':null};
+  ['ren-main','ren-sac'].forEach(s=>{
+    const el=document.getElementById(s); if(!el) return;
+    el.innerHTML='<span class="text-gray-500 text-3xl">+</span>';
+    el.style.borderColor=''; el.style.borderStyle='dashed';
+  });
+  document.getElementById('ren-preview')?.classList.add('hidden');
+  const rb=document.getElementById('ren-btn');
+  if(rb){rb.disabled=true;rb.classList.add('opacity-40','cursor-not-allowed');}
 }
 
-let forgeSelectTarget=null;
-function openForgeSelect(slot) {
-  forgeSelectTarget=slot;
-  document.getElementById('forge-select-grid').innerHTML=inventory.map(n=>nftCard(n,{onclick:`selectForgeNFT(${n.id})`})).join('');
+// ABRIR MODAL SELECCIÓN
+function openForgeSelect(slot, mode) {
+  forgeSelectSlot=slot;
+  document.getElementById('forge-select-title').textContent = mode==='ren'&&slot==='ren-sac' ? 'Selecciona Sacrificio (LVL 50)' :
+    mode==='ren' ? 'Selecciona NFT (LVL 50)' : mode==='lvl'&&slot==='lvl-main' ? 'NFT a subir de nivel' : 'Selecciona NFT';
+  // Filter inventory
+  let eligible = inventory;
+  if(mode==='ren') eligible = inventory.filter(n=>n.level>=MAX_LEVEL);
+  if(mode==='ren'&&slot==='ren-sac'&&renSlots['ren-main']){
+    const main=renSlots['ren-main'];
+    eligible=eligible.filter(n=>n.id!==main.id&&n.race===main.race&&n.lineage===main.lineage&&n.level>=MAX_LEVEL);
+  }
+  document.getElementById('forge-select-grid').innerHTML = eligible.length === 0
+    ? '<p class="text-muted text-sm col-span-2 text-center py-8">No hay NFTs elegibles</p>'
+    : eligible.map(n=>nftCard(n,{onclick:`selectForgeSlot(${n.id})`})).join('');
   openModal('modal-forge-select');
 }
 
-function selectForgeNFT(id) {
+function selectForgeSlot(id) {
   const nft=inventory.find(n=>n.id===id); if(!nft) return;
-  forgeSlots[forgeSelectTarget]=nft;
-  const el=document.getElementById('forge-'+forgeSelectTarget);
+  closeModal('modal-forge-select');
+  const mode=forgeMode, slot=forgeSelectSlot;
+  const el=document.getElementById(slot); if(!el) return;
   el.innerHTML=`<img src="${raceImg(nft.race)}" class="w-full h-full object-cover rounded-xl"/>`;
   const rr=RARITIES[nft.rarity]||RARITIES.Cobre;
   el.style.borderColor=rr.color; el.style.borderStyle='solid';
-  closeModal('modal-forge-select');
-  checkForgeReady();
+  if(mode==='asc') { forgeSlots[slot]=nft; checkForgeAscReady(); }
+  else if(mode==='lvl') { lvlSlots[slot]=nft; checkForgeLvlReady(); }
+  else if(mode==='ren') { renSlots[slot]=nft; checkForgeRenReady(); }
 }
 
-function checkForgeReady() {
+// ASCENDER — validación
+function checkForgeAscReady() {
   const {main,s1,s2,s3}=forgeSlots;
   if(!main||!s1||!s2||!s3) return;
-  const btn=document.getElementById('forge-btn');
   const ok=s1.race===main.race&&s2.race===main.race&&s3.race===main.race&&
             s1.lineage===main.lineage&&s2.lineage===main.lineage&&s3.lineage===main.lineage&&
             s1.rarity===main.rarity&&s2.rarity===main.rarity&&s3.rarity===main.rarity;
   const nextRarity=RARITY_ORDER[RARITY_ORDER.indexOf(main.rarity)+1];
   document.getElementById('forge-preview').classList.remove('hidden');
   document.getElementById('forge-cost').classList.remove('hidden');
+  const rt=document.getElementById('forge-result-text');
+  const btn=document.getElementById('forge-btn');
   if(ok&&nextRarity){
-    document.getElementById('forge-result-text').innerHTML=`<span style="color:${RARITIES[nextRarity].color}">${main.race}/${main.lineage} ${nextRarity.toUpperCase()}</span>`;
+    rt.innerHTML=`<span style="color:${RARITIES[nextRarity].color}">${main.race}/${main.lineage} → ${nextRarity.toUpperCase()}</span>`;
     btn.disabled=false; btn.classList.remove('opacity-40','cursor-not-allowed');
   } else {
-    document.getElementById('forge-result-text').innerHTML='<span class="text-bear">⚠ Los 4 NFTs deben ser idénticos</span>';
+    rt.innerHTML='<span class="text-bear">⚠ Los 4 NFTs deben ser idénticos</span>';
     btn.disabled=true; btn.classList.add('opacity-40','cursor-not-allowed');
   }
 }
-
 function executeForge() {
   if(PLAYER.tick<50){alert('Necesitas 50 $TICK');return;}
   const {main,s1,s2,s3}=forgeSlots;
@@ -612,9 +750,80 @@ function executeForge() {
   PLAYER.tick-=50;
   inventory=inventory.filter(n=>n.id!==s1.id&&n.id!==s2.id&&n.id!==s3.id);
   const t=inventory.find(n=>n.id===main.id);
-  if(t){t.rarity=nextRarity;t.hp=Math.round(t.hp*1.3);t.atq=Math.round(t.atq*1.2);t.def=Math.round(t.def*1.2);}
-  updateHeader(); resetForge();
+  if(t) t.rarity=nextRarity;
+  updateHeader(); resetAllForge();
   alert(`🔥 ¡FUSIÓN EXITOSA!\n${main.race}/${main.lineage} → ${nextRarity.toUpperCase()}\n−50 $TICK`);
+  showView('view-barracks');
+}
+
+// NIVEL — validación y ejecución
+function checkForgeLvlReady() {
+  const mainNFT=lvlSlots['lvl-main'];
+  const foods=['lvl-f1','lvl-f2','lvl-f3','lvl-f4'].map(k=>lvlSlots[k]).filter(Boolean);
+  if(!mainNFT||foods.length===0){document.getElementById('lvl-preview').classList.add('hidden');return;}
+  if(mainNFT.level>=MAX_LEVEL){
+    document.getElementById('lvl-preview').classList.remove('hidden');
+    document.getElementById('lvl-preview-text').innerHTML='<span class="text-tick">Nivel máximo alcanzado (50). Usa Renacimiento.</span>';
+    return;
+  }
+  const totalXP=foods.reduce((a,n)=>a+xpFromNFT(n),0);
+  let simLevel=mainNFT.level, simXP=mainNFT.xp+totalXP, levelsGained=0;
+  while(simLevel<MAX_LEVEL&&simXP>=xpToNextLevel(simLevel)){simXP-=xpToNextLevel(simLevel);simLevel++;levelsGained++;}
+  const info=document.getElementById('lvl-main-info');
+  info.innerHTML=`<p class="text-[10px] font-mono text-muted">Lv${mainNFT.level} · ${mainNFT.xp}/${xpToNextLevel(mainNFT.level)} XP</p>`;
+  info.classList.remove('hidden');
+  document.getElementById('lvl-preview').classList.remove('hidden');
+  document.getElementById('lvl-preview-text').innerHTML=`
+    <div class="flex justify-between"><span class="text-muted">XP que recibirá:</span><span class="text-purple-400 font-bold">+${totalXP.toLocaleString()} XP</span></div>
+    <div class="flex justify-between"><span class="text-muted">Niveles ganados:</span><span class="${levelsGained>0?'text-bull':'text-muted'} font-bold">+${levelsGained} ${levelsGained>0?'🎉':''}</span></div>
+    <div class="flex justify-between"><span class="text-muted">Nivel final:</span><span class="text-white font-bold">Lv ${simLevel}</span></div>`;
+  const btn=document.getElementById('lvl-btn');
+  btn.disabled=false; btn.classList.remove('opacity-40','cursor-not-allowed');
+}
+function executeFeed() {
+  const mainNFT=lvlSlots['lvl-main'];
+  const foods=['lvl-f1','lvl-f2','lvl-f3','lvl-f4'].map(k=>lvlSlots[k]).filter(Boolean);
+  if(!mainNFT||foods.length===0) return;
+  const totalXP=foods.reduce((a,n)=>a+xpFromNFT(n),0);
+  const foodIds=foods.map(f=>f.id);
+  inventory=inventory.filter(n=>!foodIds.includes(n.id));
+  const target=inventory.find(n=>n.id===mainNFT.id);
+  if(target){
+    const levelsGained=addXP(target,totalXP);
+    alert(`⬆ ¡NIVEL SUBIDO!\n${target.race}/${target.lineage}\n+${totalXP.toLocaleString()} XP · ${levelsGained>0?'+'+levelsGained+' nivel(es)':'XP acumulado'}\nNivel actual: ${target.level}`);
+  }
+  updateHeader(); resetAllForge(); showView('view-barracks');
+}
+
+// RENACIMIENTO — validación y ejecución
+function checkForgeRenReady() {
+  const {main,sac}={'main':renSlots['ren-main'],'sac':renSlots['ren-sac']};
+  const btn=document.getElementById('ren-btn');
+  const prev=document.getElementById('ren-preview');
+  if(!main||!sac){prev.classList.add('hidden');btn.disabled=true;btn.classList.add('opacity-40','cursor-not-allowed');return;}
+  const valid=main.level>=MAX_LEVEL&&sac.level>=MAX_LEVEL&&main.race===sac.race&&main.lineage===sac.lineage&&main.id!==sac.id;
+  prev.classList.remove('hidden');
+  const rebirthsAfter=(main.rebirths||0)+1;
+  if(valid&&rebirthsAfter<=MAX_REBIRTHS){
+    document.getElementById('ren-preview-text').innerHTML=`${main.race}/${main.lineage} renacerá al Lv1 con +${rebirthsAfter*20}% stats permanente`;
+    btn.disabled=false; btn.classList.remove('opacity-40','cursor-not-allowed');
+  } else if(rebirthsAfter>MAX_REBIRTHS){
+    document.getElementById('ren-preview-text').innerHTML=`<span class="text-bear">Máximo de renacimientos (${MAX_REBIRTHS}) alcanzado</span>`;
+    btn.disabled=true; btn.classList.add('opacity-40','cursor-not-allowed');
+  } else {
+    document.getElementById('ren-preview-text').innerHTML='<span class="text-bear">⚠ Se requieren dos NFTs idénticos al Lv50</span>';
+    btn.disabled=true; btn.classList.add('opacity-40','cursor-not-allowed');
+  }
+}
+function executeRebirth() {
+  if(PLAYER.tick<100){alert('Necesitas 100 $TICK');return;}
+  const main=renSlots['ren-main'], sac=renSlots['ren-sac'];
+  PLAYER.tick-=100;
+  inventory=inventory.filter(n=>n.id!==sac.id);
+  const target=inventory.find(n=>n.id===main.id);
+  if(target){target.level=1;target.xp=0;target.rebirths=(target.rebirths||0)+1;}
+  updateHeader(); resetAllForge();
+  alert(`🔄 ¡RENACIMIENTO COMPLETADO!\n${main.race}/${main.lineage} volvió al Lv1\n+${target.rebirths*20}% stats permanente\n−100 $TICK`);
   showView('view-barracks');
 }
 
@@ -623,20 +832,21 @@ function executeForge() {
 // =============================================
 function renderArenaSelect() {
   selectedFighter=null;
-  document.getElementById('arena-select').classList.remove('hidden');
-  document.getElementById('arena-battle').classList.add('hidden');
-  document.getElementById('arena-result').classList.add('hidden');
+  ['arena-select','arena-battle','arena-result'].forEach((id,i)=>
+    document.getElementById(id)?.classList[i===0?'remove':'add']('hidden'));
   const btn=document.getElementById('arena-fight-btn');
   btn.disabled=true; btn.classList.add('opacity-40','cursor-not-allowed');
   document.getElementById('arena-fighter-grid').innerHTML=inventory.map(nft=>{
     const rr=RARITIES[nft.rarity]||RARITIES.Cobre;
+    const s=getStats(nft);
     return `<div id="arena-card-${nft.id}" onclick="selectFighter(${nft.id})" class="bg-panel border-2 rounded-xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform" style="border-color:${rr.color}">
       <img src="${raceImg(nft.race)}" class="nft-img"/>
-      <div class="p-1.5 text-center"><p class="text-[10px] font-bold">${nft.race}</p><p class="text-[9px] font-mono text-muted">Lvl ${nft.level} · ${nft.rarity}</p></div>
+      <div class="p-1.5 text-center"><p class="text-[10px] font-bold">${nft.race}</p>
+      <p class="text-[9px] font-mono text-muted">Lv${nft.level} · ${nft.rarity}</p>
+      <p class="text-[9px] font-mono text-bear">ATQ ${s.atq.toLocaleString()}</p></div>
     </div>`;
   }).join('');
 }
-
 function selectFighter(id) {
   selectedFighter=inventory.find(n=>n.id===id);
   document.querySelectorAll('[id^="arena-card-"]').forEach(el=>{el.style.borderColor='';el.style.boxShadow='';});
@@ -645,59 +855,52 @@ function selectFighter(id) {
   const btn=document.getElementById('arena-fight-btn');
   btn.disabled=false; btn.classList.remove('opacity-40','cursor-not-allowed');
 }
-
-let battleTimer = null;
-
 function startBattle() {
   if(!selectedFighter) return;
   const oppRace=RACES.filter(r=>r!==selectedFighter.race)[Math.floor(Math.random()*(RACES.length-1))];
   const oppLineage=LINEAGE_KEYS[Math.floor(Math.random()*LINEAGE_KEYS.length)];
   const rarities=['Cobre','Cobre','Bronce','Bronce','Plata','Plata'];
   const oppRarity=rarities[Math.floor(Math.random()*rarities.length)];
+  const oppLevel=Math.max(1,selectedFighter.level+Math.floor(Math.random()*10)-4);
   const mult=RARITIES[oppRarity]?.mult||1;
-  const opp={id:999,race:oppRace,lineage:oppLineage,rarity:oppRarity,level:selectedFighter.level,
-    hp:  Math.round((420+Math.random()*280)*mult),
-    atq: Math.round((80 +Math.random()*40) *mult),
-    def: Math.round((40 +Math.random()*30) *mult),
-    vel: Math.round(10+Math.random()*40)};
-  battleState={p1:{...selectedFighter,curHp:selectedFighter.hp},p2:{...opp,curHp:opp.hp},round:0,done:false};
+  const lvlM=1+(oppLevel-1)*0.07;
+  const opp={id:999,race:oppRace,lineage:oppLineage,rarity:oppRarity,level:oppLevel,
+    xp:0,rebirths:0,baseHp:500,baseAtq:95,baseDef:45,baseVel:30};
+  const s1=getStats(selectedFighter), s2=getStats(opp);
+  battleState={p1:{...selectedFighter,curHp:s1.hp,maxHp:s1.hp,stats:s1},
+               p2:{...opp,curHp:s2.hp,maxHp:s2.hp,stats:s2},round:0,done:false};
   document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(selectedFighter.race)}" class="w-full h-full object-cover"/>`;
   document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(opp.race)}" class="w-full h-full object-cover"/>`;
   document.getElementById('p1-name').textContent=selectedFighter.race;
   document.getElementById('p2-name').textContent=opp.race;
-  document.getElementById('p1-hp').textContent=selectedFighter.hp;
-  document.getElementById('p2-hp').textContent=opp.hp;
+  document.getElementById('p1-hp').textContent=s1.hp.toLocaleString();
+  document.getElementById('p2-hp').textContent=s2.hp.toLocaleString();
   document.getElementById('p1-bar').style.width='100%';
   document.getElementById('p2-bar').style.width='100%';
   document.getElementById('battle-log').innerHTML='';
   document.getElementById('battle-round').textContent='RONDA 1';
-  document.getElementById('battle-status').textContent='⚔ ¡Que comience la batalla!';
+  document.getElementById('battle-status').textContent='⚔ ¡Que comience!';
   document.getElementById('arena-select').classList.add('hidden');
   document.getElementById('arena-battle').classList.remove('hidden');
   if(battleTimer) clearTimeout(battleTimer);
-  battleTimer=setTimeout(autoBattleLoop, 900);
+  battleTimer=setTimeout(autoBattleLoop,900);
 }
-
 function autoBattleLoop() {
   if(!battleState||battleState.done){setTimeout(showBattleResult,1200);return;}
   battleNextStep();
   if(!battleState.done){
-    const vel=(battleState.p1.vel+battleState.p2.vel);
-    const delay=Math.max(350, 1400-vel*6);
-    battleTimer=setTimeout(autoBattleLoop,delay);
+    const vel=(battleState.p1.stats.vel+battleState.p2.stats.vel);
+    battleTimer=setTimeout(autoBattleLoop,Math.max(350,1400-vel*5));
   } else {
     setTimeout(showBattleResult,1500);
   }
 }
-
 function skipBattle() {
   if(battleTimer) clearTimeout(battleTimer);
   if(!battleState) return;
-  // Simular rondas restantes instantáneamente
-  while(!battleState.done && battleState.round<25){ battleNextStep(); }
+  while(!battleState.done&&battleState.round<25) battleNextStep();
   showBattleResult();
 }
-
 function battleNextStep() {
   if(!battleState||battleState.done) return;
   const {p1,p2}=battleState;
@@ -706,21 +909,17 @@ function battleNextStep() {
   document.getElementById('battle-round').textContent='RONDA '+battleState.round;
   const log=document.getElementById('battle-log');
   const arena=document.getElementById('arena-battle');
-
   function atk(att,def,isP1){
     const crit=Math.random()<0.18, blocked=Math.random()<0.08;
-    let dmg=Math.max(5,Math.round((att.atq*(0.80+Math.random()*0.45))-(def.def*0.55)));
-    if(blocked){dmg=0;}
-    else if(crit){dmg=Math.round(dmg*2.1);}
+    let dmg=Math.max(5,Math.round((att.stats.atq*(0.80+Math.random()*0.45))-(def.stats.def*0.55)));
+    if(blocked) dmg=0; else if(crit) dmg=Math.round(dmg*2.1);
     def.curHp=Math.max(0,def.curHp-dmg);
-    const pct=Math.round(def.curHp/def.hp*100);
+    const pct=Math.round(def.curHp/def.maxHp*100);
     const e=document.createElement('div'); e.className='log-entry';
-    if(blocked){
-      e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> ⚔ <span class="text-muted">🛡 BLOQUEADO</span>`;
-    } else if(crit){
-      e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> ⚔ <span class="text-tick font-bold">💥 CRÍTICO! −${dmg.toLocaleString()} HP</span>`;
-      // Flash en el panel del defensor
-      if(arena) { arena.classList.add(isP1?'flash-red':'flash-green'); setTimeout(()=>arena.classList.remove('flash-red','flash-green'),350); }
+    if(blocked) e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> ⚔ <span class="text-muted">🛡 BLOQUEADO</span>`;
+    else if(crit){
+      e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> ⚔ <span class="text-tick font-bold">💥 CRÍTICO −${dmg.toLocaleString()} HP</span>`;
+      if(arena){arena.classList.add(isP1?'flash-red':'flash-green');setTimeout(()=>arena.classList.remove('flash-red','flash-green'),350);}
     } else {
       e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> ⚔ <span class="${isP1?'text-bear':'text-bull'}">−${dmg.toLocaleString()} HP</span>`;
     }
@@ -729,97 +928,233 @@ function battleNextStep() {
     else    {document.getElementById('p1-hp').textContent=def.curHp.toLocaleString();document.getElementById('p1-bar').style.width=pct+'%';}
     return def.curHp<=0;
   }
-
-  // Quién ataca primero: mayor VEL va primero
-  const firstP1=p1.vel>=p2.vel;
+  const firstP1=p1.stats.vel>=p2.stats.vel;
   let ended=firstP1?atk(p1,p2,true):atk(p2,p1,false);
   if(!ended) ended=firstP1?atk(p2,p1,false):atk(p1,p2,true);
   if(ended||battleState.round>=25){
     battleState.done=true;
-    const status=p2.curHp<=0?'⚔ ¡VICTORIA!':p1.curHp<=0?'💀 Derrota...':'🤝 Empate';
-    document.getElementById('battle-status').textContent=status;
+    document.getElementById('battle-status').textContent=p2.curHp<=0?'⚔ ¡VICTORIA!':p1.curHp<=0?'💀 Derrota...':'🤝 Empate';
   }
 }
-
 function showBattleResult() {
   const {p1,p2,round}=battleState;
   const win=p1.curHp>p2.curHp, draw=p1.curHp===p2.curHp;
-  const tick=win?Math.round(5+Math.random()*15):2;
+  const tick=win?Math.round(8+Math.random()*22):3;
+  const xpGained=win?Math.round(40+Math.random()*30):20;
   if(win){PLAYER.wins++;PLAYER.trophies+=25;PLAYER.tick+=tick;PLAYER.battleHistory.unshift({result:'WIN',rival:`${p2.race}/${p2.lineage}`,rarity:p2.rarity,reward:`+${tick} $TICK`});}
-  else   {PLAYER.losses++;PLAYER.trophies=Math.max(0,PLAYER.trophies-10);PLAYER.tick+=2;PLAYER.battleHistory.unshift({result:'LOSS',rival:`${p2.race}/${p2.lineage}`,rarity:p2.rarity,reward:''});}
+  else   {PLAYER.losses++;PLAYER.trophies=Math.max(0,PLAYER.trophies-10);PLAYER.tick+=3;PLAYER.battleHistory.unshift({result:'LOSS',rival:`${p2.race}/${p2.lineage}`,rarity:p2.rarity,reward:''});}
   if(PLAYER.battleHistory.length>5) PLAYER.battleHistory.pop();
   const fighter=inventory.find(n=>n.id===p1.id);
-  if(fighter) fighter.xp=Math.min(100,fighter.xp+20);
+  let levelMsg='';
+  if(fighter){const gained=addXP(fighter,xpGained);if(gained>0) levelMsg=` · Lv${fighter.level} 🎉`;}
   updateHeader();
   document.getElementById('arena-battle').classList.add('hidden');
   document.getElementById('arena-result').classList.remove('hidden');
   document.getElementById('result-icon').textContent=win?'🏆':draw?'🤝':'💀';
   document.getElementById('result-title').textContent=win?'¡VICTORIA!':draw?'EMPATE':'DERROTA';
   document.getElementById('result-title').className=`text-2xl font-extrabold mb-1 ${win?'text-bull':draw?'text-tick':'text-bear'}`;
-  document.getElementById('result-sub').textContent=`${round} rondas · vs ${p2.race}/${p2.lineage}`;
+  document.getElementById('result-sub').textContent=`${round} rondas · vs ${p2.race}/${p2.lineage}${levelMsg}`;
   document.getElementById('result-rewards').innerHTML=`
     <p class="text-[10px] text-muted font-bold tracking-widest mb-2">RECOMPENSAS</p>
     <div class="flex justify-between text-xs"><span class="text-muted">$TICK</span><span class="text-tick font-mono font-bold">+${tick}</span></div>
-    <div class="flex justify-between text-xs"><span class="text-muted">XP</span><span class="text-bull font-mono">+20</span></div>
+    <div class="flex justify-between text-xs"><span class="text-muted">XP</span><span class="text-purple-400 font-mono">+${xpGained}</span></div>
     <div class="flex justify-between text-xs"><span class="text-muted">Trofeos</span><span class="${win?'text-bull':'text-bear'} font-mono">${win?'+25':'-10'}</span></div>`;
 }
-
 function resetArena(){renderArenaSelect();}
 
 // =============================================
-// MERCADO / GACHA
+// MERCADO
 // =============================================
+function renderMarket() {renderTickDisplay();renderP2PListings();}
+function switchMarketTab(tab) {
+  ['shop','p2p','tick'].forEach(t=>{
+    document.getElementById('mkt-panel-'+t)?.classList.add('hidden');
+    const b=document.getElementById('mkt-tab-'+t);
+    if(b){b.classList.remove('tab-active-bull');b.classList.add('text-muted');}
+  });
+  document.getElementById('mkt-panel-'+tab)?.classList.remove('hidden');
+  const ab=document.getElementById('mkt-tab-'+tab);
+  if(ab){ab.classList.add('tab-active-bull');ab.classList.remove('text-muted');}
+  if(tab==='tick') renderTickDisplay();
+  if(tab==='p2p') renderP2PListings();
+}
+
+// Tienda — Cajas
 function openPackModal(type) {
   const counts={basica:1,escuadron:5,batallon:10,recluta:5};
-  const costs ={basica:2.5,escuadron:10,batallon:20,recluta:15};
+  const costs={basica:2.5,escuadron:10,batallon:20,recluta:15};
   if(PLAYER.usdt<costs[type]){alert(`Necesitas ${costs[type]} USDT`);return;}
   PLAYER.usdt-=costs[type];
   if(type==='recluta') PLAYER.tick+=100;
   const container=document.getElementById('pack-result-cards');
   container.innerHTML='';
+  const newNFTs=[];
   for(let i=0;i<counts[type];i++){
     const nft=rollNFT(type==='batallon'&&i===0);
-    inventory.push(nft);
+    inventory.push(nft); newNFTs.push(nft);
     const rr=RARITIES[nft.rarity];
-    container.innerHTML+=`<div class="text-center" style="animation:reveal .5s ${i*.15}s both">
-      <div class="border-2 rounded-xl overflow-hidden w-28 h-28" style="border-color:${rr.color}">
+    container.innerHTML+=`<div class="text-center" style="animation:reveal .5s ${i*.1}s both">
+      <div class="border-2 rounded-xl overflow-hidden w-24 h-24" style="border-color:${rr.color}">
         <img src="${raceImg(nft.race)}" class="w-full h-full object-cover"/>
       </div>
       <p class="text-[9px] font-bold mt-1" style="color:${rr.color}">${nft.rarity}</p>
-      <p class="text-[9px] text-muted">${nft.race}/${nft.lineage}</p>
+      <p class="text-[8px] text-muted">${nft.race}/${nft.lineage}</p>
     </div>`;
   }
-  if(type==='recluta'){
-    const last=inventory[inventory.length-counts[type]];
-    if(last){last.level=3;last.vel=10;last.hp=160;last.atq=22;last.def=15;}
+  if(type==='recluta'&&newNFTs.length>0){
+    const first=inventory.find(n=>n.id===newNFTs[0].id);
+    if(first){first.level=25;first.xp=0;}
   }
   updateHeader();
   openModal('modal-pack-result');
 }
-
 function rollNFT(guaranteeEpic=false) {
   const roll=guaranteeEpic?86:Math.random()*100;
   const tier=roll<=10?'Legendario':roll<=35?'Epico':'Comun';
   const pool=LINEAGE_KEYS.filter(k=>LINEAGES[k].tier===tier);
   const lineage=pool[Math.floor(Math.random()*pool.length)]||'ADA';
   const race=RACES[Math.floor(Math.random()*RACES.length)];
-  // BTC y ETH son Legendario: empiezan en Bronce con más stats
-  const isLegLineage=(lineage==='BTC'||lineage==='ETH');
-  const startRarity=isLegLineage?'Bronce':'Cobre';
-  const baseHp=isLegLineage?700:500;
-  const baseAtq=isLegLineage?120:95;
-  return {id:nextId++,race,lineage,rarity:startRarity,level:1,xp:0,hp:baseHp,atq:baseAtq,def:0,vel:0};
+  const isLegLine=lineage==='BTC'||lineage==='ETH';
+  return {id:nextId++,race,lineage,rarity:isLegLine?'Bronce':'Cobre',
+    level:1,xp:0,rebirths:0,baseHp:500,baseAtq:95,baseDef:45,baseVel:30};
+}
+
+// P2P Marketplace
+function showP2PTab(tab) {
+  ['buy','sell'].forEach(t=>{
+    document.getElementById('p2p-'+t+'-panel')?.classList.add('hidden');
+    const b=document.getElementById('p2p-'+t+'-tab');
+    if(b){b.classList.remove('bg-bull','text-black');b.classList.add('bg-panel2','border','border-gray-700','text-muted');}
+  });
+  document.getElementById('p2p-'+tab+'-panel')?.classList.remove('hidden');
+  const ab=document.getElementById('p2p-'+tab+'-tab');
+  if(ab){ab.classList.add('bg-bull','text-black');ab.classList.remove('bg-panel2','border','border-gray-700','text-muted');}
+  if(tab==='sell') renderSellPanel();
+}
+function renderP2PListings() {
+  const allListings=[...p2pListings,...playerListings];
+  const el=document.getElementById('p2p-listings'); if(!el) return;
+  el.innerHTML = allListings.length===0
+    ? '<p class="text-muted text-sm text-center py-6">No hay anuncios activos</p>'
+    : allListings.map(l=>{
+        const rr=RARITIES[l.nft.rarity]||RARITIES.Cobre;
+        const s=getStats(l.nft);
+        return `<div class="bg-panel2 border border-gray-700 rounded-xl p-3 flex items-center gap-3">
+          <div class="w-14 h-14 rounded-xl overflow-hidden border-2 flex-none" style="border-color:${rr.color}">
+            <img src="${raceImg(l.nft.race)}" class="w-full h-full object-cover"/>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-bold truncate">${l.nft.race} <span class="font-mono" style="color:${rr.color}">${l.nft.rarity}</span></p>
+            <p class="text-[9px] text-muted font-mono">${l.nft.lineage} · Lv${l.nft.level} · ATQ ${s.atq.toLocaleString()}</p>
+            <p class="text-[9px] text-muted">Vendedor: ${l.seller||'Tú'}</p>
+          </div>
+          <div class="text-right flex-none">
+            <p class="text-sm font-mono font-bold text-bull">${l.price} USDT</p>
+            <button onclick="buyListedNFT('${l.id}')" class="mt-1 bg-bull text-black font-bold py-1 px-3 rounded-lg text-[10px]">COMPRAR</button>
+          </div>
+        </div>`;
+      }).join('');
+}
+function buyListedNFT(listingId) {
+  const pL=playerListings.find(l=>l.id===listingId);
+  const simL=p2pListings.find(l=>l.id===listingId);
+  const listing=pL||simL;
+  if(!listing){alert('Anuncio no disponible');return;}
+  if(PLAYER.usdt<listing.price){alert(`Necesitas ${listing.price} USDT`);return;}
+  PLAYER.usdt-=listing.price;
+  if(pL) playerListings=playerListings.filter(l=>l.id!==listingId);
+  else   p2pListings=p2pListings.filter(l=>l.id!==listingId);
+  inventory.push({...listing.nft,id:nextId++});
+  updateHeader();
+  alert(`✅ ¡Comprado!\n${listing.nft.race}/${listing.nft.lineage} ${listing.nft.rarity} Lv${listing.nft.level}\n-${listing.price} USDT`);
+  renderP2PListings();
+}
+function renderSellPanel() {
+  selectedP2PNFT=null;
+  document.getElementById('p2p-price-section').classList.add('hidden');
+  document.getElementById('p2p-my-nfts').innerHTML=inventory.map(n=>{
+    const rr=RARITIES[n.rarity]||RARITIES.Cobre;
+    return `<div id="sell-card-${n.id}" onclick="selectP2PNFT(${n.id})" class="bg-panel border-2 rounded-xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform" style="border-color:${rr.color}">
+      <img src="${raceImg(n.race)}" class="nft-img"/>
+      <div class="p-1.5 text-center"><p class="text-[9px] font-bold truncate">${n.race}</p><p class="text-[8px] text-muted">Lv${n.level} · ${n.rarity}</p></div>
+    </div>`;
+  }).join('');
+  document.getElementById('p2p-my-listings').innerHTML = playerListings.length===0 ? '' :
+    '<p class="text-[10px] text-muted font-bold tracking-widest mb-2 mt-3">TUS ANUNCIOS</p>' +
+    playerListings.map(l=>`<div class="bg-panel2 border border-gray-700 rounded-xl p-2 flex items-center justify-between">
+      <p class="text-xs">${l.nft.race}/${l.nft.lineage} · <span class="text-bull font-bold">${l.price} USDT</span></p>
+      <button onclick="cancelListing('${l.id}')" class="text-bear text-[10px] font-bold px-2 py-1 rounded border border-bear">CANCELAR</button>
+    </div>`).join('');
+}
+function selectP2PNFT(id) {
+  selectedP2PNFT=inventory.find(n=>n.id===id);
+  document.querySelectorAll('[id^="sell-card-"]').forEach(el=>el.style.boxShadow='');
+  document.getElementById('sell-card-'+id).style.boxShadow='0 0 12px rgba(0,200,83,.5)';
+  const suggested={Cobre:1.5,Bronce:3.5,Plata:8,Oro:20,Diamante:55,Legendario:150}[selectedP2PNFT.rarity]||2;
+  document.getElementById('p2p-price-input').value=suggested.toFixed(2);
+  document.getElementById('p2p-price-section').classList.remove('hidden');
+}
+function listNFTForSale() {
+  if(!selectedP2PNFT) return;
+  const price=parseFloat(document.getElementById('p2p-price-input').value);
+  if(!price||price<0.1){alert('Precio mínimo: 0.10 USDT');return;}
+  playerListings.push({id:'pl'+Date.now(),seller:'Jugador_001',nft:{...selectedP2PNFT},price:+(price.toFixed(2))});
+  inventory=inventory.filter(n=>n.id!==selectedP2PNFT.id);
+  selectedP2PNFT=null;
+  alert(`📋 NFT publicado por ${price.toFixed(2)} USDT`);
+  renderSellPanel(); renderP2PListings();
+}
+function cancelListing(id) {
+  const l=playerListings.find(x=>x.id===id); if(!l) return;
+  inventory.push({...l.nft,id:nextId++});
+  playerListings=playerListings.filter(x=>x.id!==id);
+  renderSellPanel(); renderP2PListings();
+}
+
+// TICK Exchange
+function renderTickDisplay() {
+  const el=document.getElementById('tick-balance-display');
+  const eq=document.getElementById('tick-usdt-equiv');
+  if(el) el.textContent=PLAYER.tick.toLocaleString()+' $TICK';
+  if(eq) eq.textContent=(PLAYER.tick*0.08).toFixed(2);
+}
+function updateBuyPreview() {
+  const usdt=parseFloat(document.getElementById('buy-tick-input').value)||0;
+  document.getElementById('buy-tick-preview').textContent=`→ Recibirás ${Math.floor(usdt*10).toLocaleString()} $TICK`;
+}
+function updateSellPreview() {
+  const ticks=parseFloat(document.getElementById('sell-tick-input').value)||0;
+  document.getElementById('sell-tick-preview').textContent=`→ Recibirás ${(ticks*0.08).toFixed(2)} USDT`;
+}
+function buyTick() {
+  const usdt=parseFloat(document.getElementById('buy-tick-input').value)||0;
+  if(usdt<0.1){alert('Mínimo 0.10 USDT');return;}
+  if(PLAYER.usdt<usdt){alert('Saldo USDT insuficiente');return;}
+  const ticks=Math.floor(usdt*10);
+  PLAYER.usdt=+(PLAYER.usdt-usdt).toFixed(2); PLAYER.tick+=ticks;
+  updateHeader(); renderTickDisplay();
+  document.getElementById('buy-tick-input').value='';
+  document.getElementById('buy-tick-preview').textContent='→ Recibirás 0 $TICK';
+  alert(`✅ Compraste ${ticks.toLocaleString()} $TICK\n-${usdt} USDT`);
+}
+function sellTick() {
+  const ticks=parseFloat(document.getElementById('sell-tick-input').value)||0;
+  if(ticks<10){alert('Mínimo 10 $TICK');return;}
+  if(PLAYER.tick<ticks){alert('Saldo $TICK insuficiente');return;}
+  const usdt=+(ticks*0.08).toFixed(2);
+  PLAYER.tick-=ticks; PLAYER.usdt=+(PLAYER.usdt+usdt).toFixed(2);
+  updateHeader(); renderTickDisplay();
+  document.getElementById('sell-tick-input').value='';
+  document.getElementById('sell-tick-preview').textContent='→ Recibirás 0.00 USDT';
+  alert(`✅ Vendiste ${ticks.toLocaleString()} $TICK\n+${usdt} USDT`);
 }
 
 // =============================================
-// MODALES
+// MODALES + INIT
 // =============================================
-function openModal(id){document.getElementById(id).classList.remove('hidden');}
-function closeModal(id){document.getElementById(id).classList.add('hidden');}
+function openModal(id){document.getElementById(id)?.classList.remove('hidden');}
+function closeModal(id){document.getElementById(id)?.classList.add('hidden');}
 
-// =============================================
-// INIT
-// =============================================
 window.addEventListener('load',()=>{
   document.getElementById('app-header').classList.add('hidden');
   document.getElementById('app-nav').classList.add('hidden');
