@@ -59,7 +59,7 @@
     </div>
   </div>
   <div class="flex-1 mx-3 ticker-wrap text-[10px] font-mono font-bold bg-black/30 rounded px-2 py-1">
-    <div class="ticker-inner text-gray-300">BTC <span class="text-bull">+2.4%</span> &nbsp;|&nbsp; ETH <span class="text-bear">-0.8%</span> &nbsp;|&nbsp; SOL <span class="text-bull">+4.1%</span> &nbsp;|&nbsp; BNB <span class="text-bear">-1.2%</span> &nbsp;|&nbsp; DOGE <span class="text-bull">+6.3%</span> &nbsp;|&nbsp; ADA <span class="text-bull">+0.9%</span></div>
+    <div id="ticker-inner" class="ticker-inner text-gray-300">BTC <span class="text-bull">+2.4%</span> &nbsp;|&nbsp; ETH <span class="text-bear">-0.8%</span> &nbsp;|&nbsp; SOL <span class="text-bull">+4.1%</span> &nbsp;|&nbsp; BNB <span class="text-bear">-1.2%</span> &nbsp;|&nbsp; DOGE <span class="text-bull">+6.3%</span> &nbsp;|&nbsp; ADA <span class="text-bull">+0.9%</span></div>
   </div>
   <div class="flex flex-col items-end leading-tight">
     <div class="flex items-center gap-2">
@@ -90,7 +90,7 @@
         </div>
       </div>
       <button onclick="connectWallet()" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base shadow-[0_0_20px_rgba(0,200,83,.35)] flex items-center justify-center gap-2">🦊 CONECTAR WALLET</button>
-      <button onclick="connectWallet()" class="w-full bg-panel2 border border-gray-700 text-textmain font-semibold py-3 rounded-xl text-sm">Jugar como Invitado</button>
+      <button onclick="connectGuest()" class="w-full bg-panel2 border border-gray-700 text-textmain font-semibold py-3 rounded-xl text-sm">Jugar como Invitado</button>
     </div>
     <p class="text-xs text-muted">225 combinaciones · 15 razas · 15 linajes cripto</p>
   </div>
@@ -99,7 +99,7 @@
   <div id="view-lobby" class="hidden view p-4 space-y-4">
     <div class="bg-panel2 rounded-xl p-3 flex items-center gap-3">
       <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-bull flex-none"><img id="lobby-avatar-img" src="" class="w-full h-full object-cover"/></div>
-      <div><p class="font-bold text-sm">Jugador_001</p><p class="text-xs text-muted font-mono">Liga Plata · <span id="lobby-trophies">1,250</span> 🏆</p></div>
+      <div><p id="lobby-player-name" class="font-bold text-sm">Jugador_001</p><p class="text-xs text-muted font-mono">Liga Plata · <span id="lobby-trophies">1,250</span> 🏆</p></div>
       <div class="ml-auto text-right">
         <p class="text-xs font-mono text-tick font-bold" id="lobby-tick">1000 $TICK</p>
         <p class="text-xs font-mono text-bull font-bold" id="lobby-usdt">500 USDT</p>
@@ -136,6 +136,8 @@
       <h2 class="font-bold text-base">Mis Gladiadores</h2>
       <span id="barracks-count" class="text-xs text-muted font-mono"></span>
     </div>
+    <!-- Solo visible con sesión real: reclutar (mint) en el backend -->
+    <div id="barracks-api" class="hidden mb-3"></div>
     <div class="flex gap-2 mb-3 overflow-x-auto pb-1">
       <button onclick="filterRarity('all')" id="filter-all" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-bull text-black">TODOS</button>
       <button onclick="filterRarity('Legendario')" id="filter-Legendario" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">LEGENDARIO</button>
@@ -453,6 +455,14 @@ function xpFromNFT(nft) {
   return Math.floor(base * Math.max(1, nft.level * 0.6));
 }
 function getStats(nft) {
+  // Gladiadores del backend: usar los stats calculados por el servidor
+  // (raza + rareza + nivel + renacimiento + oráculo). No recalcular aquí.
+  if(nft.stats) return {
+    hp:  nft.stats.vida,
+    atq: nft.stats.atq_fisico,
+    def: nft.stats.defensa || 0,
+    vel: nft.stats.vel_ataque || 0,
+  };
   const rMult = RARITIES[nft.rarity]?.mult || 1;
   const lMult = 1 + (nft.level - 1) * 0.07;
   const rebBonus = 1 + (nft.rebirths || 0) * 0.20;
@@ -533,6 +543,93 @@ function generateSimulatedListings() {
 }
 
 // =============================================
+// CONEXIÓN AL BACKEND (API REAL)
+// =============================================
+// El backend vive en Render. Login con MetaMask, mis gladiadores,
+// batallas y oráculo usan la API real. Mercado, forja y tienda de
+// $TICK siguen siendo SIMULADOS en local (ver comentarios en cada función).
+// Para desarrollo local se puede apuntar a la API local con
+// ?api=http://127.0.0.1:8000 o guardando 'cc_api_base' en localStorage.
+const API_BASE = localStorage.getItem('cc_api_base')
+  || new URLSearchParams(location.search).get('api')
+  || 'https://candleclash-backend-o1df.onrender.com';
+let apiToken = localStorage.getItem('cc_token') || null;
+let apiWallet = localStorage.getItem('cc_wallet') || null;
+let sessionRestored = false; // true si el JWT guardado sigue válido
+let oracleMultipliers = null; // {BTC: 1.03, ...} reales del oráculo
+
+async function apiFetch(path, opts={}) {
+  const headers = {'Content-Type':'application/json', ...(opts.headers||{})};
+  if(apiToken) headers['Authorization']='Bearer '+apiToken;
+  const res = await fetch(API_BASE+path, {...opts, headers});
+  if(!res.ok) throw new Error('API '+res.status);
+  return res.json();
+}
+
+// Oráculo real: multiplicadores según el precio de cada cripto.
+// Es público, se carga aunque no haya login. Si falla (Render dormido,
+// sin red), se quedan los valores simulados del HTML.
+async function loadOracleMultipliers() {
+  try {
+    const mults = await apiFetch('/api/oracle/multipliers');
+    oracleMultipliers = mults;
+    const el = document.getElementById('ticker-inner');
+    if(el) el.innerHTML = Object.keys(mults).map(sym=>{
+      const m = mults[sym];
+      const cls = m>=1 ? 'text-bull' : 'text-bear';
+      return `${sym} <span class="${cls}">×${m.toFixed(2)}</span> &nbsp;|&nbsp; `;
+    }).join('');
+  } catch(e) { /* sin conexión al oráculo: se usa la simulación */ }
+}
+
+// Convierte un gladiador del backend a la forma que usa el frontend.
+// stats = computed_stats del servidor: NO se recalculan en JS.
+function apiGladiatorToLocal(doc) {
+  const bs = doc.base_stats || {};
+  return {
+    id: nextId++,
+    token_id: doc.token_id,
+    fromApi: true,
+    race: doc.race, lineage: doc.lineage, rarity: doc.rarity,
+    level: doc.level, xp: doc.xp||0, rebirths: doc.rebirths||0,
+    baseHp: bs.vida||500, baseAtq: bs.atq_fisico||95, baseDef: bs.defensa||45, baseVel: bs.vel_ataque||30,
+    stats: doc.computed_stats || null,
+  };
+}
+
+async function loadMyGladiators() {
+  const docs = await apiFetch('/api/gladiators/my');
+  inventory = docs.map(apiGladiatorToLocal);
+  renderBarracks(); renderArenaSelect(); updateHeader();
+}
+
+// Recluta (mint) un gladiador Cobre nivel 1 en el backend.
+// Raza y linaje aleatorios si no se indican.
+async function mintGladiator(race, lineage) {
+  if(!apiToken){ alert('Conecta tu wallet con MetaMask para reclutar.'); return; }
+  try {
+    const doc = await apiFetch('/api/gladiators/mint', {
+      method:'POST',
+      body: JSON.stringify({...(race?{race}:{}), ...(lineage?{lineage}:{})}),
+    });
+    inventory.push(apiGladiatorToLocal(doc));
+    renderBarracks(); updateHeader();
+    alert(`⚔ ¡Gladiador reclutado!\n${doc.race}/${doc.lineage} · Cobre · Lv1`);
+  } catch(e) { alert('No se pudo reclutar: '+e.message); }
+}
+
+// Refresca UN gladiador desde el servidor sin tocar la vista actual
+// (se usa tras una batalla real para sincronizar nivel/XP).
+async function refreshFighterFromServer(fighter) {
+  if(!fighter.token_id) return;
+  try {
+    const doc = await apiFetch('/api/gladiators/'+encodeURIComponent(fighter.token_id));
+    const upd = apiGladiatorToLocal(doc);
+    Object.assign(fighter, {...upd, id: fighter.id}); // conservar id local
+  } catch(e) { /* se queda el estado local */ }
+}
+
+// =============================================
 // NFT CARD
 // =============================================
 function nftCard(nft, opts={}) {
@@ -588,7 +685,39 @@ function showView(id) {
 // =============================================
 // LOGIN
 // =============================================
-function connectWallet() {
+// Login real con MetaMask: pide nonce, firma con personal_sign y hace
+// login en el backend; el JWT queda guardado en localStorage.
+// Sin MetaMask (o si el login falla), entra como invitado (simulado).
+async function connectWallet() {
+  if(sessionRestored && apiToken) { enterApp(); return; }
+  if(window.ethereum) {
+    try {
+      const accounts = await window.ethereum.request({method:'eth_requestAccounts'});
+      const wallet = accounts[0].toLowerCase();
+      const {nonce, message} = await apiFetch('/api/auth/nonce/'+wallet);
+      const signature = await window.ethereum.request({method:'personal_sign', params:[message, wallet]});
+      const {access_token} = await apiFetch('/api/auth/login', {method:'POST',
+        body: JSON.stringify({wallet_address: wallet, signature, nonce})});
+      apiToken = access_token; apiWallet = wallet;
+      localStorage.setItem('cc_token', apiToken);
+      localStorage.setItem('cc_wallet', apiWallet);
+      await loadMyGladiators();
+      enterApp();
+      return;
+    } catch(e) {
+      alert('No se pudo conectar con MetaMask ('+e.message+'). Entras como invitado.');
+    }
+  } else {
+    alert('MetaMask no detectado. Entras como invitado (modo simulado).');
+  }
+  enterApp();
+}
+function connectGuest() {
+  apiToken = null; apiWallet = null; sessionRestored = false;
+  localStorage.removeItem('cc_token'); localStorage.removeItem('cc_wallet');
+  enterApp();
+}
+function enterApp() {
   document.getElementById('app-header').classList.remove('hidden');
   document.getElementById('app-nav').classList.remove('hidden');
   updateHeader();
@@ -599,6 +728,8 @@ function updateHeader() {
   document.getElementById('hdr-usdt').textContent    = PLAYER.usdt.toLocaleString()+' USDT';
   document.getElementById('hdr-trophies').textContent= '🏆 '+PLAYER.trophies.toLocaleString();
   document.getElementById('hdr-avatar-img').src = raceImg(inventory[0]?.race||'Humano');
+  const nameEl = document.getElementById('lobby-player-name');
+  if(nameEl) nameEl.textContent = apiWallet ? apiWallet.slice(0,6)+'…'+apiWallet.slice(-4) : 'Jugador_001';
 }
 
 // =============================================
@@ -623,7 +754,21 @@ function renderLobby() {
 function renderBarracks() {
   const list = currentRarityFilter==='all' ? inventory : inventory.filter(n=>n.rarity===currentRarityFilter);
   document.getElementById('barracks-count').textContent = list.length+'/'+inventory.length+' NFTs';
-  document.getElementById('barracks-grid').innerHTML = list.map(n=>nftCard(n,{onclick:`openNFTDetail(${n.id})`})).join('');
+  // Panel de recluta real (solo con sesión): mint en el backend.
+  const apiPanel = document.getElementById('barracks-api');
+  if(apiPanel){
+    if(apiToken){
+      apiPanel.classList.remove('hidden');
+      apiPanel.innerHTML = `<button onclick="mintGladiator()" class="w-full bg-bull text-black font-bold py-3 rounded-xl text-sm">＋ RECLUTAR GLADIADOR · GRATIS</button>
+      <p class="text-[10px] text-muted text-center mt-1">Recluta un gladiador Cobre Lv1 real en el backend (raza y linaje aleatorios)</p>`;
+    } else apiPanel.classList.add('hidden');
+  }
+  document.getElementById('barracks-grid').innerHTML = list.length===0
+    ? `<div class="col-span-2 bg-panel border border-gray-800 rounded-xl p-4 text-center">
+         <p class="text-sm font-bold mb-1">Sin gladiadores todavía</p>
+         <p class="text-xs text-muted">${apiToken?'Recluta tu primer gladiador gratis con el botón de arriba.':'Conecta tu wallet con MetaMask para reclutar gladiadores reales.'}</p>
+       </div>`
+    : list.map(n=>nftCard(n,{onclick:`openNFTDetail(${n.id})`})).join('');
 }
 function filterRarity(r) {
   currentRarityFilter=r;
@@ -879,6 +1024,8 @@ function selectFighter(id) {
 }
 function startBattle() {
   if(!selectedFighter) return;
+  // Gladiador real: la batalla se simula en el servidor.
+  if(selectedFighter.fromApi && apiToken) { startBattleReal(); return; }
   const oppRace=RACES.filter(r=>r!==selectedFighter.race)[Math.floor(Math.random()*(RACES.length-1))];
   const oppLineage=LINEAGE_KEYS[Math.floor(Math.random()*LINEAGE_KEYS.length)];
   const rarities=['Cobre','Cobre','Bronce','Bronce','Plata','Plata'];
@@ -985,6 +1132,103 @@ function showBattleResult() {
 function resetArena(){renderArenaSelect();}
 
 // =============================================
+// ARENA REAL (SERVIDOR)
+// =============================================
+// Batalla real: el servidor simula y devuelve el log completo.
+// Aquí solo se reproduce ese log entrada a entrada en la UI existente.
+// El HP del rival es estimado (daño total recibido): el servidor no
+// devuelve su HP máximo, solo el log y el resultado.
+async function startBattleReal() {
+  const fighter = selectedFighter;
+  document.getElementById('arena-select').classList.add('hidden');
+  document.getElementById('arena-battle').classList.remove('hidden');
+  document.getElementById('battle-status').textContent = 'Buscando oponente en el servidor...';
+  document.getElementById('battle-log').innerHTML = '';
+  try {
+    const res = await apiFetch('/api/battle/fight', {method:'POST',
+      body: JSON.stringify({gladiator_id: fighter.token_id})});
+    playServerBattle(fighter, res);
+  } catch(e) {
+    alert('La batalla falló: '+e.message);
+    renderArenaSelect();
+  }
+}
+
+function playServerBattle(fighter, res) {
+  const s1 = getStats(fighter); // stats del servidor (computed_stats)
+  const isP1Hit = e => e.attacker===fighter.race; // si ambos tienen la misma raza, es ambiguo
+  const dmgToP2 = res.log.filter(e=>isP1Hit(e)&&e.damage).reduce((a,e)=>a+e.damage,0);
+  const p2Max = Math.max(1, dmgToP2);
+  const p1Max = s1.hp;
+  let p1Hp = p1Max, p2Hp = p2Max;
+  const p2Race = (res.log.map(e=>e.attacker).find(r=>r!==fighter.race)) || 'Rival';
+  document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(fighter.race)}" class="w-full h-full object-cover"/>`;
+  document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(p2Race)}" class="w-full h-full object-cover"/>`;
+  document.getElementById('p1-name').textContent=fighter.race;
+  document.getElementById('p2-name').textContent=p2Race;
+  document.getElementById('p1-hp').textContent=p1Max.toLocaleString();
+  document.getElementById('p2-hp').textContent='?';
+  document.getElementById('p1-bar').style.width='100%';
+  document.getElementById('p2-bar').style.width='100%';
+  document.getElementById('battle-round').textContent='RONDA 1';
+  const logEl=document.getElementById('battle-log');
+  let i=0, curRound=0;
+  const step=()=>{
+    if(i>=res.log.length){ showServerBattleResult(fighter, res, p2Race); return; }
+    const e=res.log[i++];
+    if(e.round!==curRound){ curRound=e.round; document.getElementById('battle-round').textContent='RONDA '+curRound; }
+    const isP1 = isP1Hit(e);
+    const div=document.createElement('div'); div.className='log-entry';
+    if(e.type==='block') div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> ⚔ <span class="text-muted">🛡 BLOQUEADO</span>`;
+    else if(e.type==='crit') div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> ⚔ <span class="text-tick font-bold">💥 CRÍTICO −${(e.damage||0).toLocaleString()} HP</span>`;
+    else if(e.type==='reflect') div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> ⚔ <span class="text-purple-400">−${(e.damage||0).toLocaleString()} HP · reflejo −${(e.reflected||0).toLocaleString()}</span>`;
+    else div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> ⚔ <span class="${isP1?'text-bear':'text-bull'}">−${(e.damage||0).toLocaleString()} HP</span>`;
+    logEl.appendChild(div); logEl.scrollTop=logEl.scrollHeight;
+    if(e.damage){
+      if(isP1){ p2Hp=Math.max(0,p2Hp-e.damage); document.getElementById('p2-hp').textContent=p2Hp.toLocaleString(); document.getElementById('p2-bar').style.width=Math.round(p2Hp/p2Max*100)+'%'; }
+      else { p1Hp=Math.max(0,p1Hp-e.damage); document.getElementById('p1-hp').textContent=p1Hp.toLocaleString(); document.getElementById('p1-bar').style.width=Math.round(p1Hp/p1Max*100)+'%'; }
+    }
+    if(e.reflected){ // el reflejo daña al atacante
+      if(isP1){ p1Hp=Math.max(0,p1Hp-e.reflected); document.getElementById('p1-hp').textContent=p1Hp.toLocaleString(); document.getElementById('p1-bar').style.width=Math.round(p1Hp/p1Max*100)+'%'; }
+      else { p2Hp=Math.max(0,p2Hp-e.reflected); document.getElementById('p2-hp').textContent=p2Hp.toLocaleString(); document.getElementById('p2-bar').style.width=Math.round(p2Hp/p2Max*100)+'%'; }
+    }
+    setTimeout(step, 450);
+  };
+  step();
+}
+
+function showServerBattleResult(fighter, res, p2Race) {
+  const win = res.result==='p1', draw = res.result==='draw';
+  // Historial local del lobby (la lista en sí sigue siendo simulada).
+  if(win){PLAYER.wins++;PLAYER.battleHistory.unshift({result:'WIN',rival:p2Race,rarity:'',reward:`+${res.tick_reward} $TICK`});}
+  else if(!draw){PLAYER.losses++;PLAYER.battleHistory.unshift({result:'LOSS',rival:p2Race,rarity:'',reward:''});}
+  if(PLAYER.battleHistory.length>5) PLAYER.battleHistory.pop();
+  // Sincronizar $TICK, trofeos, victorias y nivel/XP reales desde el servidor.
+  apiFetch('/api/auth/me').then(u=>{
+    PLAYER.tick=u.tick_balance; PLAYER.trophies=u.trophies;
+    PLAYER.wins=u.wins; PLAYER.losses=u.losses;
+    updateHeader();
+  }).catch(()=>{ // sin conexión: aplicar las recompensas del resultado localmente
+    PLAYER.tick+=res.tick_reward;
+    PLAYER.trophies=Math.max(0,PLAYER.trophies+(win?25:draw?0:-10));
+    updateHeader();
+  });
+  refreshFighterFromServer(fighter);
+  document.getElementById('battle-status').textContent = win?'⚔ ¡VICTORIA!':draw?'🤝 Empate':'💀 Derrota...';
+  document.getElementById('arena-battle').classList.add('hidden');
+  document.getElementById('arena-result').classList.remove('hidden');
+  document.getElementById('result-icon').textContent=win?'🏆':draw?'🤝':'💀';
+  document.getElementById('result-title').textContent=win?'¡VICTORIA!':draw?'EMPATE':'DERROTA';
+  document.getElementById('result-title').className=`text-2xl font-extrabold mb-1 ${win?'text-bull':draw?'text-tick':'text-bear'}`;
+  document.getElementById('result-sub').textContent=`${res.rounds} rondas · vs ${p2Race}${res.leveled_up?' · ¡Subiste al Lv'+res.level_after+'! 🎉':''}`;
+  document.getElementById('result-rewards').innerHTML=`
+    <p class="text-[10px] text-muted font-bold tracking-widest mb-2">RECOMPENSAS (SERVIDOR)</p>
+    <div class="flex justify-between text-xs"><span class="text-muted">$TICK</span><span class="text-tick font-mono font-bold">+${res.tick_reward}</span></div>
+    <div class="flex justify-between text-xs"><span class="text-muted">XP</span><span class="text-purple-400 font-mono">+${res.xp_gained}</span></div>
+    <div class="flex justify-between text-xs"><span class="text-muted">Trofeos</span><span class="${win?'text-bull':'text-bear'} font-mono">${win?'+25':draw?'0':'-10'}</span></div>`;
+}
+
+// =============================================
 // MERCADO
 // =============================================
 function renderMarket() {renderTickDisplay();renderP2PListings();}
@@ -1002,6 +1246,10 @@ function switchMarketTab(tab) {
 }
 
 // Tienda — Cajas
+// SIMULADO: las cajas se abren solo en local y no llaman al backend.
+// Los gladiadores reales se reclutan con el botón RECLUTAR de Barracas
+// (POST /api/gladiators/mint). La forja, el mercado P2P y la tienda de
+// $TICK también siguen siendo simulados en local.
 function openPackModal(type) {
   const counts={basica:1,escuadron:5,batallon:10,recluta:5};
   const costs={basica:2.5,escuadron:10,batallon:20,recluta:15};
@@ -1181,6 +1429,17 @@ window.addEventListener('load',()=>{
   document.getElementById('app-header').classList.add('hidden');
   document.getElementById('app-nav').classList.add('hidden');
   showView('view-login');
+  loadOracleMultipliers(); // el oráculo es público: se carga aunque no haya login
+  // Restaurar sesión si hay un JWT guardado y sigue válido.
+  if(apiToken && apiWallet) {
+    apiFetch('/api/auth/me').then(async ()=>{
+      sessionRestored = true;
+      await loadMyGladiators();
+    }).catch(()=>{
+      apiToken=null; apiWallet=null; sessionRestored=false;
+      localStorage.removeItem('cc_token'); localStorage.removeItem('cc_wallet');
+    });
+  }
 });
 </script>
 </body>
