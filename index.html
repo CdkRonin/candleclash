@@ -179,6 +179,7 @@
       </div>
       <div id="forge-preview" class="hidden mb-3 p-3 bg-panel2 border border-gray-700 rounded-xl text-center w-full max-w-xs"><p class="text-[10px] text-muted font-bold mb-1">RESULTADO</p><p id="forge-result-text" class="text-sm font-bold"></p></div>
       <div id="forge-cost" class="hidden text-xs text-muted mb-3 text-center">Costo: <span class="text-tick font-bold">50 $TICK</span></div>
+      <button onclick="autoFillAscend()" class="w-full max-w-xs bg-panel2 border border-gray-700 text-white font-bold py-2 rounded-xl text-xs mb-2">✨ AUTO-SELECCIONAR IDÉNTICOS</button>
       <button id="forge-btn" onclick="executeForge()" class="w-full max-w-xs bg-bear text-white font-bold py-4 rounded-xl opacity-40 cursor-not-allowed" disabled>FUNDIR EN LA FORJA</button>
     </div>
 
@@ -223,6 +224,7 @@
         <div id="ren-sac" onclick="openForgeSelect('ren-sac','ren')" class="forge-slot w-32 h-32 border-2 border-dashed border-red-900 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden mx-auto"><span class="text-red-800 text-3xl">+</span></div>
       </div>
       <div id="ren-preview" class="hidden mb-3 p-3 bg-panel2 border border-gray-700 rounded-xl text-center w-full max-w-xs"><p id="ren-preview-text" class="text-sm font-bold text-tick"></p></div>
+      <button onclick="autoFillRebirth()" class="w-full max-w-xs bg-panel2 border border-gray-700 text-white font-bold py-2 rounded-xl text-xs mb-2">✨ BUSCAR COPIA IDÉNTICA LV50</button>
       <button id="ren-btn" onclick="executeRebirth()" class="w-full max-w-xs bg-purple-700 text-white font-bold py-4 rounded-xl opacity-40 cursor-not-allowed" disabled>🔄 RENACER · 100 $TICK</button>
     </div>
   </div>
@@ -231,6 +233,20 @@
   <div id="view-arena" class="hidden view p-4 flex flex-col">
     <div id="arena-select">
       <h2 class="font-bold text-base mb-3 text-center">⚔️ Selecciona tu Gladiador</h2>
+      <!-- Organizador: ordenar y filtrar. Por defecto, el mejor primero (poder ↓). -->
+      <div class="flex flex-wrap gap-2 mb-2">
+        <select id="arena-sort" onchange="setArenaSort(this.value)" class="flex-1 min-w-[110px] bg-panel2 border border-gray-700 rounded-lg text-xs font-bold py-2 px-2">
+          <option value="power">Orden: Poder ↓</option>
+          <option value="level">Orden: Nivel ↓</option>
+          <option value="hp">Orden: Vida ↓</option>
+          <option value="atq">Orden: Ataque ↓</option>
+          <option value="race">Orden: Raza A–Z</option>
+        </select>
+        <select id="arena-filter-race" onchange="setArenaFilter('race',this.value)" class="flex-1 min-w-[100px] bg-panel2 border border-gray-700 rounded-lg text-xs py-2 px-2"><option value="all">Raza: todas</option></select>
+        <select id="arena-filter-rarity" onchange="setArenaFilter('rarity',this.value)" class="flex-1 min-w-[100px] bg-panel2 border border-gray-700 rounded-lg text-xs py-2 px-2"><option value="all">Rareza: todas</option></select>
+        <select id="arena-filter-lineage" onchange="setArenaFilter('lineage',this.value)" class="flex-1 min-w-[100px] bg-panel2 border border-gray-700 rounded-lg text-xs py-2 px-2"><option value="all">Linaje: todos</option></select>
+      </div>
+      <p id="arena-count" class="text-[10px] text-muted text-center mb-3"></p>
       <div id="arena-fighter-grid" class="grid grid-cols-2 gap-3 mb-4"></div>
       <p id="arena-energy" class="text-center text-xs font-mono font-bold text-yellow-300 mb-2">⚡ Energía: 10/10</p>
       <button onclick="startBattle()" id="arena-fight-btn" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base opacity-40 cursor-not-allowed" disabled>BUSCAR OPONENTE</button>
@@ -270,11 +286,12 @@
     <!-- TIENDA -->
     <div id="mkt-panel-shop" class="space-y-3">
       <div class="bg-panel2 rounded-xl p-3 text-center text-xs text-muted">225 combinaciones · 15 razas × 15 linajes</div>
-      <p class="text-[10px] text-muted text-center">Tienda en modo demo: las compras usan saldo simulado, no dinero real todavía.</p>
+      <p class="text-[10px] text-muted text-center">El Paquete Recluta es real (1 por cuenta). Las demás cajas siguen en modo demo: usan saldo simulado, no dinero real todavía.</p>
       <div class="bg-panel border-2 border-tick rounded-xl p-4 relative shadow-[0_0_15px_rgba(255,215,0,.15)]">
         <div class="absolute top-0 right-0 bg-tick text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">PRIMERA VEZ</div>
         <div class="flex items-center gap-3 mb-3"><span class="text-3xl">🎖️</span><div><h3 class="font-bold text-tick">Paquete Recluta</h3><p class="text-xs text-muted">5 cajas + 100 $TICK + 1 NFT Lvl 25</p></div></div>
-        <button onclick="openPackModal('recluta')" class="w-full bg-tick text-black font-bold py-3 rounded-xl text-sm">COMPRAR · 15 USDT</button>
+        <button id="recluta-btn" onclick="openPackModal('recluta')" class="w-full bg-tick text-black font-bold py-3 rounded-xl text-sm">COMPRAR · 15 USDT</button>
+        <p id="recluta-note" class="text-[10px] text-muted text-center mt-1">1 por cuenta · los 5 NFTs son reales y aparecen en tus Barracas</p>
       </div>
       <div class="bg-panel border border-gray-800 rounded-xl p-4 flex items-center justify-between">
         <div class="flex items-center gap-3"><span class="text-2xl">📦</span><div><h3 class="font-bold text-sm">Caja Básica</h3><p class="text-xs text-muted">1 Gladiador · RNG</p></div></div>
@@ -387,9 +404,16 @@
 </div>
 
 <div id="modal-forge-select" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col p-4 overflow-y-auto">
-  <div class="flex items-center justify-between mb-4">
+  <div class="flex items-center justify-between mb-3">
     <h3 id="forge-select-title" class="font-bold">Selecciona NFT</h3>
     <button onclick="closeModal('modal-forge-select')" class="text-muted text-2xl leading-none">×</button>
+  </div>
+  <!-- Solo compatibles + filtros (en Subir de nivel: por raza, rareza y linaje). -->
+  <label class="flex items-center gap-2 text-xs mb-3 cursor-pointer"><input type="checkbox" id="forge-only-compatible" checked onchange="renderForgeSelectGrid()" class="accent-green-500"> Solo compatibles con esta acción</label>
+  <div id="forge-select-filters" class="hidden flex flex-wrap gap-2 mb-3">
+    <select id="forge-filter-race" onchange="setForgeFilter('race',this.value)" class="flex-1 min-w-[90px] bg-panel2 border border-gray-700 rounded-lg text-xs py-2 px-2"><option value="all">Raza: todas</option></select>
+    <select id="forge-filter-rarity" onchange="setForgeFilter('rarity',this.value)" class="flex-1 min-w-[90px] bg-panel2 border border-gray-700 rounded-lg text-xs py-2 px-2"><option value="all">Rareza: todas</option></select>
+    <select id="forge-filter-lineage" onchange="setForgeFilter('lineage',this.value)" class="flex-1 min-w-[90px] bg-panel2 border border-gray-700 rounded-lg text-xs py-2 px-2"><option value="all">Linaje: todos</option></select>
   </div>
   <div id="forge-select-grid" class="grid grid-cols-2 gap-3"></div>
 </div>
@@ -567,6 +591,7 @@ let selectedP2PNFT = null;
 // (demo local), la misma regla vive en localStorage.
 const ENERGY_MAX = 10, ENERGY_REGEN_MS = 30*60*1000;
 let energyState = {energy: ENERGY_MAX, nextInMin: 0};
+let starterPackClaimed = false; // Paquete Recluta: 1 por cuenta (lo dice el servidor, en /api/auth/me)
 function guestEnergyState(){
   let e=parseInt(localStorage.getItem('cc_energy')||String(ENERGY_MAX),10);
   let ts=parseInt(localStorage.getItem('cc_energy_ts')||String(Date.now()),10);
@@ -602,6 +627,8 @@ async function syncProfileFromServer(){
     PLAYER.tick=u.tick_balance; PLAYER.trophies=u.trophies;
     PLAYER.wins=u.wins; PLAYER.losses=u.losses;
     if(typeof u.energy==='number') energyState={energy:u.energy,nextInMin:u.energy_next_in_min||0};
+    starterPackClaimed=!!u.starter_pack_claimed;
+    updateReclutaButton();
     updateHeader(); updateFightButton();
   } catch(e) { /* sin conexión: se queda el estado local */ }
 }
@@ -815,6 +842,11 @@ async function connectWallet() {
       enterApp();
       return;
     } catch(e) {
+      // Sin media sesión: si el login o la carga de gladiadores falla,
+      // se entra como invitado de verdad (antes quedaba el token puesto
+      // con el inventario de demostración, y las batallas no gastaban energía).
+      apiToken=null; apiWallet=null; sessionRestored=false;
+      localStorage.removeItem('cc_token'); localStorage.removeItem('cc_wallet');
       alert('No se pudo conectar con MetaMask ('+e.message+'). Entras como invitado.');
     }
   } else {
@@ -868,6 +900,12 @@ function renderLobby() {
 function renderBarracks() {
   const list = currentRarityFilter==='all' ? inventory : inventory.filter(n=>n.rarity===currentRarityFilter);
   document.getElementById('barracks-count').textContent = list.length+'/'+inventory.length+' NFTs';
+  // Aviso cuando hay gladiadores de demostración mezclados con los
+  // reales (vienen de las cajas simuladas): no pelean batallas reales.
+  const demoCount = apiToken ? inventory.filter(n=>!n.fromApi).length : 0;
+  const demoNote = demoCount>0
+    ? `<div class="col-span-2 bg-panel2 border border-yellow-700 rounded-xl p-3 text-center"><p class="text-[11px] text-yellow-300 font-bold">⚠ ${demoCount} gladiador(es) de demostración (de cajas simuladas): no pelean batallas reales ni gastan energía.</p></div>`
+    : '';
   // Panel de recluta real (solo con sesión): mint en el backend.
   // Límite: 2 gladiadores gratis por wallet; muestra cuántos quedan
   // y desactiva el botón al llegar al límite.
@@ -883,12 +921,12 @@ function renderBarracks() {
       <p class="text-[10px] text-muted text-center mt-1">${out?'Ya tienes tus 2 gladiadores gratis.':'Te quedan '+remaining+' de 2 reclutamientos gratis · Cobre Lv1, raza y linaje aleatorios'}</p>`;
     } else apiPanel.classList.add('hidden');
   }
-  document.getElementById('barracks-grid').innerHTML = list.length===0
+  document.getElementById('barracks-grid').innerHTML = demoNote + (list.length===0
     ? `<div class="col-span-2 bg-panel border border-gray-800 rounded-xl p-4 text-center">
          <p class="text-sm font-bold mb-1">Sin gladiadores todavía</p>
          <p class="text-xs text-muted">${apiToken?'Recluta tu primer gladiador gratis con el botón de arriba.':'Conecta tu wallet con MetaMask para reclutar gladiadores reales.'}</p>
        </div>`
-    : list.map(n=>nftCard(n,{onclick:`openNFTDetail(${n.id})`})).join('');
+    : list.map(n=>nftCard(n,{onclick:`openNFTDetail(${n.id})`})).join(''));
 }
 function filterRarity(r) {
   currentRarityFilter=r;
@@ -979,32 +1017,111 @@ function resetAllForge() {
   if(rb){rb.disabled=true;rb.classList.add('opacity-40','cursor-not-allowed');}
 }
 
-// ABRIR MODAL SELECCIÓN
+// ABRIR MODAL SELECCIÓN — con "solo compatibles" y filtros.
+// Estado del organizador de la forja (solo frontend; la forja sigue simulada).
+let forgeSelectMode='asc';
+let forgeFilterRace='all', forgeFilterRarity='all', forgeFilterLineage='all';
+function fillForgeFilters(){
+  const fill=(id, values)=>{
+    const el=document.getElementById(id); if(!el||el.options.length>1) return;
+    values.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o); });
+  };
+  fill('forge-filter-race', RACES);
+  fill('forge-filter-rarity', RARITY_ORDER);
+  fill('forge-filter-lineage', LINEAGE_KEYS);
+}
+function setForgeFilter(k,v){
+  if(k==='race') forgeFilterRace=v;
+  else if(k==='rarity') forgeFilterRarity=v;
+  else if(k==='lineage') forgeFilterLineage=v;
+  renderForgeSelectGrid();
+}
+// ¿Es compatible este NFT con el slot que se está eligiendo?
+// Las reglas son las del backend (routers/forge.py), que es la verdad:
+//  - Ascender: principal de cualquier rareza salvo Legendario (ya está en
+//    el tope); sacrificios idénticos al principal (misma raza+linaje+rareza).
+//  - Subir de nivel: principal con nivel < 50; alimento: cualquier NFT.
+//  - Renacer: principal y sacrificio en Lv50, misma raza+linaje,
+//    principal con menos de 5 renacimientos. La rareza NO tiene que coincidir.
+function forgeCompatible(nft, slot, mode){
+  const slotted=new Set([...Object.values(forgeSlots),...Object.values(lvlSlots),...Object.values(renSlots)].filter(Boolean).map(n=>n.id));
+  if(slotted.has(nft.id)) return false;
+  if(mode==='asc'){
+    if(slot==='main') return nft.rarity!=='Legendario';
+    const main=forgeSlots.main; if(!main) return true;
+    return nft.race===main.race&&nft.lineage===main.lineage&&nft.rarity===main.rarity;
+  }
+  if(mode==='lvl'){
+    if(slot==='lvl-main') return nft.level<MAX_LEVEL;
+    return true; // alimento: cualquier NFT que no esté ya en un slot
+  }
+  if(mode==='ren'){
+    if(nft.level<MAX_LEVEL) return false;
+    if(slot==='ren-main') return (nft.rebirths||0)<MAX_REBIRTHS;
+    const main=renSlots['ren-main']; if(!main) return true;
+    return nft.race===main.race&&nft.lineage===main.lineage;
+  }
+  return true;
+}
+function renderForgeSelectGrid(){
+  const slot=forgeSelectSlot, mode=forgeSelectMode;
+  const onlyCompatible=document.getElementById('forge-only-compatible')?.checked!==false;
+  const filtersEl=document.getElementById('forge-select-filters');
+  if(filtersEl) filtersEl.classList.toggle('hidden', mode!=='lvl');
+  let list=inventory;
+  if(onlyCompatible) list=list.filter(n=>forgeCompatible(n,slot,mode));
+  if(mode==='lvl'){
+    list=list.filter(n=>(forgeFilterRace==='all'||n.race===forgeFilterRace)
+      &&(forgeFilterRarity==='all'||n.rarity===forgeFilterRarity)
+      &&(forgeFilterLineage==='all'||n.lineage===forgeFilterLineage));
+  }
+  document.getElementById('forge-select-grid').innerHTML = list.length===0
+    ? '<p class="text-muted text-sm col-span-2 text-center py-8">No hay NFTs elegibles</p>'
+    : list.map(n=>nftCard(n,{onclick:`selectForgeSlot(${n.id})`})).join('');
+}
 function openForgeSelect(slot, mode) {
-  forgeSelectSlot=slot;
+  forgeSelectSlot=slot; forgeSelectMode=mode;
+  fillForgeFilters();
   document.getElementById('forge-select-title').textContent = mode==='ren'&&slot==='ren-sac' ? 'Selecciona Sacrificio (LVL 50)' :
     mode==='ren' ? 'Selecciona NFT (LVL 50)' : mode==='lvl'&&slot==='lvl-main' ? 'NFT a subir de nivel' : 'Selecciona NFT';
-  // Filter inventory
-  let eligible = inventory;
-  if(mode==='ren') eligible = inventory.filter(n=>n.level>=MAX_LEVEL);
-  if(mode==='ren'&&slot==='ren-sac'&&renSlots['ren-main']){
-    const main=renSlots['ren-main'];
-    eligible=eligible.filter(n=>n.id!==main.id&&n.race===main.race&&n.lineage===main.lineage&&n.level>=MAX_LEVEL);
-  }
-  document.getElementById('forge-select-grid').innerHTML = eligible.length === 0
-    ? '<p class="text-muted text-sm col-span-2 text-center py-8">No hay NFTs elegibles</p>'
-    : eligible.map(n=>nftCard(n,{onclick:`selectForgeSlot(${n.id})`})).join('');
+  renderForgeSelectGrid();
   openModal('modal-forge-select');
+}
+
+function setForgeSlotVisual(slot, nft){
+  const el=document.getElementById(slot); if(!el) return;
+  el.innerHTML=`<img src="${raceImg(nft.race)}" class="w-full h-full object-cover rounded-xl"/>`;
+  const rr=RARITIES[nft.rarity]||RARITIES.Cobre;
+  el.style.borderColor=rr.color; el.style.borderStyle='solid';
+}
+// Ascender: busca los 3 idénticos al principal y los coloca en s1-s3.
+function autoFillAscend(){
+  const main=forgeSlots.main;
+  if(!main){ alert('Elige primero el gladiador principal.'); return; }
+  ['s1','s2','s3'].forEach(s=>{
+    if(forgeSlots[s]) return; // respetar lo ya elegido a mano
+    const next=inventory.find(n=>n.id!==main.id&&n.race===main.race&&n.lineage===main.lineage&&n.rarity===main.rarity
+      &&!Object.values(forgeSlots).some(v=>v&&v.id===n.id));
+    if(next){ forgeSlots[s]=next; setForgeSlotVisual(s,next); }
+  });
+  checkForgeAscReady();
+  const missing=['s1','s2','s3'].filter(s=>!forgeSlots[s]).length;
+  if(missing>0) alert(`Faltan ${missing} sacrificio(s) idéntico(s) en tu inventario.`);
+}
+// Renacer: busca una copia idéntica Lv50 para el sacrificio.
+function autoFillRebirth(){
+  const main=renSlots['ren-main'];
+  if(!main){ alert('Elige primero el gladiador a renacer (Lv50).'); return; }
+  const cand=inventory.find(n=>n.id!==main.id&&n.level>=MAX_LEVEL&&n.race===main.race&&n.lineage===main.lineage);
+  if(!cand){ alert('No hay ninguna copia idéntica en Lv50 para sacrificar.'); return; }
+  renSlots['ren-sac']=cand; setForgeSlotVisual('ren-sac',cand); checkForgeRenReady();
 }
 
 function selectForgeSlot(id) {
   const nft=inventory.find(n=>n.id===id); if(!nft) return;
   closeModal('modal-forge-select');
   const mode=forgeMode, slot=forgeSelectSlot;
-  const el=document.getElementById(slot); if(!el) return;
-  el.innerHTML=`<img src="${raceImg(nft.race)}" class="w-full h-full object-cover rounded-xl"/>`;
-  const rr=RARITIES[nft.rarity]||RARITIES.Cobre;
-  el.style.borderColor=rr.color; el.style.borderStyle='solid';
+  setForgeSlotVisual(slot, nft);
   if(mode==='asc') { forgeSlots[slot]=nft; checkForgeAscReady(); }
   else if(mode==='lvl') { lvlSlots[slot]=nft; checkForgeLvlReady(); }
   else if(mode==='ren') { renSlots[slot]=nft; checkForgeRenReady(); }
@@ -1115,15 +1232,80 @@ function executeRebirth() {
 }
 
 // =============================================
-// ARENA
+// ARENA — ORGANIZADOR
 // =============================================
+// Ordenar y filtrar a los gladiadores de la arena. Por defecto, el
+// mejor primero (poder ↓): el nivel manda (×1000) y los stats desempatan.
+let arenaSort='power', arenaFilterRace='all', arenaFilterRarity='all', arenaFilterLineage='all';
+function powerOf(nft){
+  const s=getStats(nft);
+  return nft.level*1000 + (s.hp||0)+(s.atq||0)+(s.def||0)+(s.vel||0);
+}
+function applyArenaOrganizer(list){
+  const out=list.filter(n=>(arenaFilterRace==='all'||n.race===arenaFilterRace)
+    &&(arenaFilterRarity==='all'||n.rarity===arenaFilterRarity)
+    &&(arenaFilterLineage==='all'||n.lineage===arenaFilterLineage));
+  const s=getStats;
+  if(arenaSort==='power') out.sort((a,b)=>powerOf(b)-powerOf(a));
+  else if(arenaSort==='level') out.sort((a,b)=>b.level-a.level||powerOf(b)-powerOf(a));
+  else if(arenaSort==='hp') out.sort((a,b)=>(s(b).hp||0)-(s(a).hp||0));
+  else if(arenaSort==='atq') out.sort((a,b)=>(s(b).atq||0)-(s(a).atq||0));
+  else if(arenaSort==='race') out.sort((a,b)=>a.race.localeCompare(b.race,'es'));
+  return out;
+}
+function setArenaSort(v){ arenaSort=v; renderArenaSelect(); }
+function setArenaFilter(k,v){
+  if(k==='race') arenaFilterRace=v;
+  else if(k==='rarity') arenaFilterRarity=v;
+  else if(k==='lineage') arenaFilterLineage=v;
+  renderArenaSelect();
+}
+function fillArenaControls(){
+  const fill=(id, values)=>{
+    const el=document.getElementById(id); if(!el||el.options.length>1) return;
+    values.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o); });
+  };
+  fill('arena-filter-race', RACES);
+  fill('arena-filter-rarity', RARITY_ORDER);
+  fill('arena-filter-lineage', LINEAGE_KEYS);
+}
+// Reintenta cargar los gladiadores reales (si la primera carga falló,
+// p. ej. con el backend dormido, la arena se quedaba vacía).
+async function retryLoadMyGladiators(){
+  try { await loadMyGladiators(); }
+  catch(e){ alert('No se pudo cargar tus gladiadores: '+e.message); }
+  renderArenaSelect();
+}
 function renderArenaSelect() {
   selectedFighter=null;
   ['arena-select','arena-battle','arena-result'].forEach((id,i)=>
     document.getElementById(id)?.classList[i===0?'remove':'add']('hidden'));
   if(!apiToken) energyState=guestEnergyState(); // invitado: regenerar en local
+  fillArenaControls();
   updateFightButton(); // habilita solo con luchador elegido Y energía > 0
-  document.getElementById('arena-fighter-grid').innerHTML=inventory.map(nft=>{
+  // Con sesión, la arena SOLO lista gladiadores REALES (del servidor).
+  // Los de las cajas simuladas no pelean batallas reales ni gastan
+  // energía: antes se mezclaban con los reales y pelear con uno de
+  // ellos era gratis, por eso la energía nunca bajaba de 10.
+  const realCount = apiToken ? inventory.filter(n=>n.fromApi).length : 0;
+  const base = apiToken ? inventory.filter(n=>n.fromApi) : inventory;
+  const list = applyArenaOrganizer(base);
+  const countEl=document.getElementById('arena-count');
+  if(countEl) countEl.textContent = apiToken
+    ? `${list.length} de ${realCount} gladiadores reales`
+    : `${list.length} gladiadores (demo)`;
+  const grid=document.getElementById('arena-fighter-grid');
+  if(apiToken && realCount===0){
+    grid.innerHTML=`<div class="col-span-2 bg-panel border border-gray-800 rounded-xl p-4 text-center">
+      <p class="text-sm font-bold mb-1">Sin gladiadores reales todavía</p>
+      <p class="text-xs text-muted mb-3">Recluta uno gratis en Barracas, o reintenta cargar si acabas de entrar.</p>
+      <button onclick="retryLoadMyGladiators()" class="bg-bull text-black font-bold py-2 px-4 rounded-lg text-xs">REINTENTAR CARGAR</button>
+    </div>`;
+    return;
+  }
+  grid.innerHTML=list.length===0
+    ? '<p class="col-span-2 text-muted text-sm text-center py-6">Ningún gladiador coincide con los filtros</p>'
+    : list.map(nft=>{
     const rr=RARITIES[nft.rarity]||RARITIES.Cobre;
     const s=getStats(nft);
     return `<div id="arena-card-${nft.id}" onclick="selectFighter(${nft.id})" class="bg-panel border-2 rounded-xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform" style="border-color:${rr.color}">
@@ -1144,6 +1326,14 @@ function selectFighter(id) {
 function startBattle() {
   if(!selectedFighter) return;
   if(energyState.energy<1){ alert('Sin energía. Próxima energía en '+energyState.nextInMin+' min.'); return; }
+  // Con sesión, un gladiador de demostración (de una caja simulada) no
+  // puede pelear: su batalla simulada no gastaba energía de ningún
+  // lado, por eso la energía se quedaba en 10. La arena ya solo lista
+  // reales; esto es el seguro por si llega uno por otro camino.
+  if(apiToken && !selectedFighter.fromApi){
+    alert('Ese gladiador es de demostración (de una caja simulada) y no puede pelear batallas reales. Elige uno de tus gladiadores reales.');
+    return;
+  }
   // Invitado (demo local): la energía se gasta en local. Con sesión,
   // la cobra el servidor en /api/battle/fight.
   if(!apiToken){ energyState=guestConsumeEnergy(); updateHeader(); }
@@ -1361,7 +1551,7 @@ function showServerBattleResult(fighter, res, p2Race) {
 // =============================================
 // MERCADO
 // =============================================
-function renderMarket() {renderTickDisplay();renderP2PListings();}
+function renderMarket() {renderTickDisplay();renderP2PListings();updateReclutaButton();}
 function switchMarketTab(tab) {
   ['shop','p2p','tick'].forEach(t=>{
     document.getElementById('mkt-panel-'+t)?.classList.add('hidden');
@@ -1376,11 +1566,61 @@ function switchMarketTab(tab) {
 }
 
 // Tienda — Cajas
-// SIMULADO: las cajas se abren solo en local y no llaman al backend.
+// SIMULADO: las cajas Básica/Escuadrón/Batallón se abren solo en local
+// y no llaman al backend. El Paquete Recluta SÍ es real con sesión
+// (POST /api/market/packs/recluta, 1 por cuenta; ver claimStarterPack).
 // Los gladiadores reales se reclutan con el botón RECLUTAR de Barracas
 // (POST /api/gladiators/mint). La forja, el mercado P2P y la tienda de
 // $TICK también siguen siendo simulados en local.
+// Paquete Recluta — botón según el servidor (1 por cuenta, no un flag local).
+function updateReclutaButton(){
+  const btn=document.getElementById('recluta-btn');
+  const note=document.getElementById('recluta-note');
+  if(!btn) return;
+  if(apiToken && starterPackClaimed){
+    btn.disabled=true;
+    btn.classList.add('opacity-40','cursor-not-allowed');
+    btn.textContent='YA RECLAMADO · 1 POR CUENTA';
+    if(note) note.textContent='Ya reclamaste tu Paquete Recluta. Los 5 NFTs están en tus Barracas.';
+  } else {
+    btn.disabled=false;
+    btn.classList.remove('opacity-40','cursor-not-allowed');
+    btn.textContent='COMPRAR · 15 USDT';
+    if(note) note.textContent='1 por cuenta · los 5 NFTs son reales y aparecen en tus Barracas';
+  }
+}
+// Tarjeta de resultado de un pack (sirve para los simulados y para los reales del servidor).
+function packResultCard(nft,i){
+  const rr=RARITIES[nft.rarity]||RARITIES.Cobre;
+  return `<div class="text-center" style="animation:reveal .5s ${i*.1}s both">
+    <div class="border-2 rounded-xl overflow-hidden w-24 h-24" style="border-color:${rr.color}">
+      <img src="${raceImg(nft.race)}" class="w-full h-full object-cover"/>
+    </div>
+    <p class="text-[9px] font-bold mt-1" style="color:${rr.color}">${nft.rarity}</p>
+    <p class="text-[8px] text-muted">${nft.race}/${nft.lineage} · Lv${nft.level||1}</p>
+  </div>`;
+}
+// Reclamo real del Paquete Recluta en el servidor: 5 NFTs en la BD con
+// sorteos reales + 100 $TICK; el primero en Lv25. Una sola vez por cuenta.
+async function claimStarterPack(){
+  try{
+    const res=await apiFetch('/api/market/packs/recluta',{method:'POST'});
+    starterPackClaimed=true;
+    updateReclutaButton();
+    await loadMyGladiators();      // los 5 NFTs reales aparecen en Barracas
+    await syncProfileFromServer(); // +100 $TICK (y energía) actualizados
+    const container=document.getElementById('pack-result-cards');
+    container.innerHTML='';
+    res.gladiators.forEach((doc,i)=>{ container.innerHTML+=packResultCard(doc,i); });
+    openModal('modal-pack-result');
+  }catch(e){
+    if(e.message.includes('Ya reclamaste')){ starterPackClaimed=true; updateReclutaButton(); }
+    alert('No se pudo reclamar el Paquete Recluta: '+e.message);
+  }
+}
 function openPackModal(type) {
+  // Paquete Recluta con sesión: reclamo real en el servidor (1 por cuenta).
+  if(type==='recluta' && apiToken){ claimStarterPack(); return; }
   const counts={basica:1,escuadron:5,batallon:10,recluta:5};
   const costs={basica:2.5,escuadron:10,batallon:20,recluta:15};
   if(PLAYER.usdt<costs[type]){alert(`Necesitas ${costs[type]} USDT`);return;}
@@ -1392,14 +1632,7 @@ function openPackModal(type) {
   for(let i=0;i<counts[type];i++){
     const nft=rollNFT(type==='batallon'&&i===0);
     inventory.push(nft); newNFTs.push(nft);
-    const rr=RARITIES[nft.rarity];
-    container.innerHTML+=`<div class="text-center" style="animation:reveal .5s ${i*.1}s both">
-      <div class="border-2 rounded-xl overflow-hidden w-24 h-24" style="border-color:${rr.color}">
-        <img src="${raceImg(nft.race)}" class="w-full h-full object-cover"/>
-      </div>
-      <p class="text-[9px] font-bold mt-1" style="color:${rr.color}">${nft.rarity}</p>
-      <p class="text-[8px] text-muted">${nft.race}/${nft.lineage}</p>
-    </div>`;
+    container.innerHTML+=packResultCard(nft,i);
   }
   if(type==='recluta'&&newNFTs.length>0){
     const first=inventory.find(n=>n.id===newNFTs[0].id);
@@ -1567,7 +1800,12 @@ window.addEventListener('load',()=>{
   if(apiToken && apiWallet) {
     apiFetch('/api/auth/me').then(async ()=>{
       sessionRestored = true;
-      await loadMyGladiators();
+      // Si solo falla la carga de gladiadores, la sesión sigue siendo
+      // válida: no se borra el token (antes se borraba y el usuario
+      // quedaba como invitado con el inventario de demostración).
+      // Barracas y Arena reintentan la carga al entrar.
+      try { await loadMyGladiators(); }
+      catch(e){ /* se reintentará al entrar a Barracas/Arena */ }
     }).catch(()=>{
       apiToken=null; apiWallet=null; sessionRestored=false;
       localStorage.removeItem('cc_token'); localStorage.removeItem('cc_wallet');
