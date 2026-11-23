@@ -414,6 +414,28 @@ const RARITIES = {
 // XP que da cada raza sacrificada (base × nivel del NFT)
 const RARITY_XP = {Cobre:40,Bronce:90,Plata:200,Oro:420,Diamante:850,Legendario:1800};
 const RACES = ['Humano','Elfo','Enano','Orco','Goblin','Mediano','Gnomo','Dracónido','Tiefling','H.Lagarto','Tabaxi','Minotauro','Forjado','Cíborg','Alienígena'];
+// Modificadores por raza: misma tabla que RACE_MODIFIERS en backend/config.py.
+// Cada raza sube 2 stats y baja 1. El frontend solo muestra 4 stats
+// (vida, ataque, defensa, velocidad), así que aquí solo se aplican esos;
+// el cálculo completo de 15 stats vive en el backend (compute_stats).
+const RACE_MODIFIERS = {
+  'Humano':    {vida:1.10, atq_fisico:1.10, vel_ataque:0.95},
+  'Elfo':      {vel_ataque:1.20, prob_critico:1.20, vida:0.90},
+  'Enano':     {defensa:1.20, bloqueo:1.20, vel_ataque:0.90},
+  'Orco':      {atq_fisico:1.20, vida:1.15, def_magica:0.90},
+  'Goblin':    {prioridad:1.20, critico:1.20, defensa:0.90},
+  'Mediano':   {prob_reflejo:1.20, vel_recup:1.15, atq_fisico:0.90},
+  'Gnomo':     {atq_magico:1.20, prob_critico:1.10, vida:0.90},
+  'Dracónido': {atq_fisico:1.15, atq_magico:1.15, vel_ataque:0.90},
+  'Tiefling':  {atq_magico:1.20, critico:1.15, defensa:0.90},
+  'H.Lagarto': {recuperacion:1.20, vel_recup:1.15, atq_magico:0.90},
+  'Tabaxi':    {vel_ataque:1.20, prioridad:1.15, defensa:0.90},
+  'Minotauro': {vida:1.20, atq_fisico:1.10, vel_ataque:0.90},
+  'Forjado':   {defensa:1.20, vida:1.10, vel_recup:0.90},
+  'Cíborg':    {prob_bloqueo:1.20, defensa:1.10, recuperacion:0.90},
+  'Alienígena':{atq_magico:1.15, reflejo:1.20, atq_fisico:0.90},
+};
+function raceMult(race, stat){ return (RACE_MODIFIERS[race]||{})[stat] || 1; }
 const LINEAGE_KEYS = Object.keys(LINEAGES);
 const RARITY_ORDER = ['Cobre','Bronce','Plata','Oro','Diamante','Legendario'];
 const MAX_LEVEL = 50;
@@ -436,10 +458,10 @@ function getStats(nft) {
   const rebBonus = 1 + (nft.rebirths || 0) * 0.20;
   const m = rMult * lMult * rebBonus;
   return {
-    hp:  Math.round((nft.baseHp  || 500) * m),
-    atq: Math.round((nft.baseAtq || 95)  * m),
-    def: nft.level >= 10 ? Math.round((nft.baseDef || 45) * m) : 0,
-    vel: nft.level >= 25 ? Math.round((nft.baseVel || 30) * m) : 0,
+    hp:  Math.round((nft.baseHp  || 500) * raceMult(nft.race, 'vida') * m),
+    atq: Math.round((nft.baseAtq || 95)  * raceMult(nft.race, 'atq_fisico') * m),
+    def: nft.level >= 10 ? Math.round((nft.baseDef || 45) * raceMult(nft.race, 'defensa') * m) : 0,
+    vel: nft.level >= 25 ? Math.round((nft.baseVel || 30) * raceMult(nft.race, 'vel_ataque') * m) : 0,
   };
 }
 function addXP(nft, xpGained) {
