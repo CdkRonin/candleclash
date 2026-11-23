@@ -90,6 +90,7 @@
         </div>
       </div>
       <button onclick="connectWallet()" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base shadow-[0_0_20px_rgba(0,200,83,.35)] flex items-center justify-center gap-2">🦊 CONECTAR WALLET</button>
+      <p class="text-[10px] text-muted text-center">🔒 La firma es gratuita y no mueve fondos: solo demuestra que eres dueño de tu wallet.</p>
       <button onclick="connectGuest()" class="w-full bg-panel2 border border-gray-700 text-textmain font-semibold py-3 rounded-xl text-sm">Jugar como Invitado</button>
     </div>
     <p class="text-xs text-muted">225 combinaciones · 15 razas · 15 linajes cripto</p>
@@ -265,6 +266,7 @@
     <!-- TIENDA -->
     <div id="mkt-panel-shop" class="space-y-3">
       <div class="bg-panel2 rounded-xl p-3 text-center text-xs text-muted">225 combinaciones · 15 razas × 15 linajes</div>
+      <p class="text-[10px] text-muted text-center">Tienda en modo demo: las compras usan saldo simulado, no dinero real todavía.</p>
       <div class="bg-panel border-2 border-tick rounded-xl p-4 relative shadow-[0_0_15px_rgba(255,215,0,.15)]">
         <div class="absolute top-0 right-0 bg-tick text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">PRIMERA VEZ</div>
         <div class="flex items-center gap-3 mb-3"><span class="text-3xl">🎖️</span><div><h3 class="font-bold text-tick">Paquete Recluta</h3><p class="text-xs text-muted">5 cajas + 100 $TICK + 1 NFT Lvl 25</p></div></div>
@@ -562,7 +564,13 @@ async function apiFetch(path, opts={}) {
   const headers = {'Content-Type':'application/json', ...(opts.headers||{})};
   if(apiToken) headers['Authorization']='Bearer '+apiToken;
   const res = await fetch(API_BASE+path, {...opts, headers});
-  if(!res.ok) throw new Error('API '+res.status);
+  if(!res.ok) {
+    // Mostrar el mensaje del servidor (p. ej. "Ya tienes tus 2
+    // gladiadores gratis") en vez de un genérico "API 403".
+    let msg = 'API '+res.status;
+    try { const d = await res.json(); if(d && d.detail) msg = d.detail; } catch(e) {}
+    throw new Error(msg);
+  }
   return res.json();
 }
 
@@ -604,9 +612,12 @@ async function loadMyGladiators() {
 }
 
 // Recluta (mint) un gladiador Cobre nivel 1 en el backend.
-// Raza y linaje aleatorios si no se indican.
+// Raza y linaje aleatorios si no se indican. Límite: 2 gratis por wallet.
+let minting = false;
 async function mintGladiator(race, lineage) {
   if(!apiToken){ alert('Conecta tu wallet con MetaMask para reclutar.'); return; }
+  if(minting) return; // evitar doble clic = doble mint
+  minting = true;
   try {
     const doc = await apiFetch('/api/gladiators/mint', {
       method:'POST',
@@ -616,6 +627,7 @@ async function mintGladiator(race, lineage) {
     renderBarracks(); updateHeader();
     alert(`⚔ ¡Gladiador reclutado!\n${doc.race}/${doc.lineage} · Cobre · Lv1`);
   } catch(e) { alert('No se pudo reclutar: '+e.message); }
+  finally { minting = false; }
 }
 
 // Refresca UN gladiador desde el servidor sin tocar la vista actual
@@ -755,12 +767,18 @@ function renderBarracks() {
   const list = currentRarityFilter==='all' ? inventory : inventory.filter(n=>n.rarity===currentRarityFilter);
   document.getElementById('barracks-count').textContent = list.length+'/'+inventory.length+' NFTs';
   // Panel de recluta real (solo con sesión): mint en el backend.
+  // Límite: 2 gladiadores gratis por wallet; muestra cuántos quedan
+  // y desactiva el botón al llegar al límite.
   const apiPanel = document.getElementById('barracks-api');
   if(apiPanel){
     if(apiToken){
       apiPanel.classList.remove('hidden');
-      apiPanel.innerHTML = `<button onclick="mintGladiator()" class="w-full bg-bull text-black font-bold py-3 rounded-xl text-sm">＋ RECLUTAR GLADIADOR · GRATIS</button>
-      <p class="text-[10px] text-muted text-center mt-1">Recluta un gladiador Cobre Lv1 real en el backend (raza y linaje aleatorios)</p>`;
+      const FREE_MINT_LIMIT = 2;
+      const realCount = inventory.filter(n=>n.fromApi).length;
+      const remaining = Math.max(0, FREE_MINT_LIMIT - realCount);
+      const out = remaining <= 0;
+      apiPanel.innerHTML = `<button onclick="mintGladiator()" ${out?'disabled':''} class="w-full ${out?'bg-panel2 text-muted cursor-not-allowed':'bg-bull text-black'} font-bold py-3 rounded-xl text-sm">${out?'LÍMITE DE RECLUTAS GRATIS ALCANZADO':'＋ RECLUTAR GLADIADOR · GRATIS'}</button>
+      <p class="text-[10px] text-muted text-center mt-1">${out?'Ya tienes tus 2 gladiadores gratis.':'Te quedan '+remaining+' de 2 reclutamientos gratis · Cobre Lv1, raza y linaje aleatorios'}</p>`;
     } else apiPanel.classList.add('hidden');
   }
   document.getElementById('barracks-grid').innerHTML = list.length===0
