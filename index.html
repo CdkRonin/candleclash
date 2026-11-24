@@ -699,13 +699,15 @@ function startEnergyTicker(){
   if(energyTickerStarted) return; energyTickerStarted=true;
   setInterval(tickEnergy, 30000);
 }
-// Sincroniza el perfil real desde el servidor: $TICK, trofeos,
-// victorias y energía. Se usa al entrar y tras cada batalla real.
+// Sincroniza el perfil real desde el servidor: $TICK, USDT, trofeos,
+// victorias y energía. Se usa al entrar y tras cada batalla, forja o
+// operación de mercado real. Es la única fuente de saldos con sesión:
+// sin ella la cabecera seguiría mostrando los 500 USDT de demo.
 async function syncProfileFromServer(){
   if(!apiToken) return;
   try {
     const u=await apiFetch('/api/auth/me');
-    PLAYER.tick=u.tick_balance; PLAYER.trophies=u.trophies;
+    PLAYER.tick=u.tick_balance; PLAYER.usdt=u.usdt_balance; PLAYER.trophies=u.trophies;
     PLAYER.wins=u.wins; PLAYER.losses=u.losses;
     if(typeof u.energy==='number') setEnergyFromServer(u.energy, u.energy_next_in_min||0);
     starterPackClaimed=!!u.starter_pack_claimed;
@@ -733,6 +735,25 @@ function updateFightButton(){
 // Mercado P2P
 let playerListings = []; // {id, nft, price}
 let p2pListings = generateSimulatedListings();
+// Con sesión: anuncios REALES del servidor (GET /api/market/listings).
+// Sin sesión se usan los simulados de arriba, marcados como demo.
+// El servidor es la verdad: precio, vendedor y gladiador vienen de
+// la BD; el frontend solo los muestra y llama a comprar/publicar.
+let realListings = []; // {id: listing_id, seller, price, nft: local}
+function listingToLocal(doc){
+  const nft=apiGladiatorToLocal(doc.nft_snapshot||{});
+  nft.id=nextId++;
+  return {id:doc.listing_id, seller:doc.seller_wallet, price:doc.price_usdt, nft};
+}
+async function loadRealListings(){
+  if(!apiToken){ realListings=[]; return []; }
+  try{
+    const docs=await apiFetch('/api/market/listings');
+    realListings=(docs||[]).map(listingToLocal);
+  }catch(e){ realListings=[]; }
+  return realListings;
+}
+function isMyListing(l){ return !!(apiToken && apiWallet && (l.seller||'').toLowerCase()===apiWallet.toLowerCase()); }
 
 function generateSimulatedListings() {
   const sellers = ['DarkOrco_88','CryptoWarrior','NightElf_Sol','GoblinKing','ForgedOne'];
@@ -754,8 +775,10 @@ function generateSimulatedListings() {
 // CONEXIÓN AL BACKEND (API REAL)
 // =============================================
 // El backend vive en Render. Login con MetaMask, mis gladiadores,
-// batallas y oráculo usan la API real. Mercado, forja y tienda de
-// $TICK siguen siendo SIMULADOS en local (ver comentarios en cada función).
+// batallas, oráculo, forja, mercado P2P y tienda de $TICK usan la
+// API real con sesión. Las cajas (salvo el Paquete Recluta) siguen
+// en demo; sin sesión todo sigue simulado en local (ver comentarios
+// en cada función).
 // Para desarrollo local se puede apuntar a la API local con
 // ?api=http://127.0.0.1:8000 o guardando 'cc_api_base' en localStorage.
 const API_BASE = localStorage.getItem('cc_api_base')
@@ -827,6 +850,7 @@ function apiGladiatorToLocal(doc) {
     fromApi: true,
     race: doc.race, lineage: doc.lineage, rarity: doc.rarity,
     level: doc.level, xp: doc.xp||0, rebirths: doc.rebirths||0,
+    is_listed: !!doc.is_listed, // en venta en el P2P: no se puede forjar ni volver a listar
     baseHp: bs.vida||500, baseAtq: bs.atq_fisico||95, baseDef: bs.defensa||45, baseVel: bs.vel_ataque||30,
     stats: doc.computed_stats || null,
   };
@@ -886,6 +910,7 @@ function nftCard(nft, opts={}) {
         <div class="absolute top-1 left-1 rounded px-1.5 py-0.5 text-[8px] font-mono font-bold ${isLegLine?'lineage-leg':''}" style="background:#0B0E11CC;color:${isLegLine?'#FFD700':lg.color}">${nft.lineage}${isLegLine?' ★':''}</div>
         <div class="absolute top-1 right-1 rounded px-1.5 py-0.5 text-[8px] font-mono font-bold" style="background:#0B0E11CC;color:${rr.color}">Lv${nft.level}</div>
         ${nft.rebirths?`<div class="absolute bottom-1 left-1 bg-purple-900/80 text-purple-300 text-[7px] font-bold px-1 rounded">🔄×${nft.rebirths}</div>`:''}
+        ${nft.is_listed?'<div class="absolute top-8 left-1 bg-tick text-black text-[7px] font-bold px-1 rounded">EN VENTA</div>':''}
         ${nft.level>=25?'<div class="absolute bottom-1 right-1 bg-bull text-black text-[7px] font-bold px-1 rounded">TORNEO ✓</div>':''}
       </div>
       <div class="p-2">
@@ -1267,7 +1292,15 @@ function setForgeFilter(k,v){
 //  - Subir de nivel: principal con nivel < 50; alimento: cualquier NFT.
 //  - Renacer: principal y sacrificio en Lv50, misma raza+linaje,
 //    principal con menos de 5 renacimientos. La rareza NO tiene que coincidir.
+// Con sesión, la forja solo puede usar gladiadores reales (del
+// servidor, con token_id) que no estén en venta: los demo no existen
+// en el backend y el servidor rechaza los listados en Ascender.
+function forgePool(){
+  return apiToken ? inventory.filter(n=>n.fromApi && !n.is_listed) : inventory;
+}
 function forgeCompatible(nft, slot, mode){
+  if(apiToken && !nft.fromApi) return false; // demo: sin token_id el servidor lo rechaza
+  if(nft.is_listed) return false; // en venta: no se sacrifica lo que se está vendiendo
   const slotted=new Set([...Object.values(forgeSlots),...Object.values(lvlSlots),...Object.values(renSlots)].filter(Boolean).map(n=>n.id));
   if(slotted.has(nft.id)) return false;
   if(mode==='asc'){
@@ -1293,9 +1326,10 @@ function forgeCompatible(nft, slot, mode){
 // tope de rareza, y los sacrificios solo aceptan copias idénticas.
 function forgeSelectEmptyMsg(){
   const slot=forgeSelectSlot, mode=forgeSelectMode;
+  const pool=forgePool();
   if(mode==='asc'){
     if(slot==='main'){
-      const anyAscendable=inventory.some(n=>n.rarity!=='Legendario');
+      const anyAscendable=pool.some(n=>n.rarity!=='Legendario');
       return anyAscendable
         ? 'Ningún gladiador coincide con los filtros. Quita el filtro "Solo compatibles" o cambia los filtros.'
         : 'Todos tus gladiadores son Legendarios: ya están en el tope de rareza y no se pueden ascender.';
@@ -1306,7 +1340,7 @@ function forgeSelectEmptyMsg(){
   }
   if(mode==='lvl'){
     if(slot==='lvl-main'){
-      const maxLv=inventory.length?Math.max(...inventory.map(n=>n.level)):0;
+      const maxLv=pool.length?Math.max(...pool.map(n=>n.level)):0;
       return `Ningún gladiador puede subir de nivel (todos están en Lv${MAX_LEVEL}). Tu nivel máximo ahora es Lv${maxLv}.`;
     }
     return 'No hay gladiadores disponibles como alimento.';
@@ -1327,7 +1361,7 @@ function renderForgeSelectGrid(){
   const onlyCompatible=document.getElementById('forge-only-compatible')?.checked!==false;
   const filtersEl=document.getElementById('forge-select-filters');
   if(filtersEl) filtersEl.classList.toggle('hidden', mode!=='lvl');
-  let list=inventory;
+  let list=forgePool();
   if(onlyCompatible) list=list.filter(n=>forgeCompatible(n,slot,mode));
   if(mode==='lvl'){
     list=list.filter(n=>(forgeFilterRace==='all'||n.race===forgeFilterRace)
@@ -1423,7 +1457,7 @@ function autoFillAscend(){
   if(!main){ showForgeMsg('forge-auto-msg','Elige primero el gladiador principal.',false); return; }
   ['s1','s2','s3'].forEach(s=>{
     if(forgeSlots[s]) return; // respetar lo ya elegido a mano
-    const next=inventory.find(n=>n.id!==main.id&&n.race===main.race&&n.lineage===main.lineage&&n.rarity===main.rarity
+    const next=forgePool().find(n=>n.id!==main.id&&n.race===main.race&&n.lineage===main.lineage&&n.rarity===main.rarity
       &&!Object.values(forgeSlots).some(v=>v&&v.id===n.id));
     if(next){ forgeSlots[s]=next; setForgeSlotVisual(s,next); }
   });
@@ -1441,7 +1475,7 @@ function autoFillRebirth(){
     showForgeMsg('ren-auto-msg',`Primero elige un gladiador principal para renacer (Nivel 50). Tu nivel máximo ahora es Lv${maxLv}.`,false);
     return;
   }
-  const cand=inventory.find(n=>n.id!==main.id&&n.level>=MAX_LEVEL&&n.race===main.race&&n.lineage===main.lineage);
+  const cand=forgePool().find(n=>n.id!==main.id&&n.level>=MAX_LEVEL&&n.race===main.race&&n.lineage===main.lineage);
   if(!cand){ showForgeMsg('ren-auto-msg',`No tienes una copia idéntica Lv50 de ${main.race}/${main.lineage}. Necesitas otro gladiador igual (misma raza y linaje) también en Nivel 50.`,false); return; }
   renSlots['ren-sac']=cand; setForgeSlotVisual('ren-sac',cand); checkForgeRenReady();
   showForgeMsg('ren-auto-msg',`✓ Copia idéntica Lv50 seleccionada: ${cand.race}/${cand.lineage} Lv50.`,true);
@@ -1519,10 +1553,28 @@ function checkForgeAscReady() {
     btn.disabled=true; btn.classList.add('opacity-40','cursor-not-allowed');
   }
 }
-function executeForge() {
-  if(PLAYER.tick<50){alert('Necesitas 50 $TICK');return;}
+async function executeForge() {
   const {main,s1,s2,s3}=forgeSlots;
+  if(!main||!s1||!s2||!s3) return;
   const nextRarity=RARITY_ORDER[RARITY_ORDER.indexOf(main.rarity)+1];
+  // REAL con sesión: POST /api/forge/ascend {main_id, sacrifice_ids}
+  // (token_id del servidor). El servidor cobra 50 $TICK, quema los 3
+  // sacrificios y sube la rareza; si rechaza, se muestra SU mensaje.
+  if(apiToken){
+    try{
+      const res=await apiFetch('/api/forge/ascend',{method:'POST',
+        body:JSON.stringify({main_id:main.token_id, sacrifice_ids:[s1.token_id,s2.token_id,s3.token_id]})});
+      bumpMission('forge');
+      await loadMyGladiators();
+      await syncProfileFromServer();
+      resetAllForge();
+      alert(`🔥 ¡FUSIÓN EXITOSA!\n${main.race}/${main.lineage} → ${res.new_rarity.toUpperCase()}\n−${res.tick_spent} $TICK`);
+      showView('view-barracks');
+    }catch(e){ alert('No se pudo ascender: '+e.message); }
+    return;
+  }
+  // DEMO sin sesión: como antes, en local.
+  if(PLAYER.tick<50){alert('Necesitas 50 $TICK');return;}
   PLAYER.tick-=50;
   inventory=inventory.filter(n=>n.id!==s1.id&&n.id!==s2.id&&n.id!==s3.id);
   const t=inventory.find(n=>n.id===main.id);
@@ -1557,10 +1609,27 @@ function checkForgeLvlReady() {
   const btn=document.getElementById('lvl-btn');
   btn.disabled=false; btn.classList.remove('opacity-40','cursor-not-allowed');
 }
-function executeFeed() {
+async function executeFeed() {
   const mainNFT=lvlSlots['lvl-main'];
   const foods=['lvl-f1','lvl-f2','lvl-f3','lvl-f4'].map(k=>lvlSlots[k]).filter(Boolean);
   if(!mainNFT||foods.length===0) return;
+  // REAL con sesión: POST /api/forge/feed {main_id, food_ids: 1–4}.
+  // Gratis; el servidor calcula la XP (rareza × nivel del alimento),
+  // quema el alimento y devuelve nivel/XP nuevos.
+  if(apiToken){
+    try{
+      const res=await apiFetch('/api/forge/feed',{method:'POST',
+        body:JSON.stringify({main_id:mainNFT.token_id, food_ids:foods.map(f=>f.token_id)})});
+      bumpMission('forge');
+      await loadMyGladiators();
+      await syncProfileFromServer();
+      resetAllForge();
+      alert(`⬆ ¡NIVEL SUBIDO!\n${mainNFT.race}/${mainNFT.lineage}\n+${res.xp_gained.toLocaleString()} XP · Nivel actual: ${res.new_level}`);
+      showView('view-barracks');
+    }catch(e){ alert('No se pudo alimentar: '+e.message); }
+    return;
+  }
+  // DEMO sin sesión: como antes, en local.
   const totalXP=foods.reduce((a,n)=>a+xpFromNFT(n),0);
   const foodIds=foods.map(f=>f.id);
   inventory=inventory.filter(n=>!foodIds.includes(n.id));
@@ -1593,9 +1662,27 @@ function checkForgeRenReady() {
     btn.disabled=true; btn.classList.add('opacity-40','cursor-not-allowed');
   }
 }
-function executeRebirth() {
-  if(PLAYER.tick<100){alert('Necesitas 100 $TICK');return;}
+async function executeRebirth() {
   const main=renSlots['ren-main'], sac=renSlots['ren-sac'];
+  if(!main||!sac) return;
+  // REAL con sesión: POST /api/forge/rebirth {main_id, sacrifice_id}.
+  // Cuesta 100 $TICK; ambos Lv50, misma raza+linaje (la rareza no
+  // tiene que coincidir). El principal vuelve a Lv1 con +20% por renacimiento.
+  if(apiToken){
+    try{
+      const res=await apiFetch('/api/forge/rebirth',{method:'POST',
+        body:JSON.stringify({main_id:main.token_id, sacrifice_id:sac.token_id})});
+      bumpMission('forge');
+      await loadMyGladiators();
+      await syncProfileFromServer();
+      resetAllForge();
+      alert(`🔄 ¡RENACIMIENTO COMPLETADO!\n${main.race}/${main.lineage} volvió al Lv1\n+${res.stat_bonus_pct}% stats permanente (renacimiento ${res.rebirths}/5)\n−${res.tick_spent} $TICK`);
+      showView('view-barracks');
+    }catch(e){ alert('No se pudo renacer: '+e.message); }
+    return;
+  }
+  // DEMO sin sesión: como antes, en local.
+  if(PLAYER.tick<100){alert('Necesitas 100 $TICK');return;}
   PLAYER.tick-=100;
   inventory=inventory.filter(n=>n.id!==sac.id);
   const target=inventory.find(n=>n.id===main.id);
@@ -2020,7 +2107,10 @@ function showServerBattleResult(fighter, res, p2Race) {
 // =============================================
 // MERCADO
 // =============================================
-function renderMarket() {renderTickDisplay();renderP2PListings();updateReclutaButton();}
+function renderMarket() {
+  if(apiToken){ syncProfileFromServer(); loadRealListings().then(renderP2PListings); }
+  renderTickDisplay(); renderP2PListings(); updateReclutaButton();
+}
 function switchMarketTab(tab) {
   ['shop','p2p','tick'].forEach(t=>{
     document.getElementById('mkt-panel-'+t)?.classList.add('hidden');
@@ -2030,17 +2120,17 @@ function switchMarketTab(tab) {
   document.getElementById('mkt-panel-'+tab)?.classList.remove('hidden');
   const ab=document.getElementById('mkt-tab-'+tab);
   if(ab){ab.classList.add('tab-active-bull');ab.classList.remove('text-muted');}
-  if(tab==='tick') renderTickDisplay();
-  if(tab==='p2p') renderP2PListings();
+  if(tab==='tick'){ if(apiToken) syncProfileFromServer(); renderTickDisplay(); }
+  if(tab==='p2p'){ if(apiToken) loadRealListings().then(renderP2PListings); else renderP2PListings(); }
 }
 
 // Tienda — Cajas
 // SIMULADO: las cajas Básica/Escuadrón/Batallón se abren solo en local
 // y no llaman al backend. El Paquete Recluta SÍ es real con sesión
 // (POST /api/market/packs/recluta, 1 por cuenta; ver claimStarterPack).
-// Los gladiadores reales se reclutan con el botón RECLUTAR de Barracas
-// (POST /api/gladiators/mint). La forja, el mercado P2P y la tienda de
-// $TICK también siguen siendo simulados en local.
+// La forja, el mercado P2P y la tienda de $TICK ya son REALES con
+// sesión (ver executeForge/executeFeed/executeRebirth, renderP2PListings
+// y buyTick/sellTick); sin sesión siguen simulados en local.
 // Paquete Recluta — botón según el servidor (1 por cuenta, no un flag local).
 function updateReclutaButton(){
   const btn=document.getElementById('recluta-btn');
@@ -2143,13 +2233,20 @@ function showP2PTab(tab) {
   if(tab==='sell') renderSellPanel();
 }
 function renderP2PListings() {
-  const allListings=[...p2pListings,...playerListings];
+  // Con sesión: SOLO anuncios reales del servidor. Los simulados se
+  // eliminan (no se mezclan): un anuncio falso junto a uno real con
+  // dinero de verdad sería un engaño. Sin sesión, demo como antes.
+  const allListings = apiToken ? realListings : [...p2pListings, ...playerListings];
   const el=document.getElementById('p2p-listings'); if(!el) return;
-  el.innerHTML = allListings.length===0
+  const note = apiToken
+    ? '<p class="text-[10px] text-tick font-bold mb-2">● ANUNCIOS REALES DEL SERVIDOR · se paga con tu USDT real</p>'
+    : '<p class="text-[10px] text-yellow-300 mb-2">● ANUNCIOS DEMO (simulados) · conecta tu wallet para ver los reales</p>';
+  el.innerHTML = note + (allListings.length===0
     ? '<p class="text-muted text-sm text-center py-6">No hay anuncios activos</p>'
     : allListings.map(l=>{
         const rr=RARITIES[l.nft.rarity]||RARITIES.Cobre;
         const s=getStats(l.nft);
+        const mine=isMyListing(l);
         return `<div class="bg-panel2 border border-gray-700 rounded-xl p-3 flex items-center gap-3">
           <div class="w-14 h-14 rounded-xl overflow-hidden border-2 flex-none" style="border-color:${rr.color}">
             <img src="${raceImg(l.nft.race)}" class="w-full h-full object-cover"/>
@@ -2157,16 +2254,35 @@ function renderP2PListings() {
           <div class="flex-1 min-w-0">
             <p class="text-xs font-bold truncate">${l.nft.race} <span class="font-mono" style="color:${rr.color}">${l.nft.rarity}</span></p>
             <p class="text-[9px] text-muted font-mono">${l.nft.lineage} · Lv${l.nft.level} · ATQ ${s.atq.toLocaleString()}</p>
-            <p class="text-[9px] text-muted">Vendedor: ${l.seller||'Tú'}</p>
+            <p class="text-[9px] text-muted">Vendedor: ${mine?'Tú':(l.seller||'Tú')}</p>
           </div>
           <div class="text-right flex-none">
             <p class="text-sm font-mono font-bold text-bull">${l.price} USDT</p>
-            <button onclick="buyListedNFT('${l.id}')" class="mt-1 bg-bull text-black font-bold py-1 px-3 rounded-lg text-[10px]">COMPRAR</button>
+            ${mine
+              ? '<p class="mt-1 text-[10px] font-bold text-tick">TU ANUNCIO</p>'
+              : `<button onclick="buyListedNFT('${l.id}')" class="mt-1 bg-bull text-black font-bold py-1 px-3 rounded-lg text-[10px]">COMPRAR</button>`}
           </div>
         </div>`;
-      }).join('');
+      }).join(''));
 }
-function buyListedNFT(listingId) {
+async function buyListedNFT(listingId) {
+  // REAL con sesión: POST /api/market/buy/{listing_id}. El servidor
+  // cobra tu USDT real (con 5% de comisión para el vendedor), transfiere
+  // el NFT a tu wallet y marca el anuncio como vendido.
+  if(apiToken){
+    const listing=realListings.find(l=>l.id===listingId);
+    if(!listing){ alert('Anuncio no disponible'); return; }
+    try{
+      const res=await apiFetch('/api/market/buy/'+encodeURIComponent(listingId),{method:'POST'});
+      await loadMyGladiators();
+      await syncProfileFromServer();
+      await loadRealListings();
+      renderP2PListings();
+      alert(`✅ ¡Comprado!\n${listing.nft.race}/${listing.nft.lineage} ${listing.nft.rarity} Lv${listing.nft.level}\n-${res.paid} USDT (comisión de plataforma: ${res.platform_fee} USDT)`);
+    }catch(e){ alert('No se pudo comprar: '+e.message); }
+    return;
+  }
+  // DEMO sin sesión: como antes, en local.
   const pL=playerListings.find(l=>l.id===listingId);
   const simL=p2pListings.find(l=>l.id===listingId);
   const listing=pL||simL;
@@ -2183,19 +2299,31 @@ function buyListedNFT(listingId) {
 function renderSellPanel() {
   selectedP2PNFT=null;
   document.getElementById('p2p-price-section').classList.add('hidden');
-  document.getElementById('p2p-my-nfts').innerHTML=inventory.map(n=>{
+  // Con sesión solo se pueden vender gladiadores reales que no estén
+  // ya en venta (el servidor rechaza los listados y los demo).
+  const sellable = apiToken ? inventory.filter(n=>n.fromApi && !n.is_listed) : inventory;
+  document.getElementById('p2p-my-nfts').innerHTML = sellable.length===0
+    ? '<p class="text-muted text-sm text-center py-6 col-span-2">No tienes gladiadores para vender</p>'
+    : sellable.map(n=>{
     const rr=RARITIES[n.rarity]||RARITIES.Cobre;
     return `<div id="sell-card-${n.id}" onclick="selectP2PNFT(${n.id})" class="bg-panel border-2 rounded-xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform" style="border-color:${rr.color}">
       <img src="${raceImg(n.race)}" class="nft-img"/>
       <div class="p-1.5 text-center"><p class="text-[9px] font-bold truncate">${n.race}</p><p class="text-[8px] text-muted">Lv${n.level} · ${n.rarity}</p></div>
     </div>`;
   }).join('');
-  document.getElementById('p2p-my-listings').innerHTML = playerListings.length===0 ? '' :
-    `<p class="text-[10px] text-muted font-bold tracking-widest mb-2 mt-3">${playerListings.length===1?'TU ANUNCIO':'TUS ANUNCIOS'} (${playerListings.length})</p>` +
-    playerListings.map(l=>`<div class="bg-panel2 border border-gray-700 rounded-xl p-2 flex items-center justify-between">
+  // Mis anuncios: con sesión vienen del servidor (seller == yo); sin
+  // sesión, de la lista local. El backend NO tiene cancelar: un anuncio
+  // real sigue activo hasta que alguien lo compre (se avisa en la UI).
+  const myListings = apiToken ? realListings.filter(isMyListing) : playerListings;
+  document.getElementById('p2p-my-listings').innerHTML = myListings.length===0 ? '' :
+    `<p class="text-[10px] text-muted font-bold tracking-widest mb-2 mt-3">${myListings.length===1?'TU ANUNCIO':'TUS ANUNCIOS'} (${myListings.length})</p>` +
+    myListings.map(l=>`<div class="bg-panel2 border border-gray-700 rounded-xl p-2 flex items-center justify-between">
       <p class="text-xs">${l.nft.race}/${l.nft.lineage} · <span class="text-bull font-bold">${l.price} USDT</span></p>
-      <button onclick="cancelListing('${l.id}')" class="text-bear text-[10px] font-bold px-2 py-1 rounded border border-bear">CANCELAR</button>
-    </div>`).join('');
+      ${apiToken
+        ? '<span class="text-[9px] text-muted">Sin cancelación todavía</span>'
+        : `<button onclick="cancelListing('${l.id}')" class="text-bear text-[10px] font-bold px-2 py-1 rounded border border-bear">CANCELAR</button>`}
+    </div>`).join('') +
+    (apiToken && myListings.length>0 ? '<p class="text-[10px] text-yellow-300 mt-2">Los anuncios reales no se pueden cancelar todavía: seguirán activos hasta que alguien los compre. Al vender, recibes el precio menos 5% de comisión.</p>' : '');
 }
 function selectP2PNFT(id) {
   selectedP2PNFT=inventory.find(n=>n.id===id);
@@ -2205,10 +2333,26 @@ function selectP2PNFT(id) {
   document.getElementById('p2p-price-input').value=suggested.toFixed(2);
   document.getElementById('p2p-price-section').classList.remove('hidden');
 }
-function listNFTForSale() {
+async function listNFTForSale() {
   if(!selectedP2PNFT) return;
   const price=parseFloat(document.getElementById('p2p-price-input').value);
   if(!price||price<0.1){alert('Precio mínimo: 0.10 USDT');return;}
+  // REAL con sesión: POST /api/market/list {gladiator_id, price_usdt}.
+  // El servidor marca el NFT como en venta (sale de tu inventario
+  // usable hasta que se venda) y devuelve el listing_id.
+  if(apiToken){
+    try{
+      await apiFetch('/api/market/list',{method:'POST',
+        body:JSON.stringify({gladiator_id:selectedP2PNFT.token_id, price_usdt:+price.toFixed(2)})});
+      selectedP2PNFT=null;
+      await loadMyGladiators();
+      await loadRealListings();
+      alert(`📋 NFT publicado por ${price.toFixed(2)} USDT\nRecibirás ${((price*0.95).toFixed(2))} USDT al venderse (5% de comisión).\nNo se puede cancelar todavía: el anuncio seguirá activo hasta que alguien lo compre.`);
+      renderSellPanel(); renderP2PListings();
+    }catch(e){ alert('No se pudo publicar: '+e.message); }
+    return;
+  }
+  // DEMO sin sesión: como antes, en local.
   playerListings.push({id:'pl'+Date.now(),seller:'Jugador_001',nft:{...selectedP2PNFT},price:+(price.toFixed(2))});
   inventory=inventory.filter(n=>n.id!==selectedP2PNFT.id);
   selectedP2PNFT=null;
@@ -2216,6 +2360,9 @@ function listNFTForSale() {
   renderSellPanel(); renderP2PListings();
 }
 function cancelListing(id) {
+  // Sin endpoint de cancelar en el backend: un anuncio real no se
+  // puede retirar desde el juego (sigue activo hasta que se venda).
+  if(apiToken){ alert('Los anuncios reales aún no se pueden cancelar: el anuncio seguirá activo hasta que alguien lo compre.'); return; }
   const l=playerListings.find(x=>x.id===id); if(!l) return;
   inventory.push({...l.nft,id:nextId++});
   playerListings=playerListings.filter(x=>x.id!==id);
@@ -2237,9 +2384,23 @@ function updateSellPreview() {
   const ticks=parseFloat(document.getElementById('sell-tick-input').value)||0;
   document.getElementById('sell-tick-preview').textContent=`→ Recibirás ${(ticks*0.08).toFixed(2)} USDT (comisión del 20% ya aplicada)`;
 }
-function buyTick() {
+async function buyTick() {
   const usdt=parseFloat(document.getElementById('buy-tick-input').value)||0;
   if(usdt<0.1){alert('Mínimo 0.10 USDT');return;}
+  // REAL con sesión: POST /api/market/tick/buy {usdt_amount}.
+  // 1 USDT = 10 $TICK, con tu saldo real del servidor.
+  if(apiToken){
+    try{
+      const res=await apiFetch('/api/market/tick/buy',{method:'POST',body:JSON.stringify({usdt_amount:usdt})});
+      await syncProfileFromServer();
+      renderTickDisplay();
+      document.getElementById('buy-tick-input').value='';
+      document.getElementById('buy-tick-preview').textContent='→ Recibirás 0 $TICK';
+      alert(`✅ Compraste ${res.tick_received.toLocaleString()} $TICK\n-${res.usdt_spent} USDT`);
+    }catch(e){ alert('No se pudo comprar $TICK: '+e.message); }
+    return;
+  }
+  // DEMO sin sesión: como antes, en local.
   if(PLAYER.usdt<usdt){alert('Saldo USDT insuficiente');return;}
   const ticks=Math.floor(usdt*10);
   PLAYER.usdt=+(PLAYER.usdt-usdt).toFixed(2); PLAYER.tick+=ticks;
@@ -2248,9 +2409,23 @@ function buyTick() {
   document.getElementById('buy-tick-preview').textContent='→ Recibirás 0 $TICK';
   alert(`✅ Compraste ${ticks.toLocaleString()} $TICK\n-${usdt} USDT`);
 }
-function sellTick() {
+async function sellTick() {
   const ticks=parseFloat(document.getElementById('sell-tick-input').value)||0;
   if(ticks<10){alert('Mínimo 10 $TICK');return;}
+  // REAL con sesión: POST /api/market/tick/sell {tick_amount}.
+  // 10 $TICK = 0.80 USDT (comisión del 20% ya aplicada).
+  if(apiToken){
+    try{
+      const res=await apiFetch('/api/market/tick/sell',{method:'POST',body:JSON.stringify({tick_amount:Math.floor(ticks)})});
+      await syncProfileFromServer();
+      renderTickDisplay();
+      document.getElementById('sell-tick-input').value='';
+      document.getElementById('sell-tick-preview').textContent='→ Recibirás 0.00 USDT';
+      alert(`✅ Vendiste ${res.tick_sold.toLocaleString()} $TICK\n+${res.usdt_received} USDT (comisión del 20% ya aplicada)`);
+    }catch(e){ alert('No se pudo vender $TICK: '+e.message); }
+    return;
+  }
+  // DEMO sin sesión: como antes, en local.
   if(PLAYER.tick<ticks){alert('Saldo $TICK insuficiente');return;}
   const usdt=+(ticks*0.08).toFixed(2);
   PLAYER.tick-=ticks; PLAYER.usdt=+(PLAYER.usdt+usdt).toFixed(2);
