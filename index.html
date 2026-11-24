@@ -466,6 +466,22 @@
   </div>
 </div>
 
+<div id="modal-create" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center p-4 overflow-y-auto">
+  <div class="w-full max-w-md pt-6">
+    <h2 class="text-bull font-extrabold text-xl mb-1 text-center">⚔ CREAR GLADIADOR</h2>
+    <p class="text-[11px] text-muted text-center mb-4">Cobre · Lv1 · elige raza y linaje, o déjalo al azar</p>
+    <label class="text-[10px] text-muted font-bold tracking-widest">NOMBRE (OPCIONAL)</label>
+    <input id="create-name" maxlength="20" placeholder="Nombre (opcional, p. ej. Humano · BTC)" class="w-full bg-panel2 border border-gray-700 rounded-xl text-sm py-2.5 px-3 mt-1 mb-4 outline-none focus:border-bull"/>
+    <label class="text-[10px] text-muted font-bold tracking-widest">RAZA</label>
+    <div id="create-race-grid" class="grid grid-cols-3 gap-2 mt-1 mb-4"></div>
+    <label class="text-[10px] text-muted font-bold tracking-widest">LINAJE</label>
+    <div id="create-lineage-grid" class="grid grid-cols-3 gap-2 mt-1 mb-5"></div>
+    <button onclick="confirmCreateGladiator()" class="bg-bull text-black font-bold py-3 px-10 rounded-xl w-full mb-2">CREAR GLADIADOR</button>
+    <button onclick="randomCreateGladiator()" class="bg-panel2 border border-gray-700 text-white font-bold py-3 px-10 rounded-xl w-full mb-2">🎲 ALEATORIO</button>
+    <button onclick="closeModal('modal-create')" class="text-muted text-xs font-bold py-2 w-full">CANCELAR</button>
+  </div>
+</div>
+
 <script>
 // =============================================
 // CONSTANTES
@@ -518,6 +534,37 @@ const RACE_MODIFIERS = {
   'Alienígena':{atq_magico:1.15, reflejo:1.20, atq_fisico:0.90},
 };
 function raceMult(race, stat){ return (RACE_MODIFIERS[race]||{})[stat] || 1; }
+// Habilidades por raza: MISMA TABLA que RACE_ABILITIES en
+// backend/config.py. SOLO para mostrarla y para la batalla demo de
+// invitado; en batallas reales manda el servidor, nunca se calculan
+// efectos aquí. kind: damage_mult (multiplica el daño de ese ataque),
+// crit (el próximo ataque siempre es crítico), heal (cura value × vida
+// máxima), block (protege del próximo ataque), extra_attack (segundo
+// golpe en la misma ronda), reduce (el próximo ataque hace 1−value).
+// Se dispara sola en el primer ataque de la ronda en que el
+// enfriamiento está listo (rondas 1, 1+cooldown, ...).
+const RACE_ABILITIES = {
+  'Humano':    {id:'golpe_decisivo',    nombre:'Golpe Decisivo',    descripcion:'Un golpe certero con +40% de daño.',             kind:'damage_mult',  value:1.4,  cooldown:4},
+  'Elfo':      {id:'tiro_certero',      nombre:'Tiro Certero',      descripcion:'El próximo ataque siempre es crítico.',           kind:'crit',         value:null, cooldown:4},
+  'Enano':     {id:'muro_piedra',       nombre:'Muro de Piedra',    descripcion:'Bloquea por completo el próximo ataque enemigo.', kind:'block',        value:null, cooldown:4},
+  'Orco':      {id:'furia_salvaje',     nombre:'Furia Salvaje',     descripcion:'Daño ×1.5 en el próximo ataque.',                 kind:'damage_mult',  value:1.5,  cooldown:5},
+  'Goblin':    {id:'punalada_rapida',   nombre:'Puñalada Rápida',   descripcion:'Ataca una vez más en esta misma ronda.',          kind:'extra_attack', value:null, cooldown:5},
+  'Mediano':   {id:'suerte_mediana',    nombre:'Suerte Mediana',    descripcion:'Recupera 10% de su vida máxima.',                 kind:'heal',         value:0.10, cooldown:4},
+  'Gnomo':     {id:'chispa_arcana',     nombre:'Chispa Arcana',     descripcion:'Daño mágico: +40% de daño en el próximo ataque.', kind:'damage_mult',  value:1.4,  cooldown:4},
+  'Dracónido': {id:'aliento_dragon',    nombre:'Aliento de Dragón', descripcion:'Daño ×1.5 en el próximo ataque.',                 kind:'damage_mult',  value:1.5,  cooldown:5},
+  'Tiefling':  {id:'pacto_infernal',    nombre:'Pacto Infernal',    descripcion:'El próximo ataque siempre es crítico.',           kind:'crit',         value:null, cooldown:4},
+  'H.Lagarto': {id:'regeneracion',      nombre:'Regeneración',      descripcion:'Recupera 15% de su vida máxima.',                 kind:'heal',         value:0.15, cooldown:5},
+  'Tabaxi':    {id:'zarpazo_doble',     nombre:'Zarpazo Doble',     descripcion:'Ataca una vez más en esta misma ronda.',          kind:'extra_attack', value:null, cooldown:5},
+  'Minotauro': {id:'embestida',         nombre:'Embestida',         descripcion:'Daño ×1.5 en el próximo ataque.',                 kind:'damage_mult',  value:1.5,  cooldown:5},
+  'Forjado':   {id:'armadura_reforzada',nombre:'Armadura Reforzada',descripcion:'El próximo ataque enemigo hace la mitad de daño.', kind:'reduce',       value:0.5,  cooldown:4},
+  'Cíborg':    {id:'escudo_energia',    nombre:'Escudo de Energía', descripcion:'Bloquea por completo el próximo ataque enemigo.', kind:'block',        value:null, cooldown:4},
+  'Alienígena':{id:'mente_colmena',     nombre:'Mente Colmena',     descripcion:'Recupera 10% de su vida máxima.',                 kind:'heal',         value:0.10, cooldown:4},
+};
+function abilityOf(nft){ return nft.ability || RACE_ABILITIES[nft.race] || RACE_ABILITIES['Humano']; }
+// Nombre que se muestra: el elegido en el creador, o por defecto
+// "Raza · Linaje" (igual que display_name del servidor).
+function defaultName(nft){ return nft.race + ' · ' + nft.lineage; }
+function gladiatorName(nft){ return nft.display_name || nft.name || defaultName(nft); }
 const LINEAGE_KEYS = Object.keys(LINEAGES);
 const RARITY_ORDER = ['Cobre','Bronce','Plata','Oro','Diamante','Legendario'];
 // Probabilidades de los packs (misma tabla que RARITY_ROLL /
@@ -851,6 +898,9 @@ function apiGladiatorToLocal(doc) {
     fromApi: true,
     race: doc.race, lineage: doc.lineage, rarity: doc.rarity,
     level: doc.level, xp: doc.xp||0, rebirths: doc.rebirths||0,
+    name: doc.name || null,
+    display_name: doc.display_name || (doc.race + ' · ' + doc.lineage),
+    ability: doc.ability || RACE_ABILITIES[doc.race] || RACE_ABILITIES['Humano'],
     is_listed: !!doc.is_listed, // en venta en el P2P: no se puede forjar ni volver a listar
     baseHp: bs.vida||500, baseAtq: bs.atq_fisico||95, baseDef: bs.defensa||45, baseVel: bs.vel_ataque||30,
     stats: doc.computed_stats || null,
@@ -863,23 +913,105 @@ async function loadMyGladiators() {
   renderBarracks(); renderArenaSelect(); updateHeader();
 }
 
+// Cuerpo del POST /api/gladiators/mint. Solo se mandan los campos
+// elegidos: sin raza/linaje/nombre el servidor sortea y deja el nombre
+// por defecto ("Raza · Linaje"). El nombre se recorta a 20 caracteres.
+function buildMintBody(race, lineage, name) {
+  const body = {};
+  if(race) body.race = race;
+  if(lineage) body.lineage = lineage;
+  const n = (name || '').trim();
+  if(n) body.name = n.slice(0, 20);
+  return body;
+}
+
 // Recluta (mint) un gladiador Cobre nivel 1 en el backend.
-// Raza y linaje aleatorios si no se indican. Límite: 2 gratis por wallet.
+// Raza, linaje y nombre elegidos en el creador; aleatorios si no se
+// indican. Límite: 2 gratis por wallet.
 let minting = false;
-async function mintGladiator(race, lineage) {
+async function mintGladiator(race, lineage, name) {
   if(!apiToken){ alert('Conecta tu wallet con MetaMask para reclutar.'); return; }
   if(minting) return; // evitar doble clic = doble mint
   minting = true;
   try {
     const doc = await apiFetch('/api/gladiators/mint', {
       method:'POST',
-      body: JSON.stringify({...(race?{race}:{}), ...(lineage?{lineage}:{})}),
+      body: JSON.stringify(buildMintBody(race, lineage, name)),
     });
     inventory.push(apiGladiatorToLocal(doc));
     renderBarracks(); updateHeader();
-    alert(`⚔ ¡Gladiador reclutado!\n${doc.race}/${doc.lineage} · Cobre · Lv1`);
+    alert(`⚔ ¡Gladiador reclutado!\n${doc.display_name || (doc.race + ' · ' + doc.lineage)} · Cobre · Lv1`);
   } catch(e) { alert('No se pudo reclutar: '+e.message); }
   finally { minting = false; }
+}
+
+// =============================================
+// CREADOR DE PERSONAJES
+// =============================================
+// Modal sencillo: nombre opcional (máx. 20), raza y linaje elegidos
+// (las 15 de siempre, sin razas nuevas). Con sesión crea el gladiador
+// real en el servidor; sin sesión crea uno DEMO local, como las cajas
+// simuladas (no se guarda, no pelea batallas reales).
+let createRace = 'Humano', createLineage = 'BTC';
+function openCreateModal() {
+  createRace = 'Humano'; createLineage = 'BTC';
+  const input = document.getElementById('create-name');
+  if(input) input.value = '';
+  renderCreateSelectors();
+  updateCreatePlaceholder();
+  openModal('modal-create');
+}
+function updateCreatePlaceholder() {
+  const el = document.getElementById('create-name');
+  if(el) el.placeholder = 'Nombre (opcional, p. ej. ' + createRace + ' · ' + createLineage + ')';
+}
+function renderCreateSelectors() {
+  const raceEl = document.getElementById('create-race-grid');
+  if(raceEl) raceEl.innerHTML = RACES.map(r => {
+    const ab = RACE_ABILITIES[r];
+    const sel = r === createRace;
+    return `<button onclick="setCreateRace('${r}')" class="rounded-xl overflow-hidden border-2 text-left ${sel ? 'border-bull' : 'border-gray-700'}" style="${sel ? 'box-shadow:0 0 10px rgba(0,200,83,.5);' : ''}">
+      <img src="${raceImg(r)}" class="w-full h-14 object-cover"/>
+      <p class="text-[9px] font-bold px-1 py-0.5 truncate ${sel ? 'text-bull' : ''}">${r}</p>
+      <p class="text-[8px] text-purple-300 px-1 pb-1 truncate">✨ ${ab.nombre}</p>
+    </button>`;
+  }).join('');
+  const linEl = document.getElementById('create-lineage-grid');
+  if(linEl) linEl.innerHTML = LINEAGE_KEYS.map(k => {
+    const lg = LINEAGES[k];
+    const sel = k === createLineage;
+    return `<button onclick="setCreateLineage('${k}')" class="rounded-lg border-2 px-2 py-1.5 text-left ${sel ? 'border-bull' : 'border-gray-700'}" style="${sel ? 'box-shadow:0 0 10px rgba(0,200,83,.5);' : ''}">
+      <p class="text-[10px] font-bold font-mono" style="color:${lg.color}">● ${k}</p>
+      <p class="text-[8px] text-muted">${lg.attr} · ${lg.tier}</p>
+    </button>`;
+  }).join('');
+}
+function setCreateRace(r) { createRace = r; renderCreateSelectors(); updateCreatePlaceholder(); }
+function setCreateLineage(l) { createLineage = l; renderCreateSelectors(); updateCreatePlaceholder(); }
+function createDemoGladiator(race, lineage, name) {
+  const nm = (name || '').trim().slice(0, 20);
+  const nft = {id: nextId++, race, lineage, rarity: 'Cobre', level: 1, xp: 0, rebirths: 0,
+    baseHp: 500, baseAtq: 95, baseDef: 45, baseVel: 30, fromApi: false,
+    name: nm || null, display_name: nm || (race + ' · ' + lineage),
+    ability: RACE_ABILITIES[race] || RACE_ABILITIES['Humano']};
+  inventory.push(nft);
+  renderBarracks(); renderArenaSelect(); updateHeader();
+  return nft;
+}
+function confirmCreateGladiator() {
+  const name = document.getElementById('create-name')?.value || '';
+  closeModal('modal-create');
+  if(apiToken) mintGladiator(createRace, createLineage, name);
+  else createDemoGladiator(createRace, createLineage, name);
+}
+function randomCreateGladiator() {
+  closeModal('modal-create');
+  if(apiToken) mintGladiator(); // sin raza/linaje/nombre: el servidor sortea
+  else {
+    const nft = rollNFT(); // demo aleatorio, como las cajas simuladas
+    inventory.push(nft);
+    renderBarracks(); renderArenaSelect(); updateHeader();
+  }
 }
 
 // Refresca UN gladiador desde el servidor sin tocar la vista actual
@@ -916,8 +1048,8 @@ function nftCard(nft, opts={}) {
       </div>
       <div class="p-2">
         <div class="mb-1">
-          <p class="text-[11px] font-bold text-white truncate leading-tight">${nft.race}</p>
-          <p class="text-[8px] font-mono font-bold leading-tight" style="color:${rr.color}">${nft.rarity.toUpperCase()}</p>
+          <p class="text-[11px] font-bold text-white truncate leading-tight">${gladiatorName(nft)}</p>
+          <p class="text-[8px] font-mono font-bold leading-tight" style="color:${rr.color}">${nft.race} · ${nft.rarity.toUpperCase()}</p>
         </div>
         ${opts.foot||''}
         <div class="xp-bar mb-1.5"><div class="xp-fill" style="width:${xpPct}%"></div></div>
@@ -1233,9 +1365,10 @@ function renderBarracks() {
   const demoNote = demoCount>0
     ? `<div class="col-span-2 bg-panel2 border border-yellow-700 rounded-xl p-3 text-center"><p class="text-[11px] text-yellow-300 font-bold">⚠ ${demoCount} gladiador(es) de demostración (de cajas simuladas): no pelean batallas reales ni gastan energía.</p></div>`
     : '';
-  // Panel de recluta real (solo con sesión): mint en el backend.
-  // Límite: 2 gladiadores gratis por wallet; muestra cuántos quedan
-  // y desactiva el botón al llegar al límite.
+  // Panel de recluta (abre el creador): con sesión, mint real en el
+  // backend. Límite: 2 gladiadores gratis por wallet; muestra cuántos
+  // quedan y desactiva el botón al llegar al límite. Sin sesión, el
+  // creador también se muestra y crea un gladiador DEMO local.
   const apiPanel = document.getElementById('barracks-api');
   if(apiPanel){
     if(apiToken){
@@ -1244,9 +1377,13 @@ function renderBarracks() {
       const realCount = inventory.filter(n=>n.fromApi).length;
       const remaining = Math.max(0, FREE_MINT_LIMIT - realCount);
       const out = remaining <= 0;
-      apiPanel.innerHTML = `<button onclick="mintGladiator()" ${out?'disabled':''} class="w-full ${out?'bg-panel2 text-muted cursor-not-allowed':'bg-bull text-black'} font-bold py-3 rounded-xl text-sm">${out?'LÍMITE DE RECLUTAS GRATIS ALCANZADO':'＋ RECLUTAR GLADIADOR · GRATIS'}</button>
-      <p class="text-[10px] text-muted text-center mt-1">${out?'Ya tienes tus 2 gladiadores gratis.':'Te quedan '+remaining+' de 2 reclutamientos gratis · Cobre Lv1, raza y linaje aleatorios'}</p>`;
-    } else apiPanel.classList.add('hidden');
+      apiPanel.innerHTML = `<button onclick="openCreateModal()" ${out?'disabled':''} class="w-full ${out?'bg-panel2 text-muted cursor-not-allowed':'bg-bull text-black'} font-bold py-3 rounded-xl text-sm">${out?'LÍMITE DE RECLUTAS GRATIS ALCANZADO':'＋ CREAR GLADIADOR · GRATIS'}</button>
+      <p class="text-[10px] text-muted text-center mt-1">${out?'Ya tienes tus 2 gladiadores gratis.':'Te quedan '+remaining+' de 2 reclutamientos gratis · Cobre Lv1, elige raza, linaje y nombre'}</p>`;
+    } else {
+      apiPanel.classList.remove('hidden');
+      apiPanel.innerHTML = `<button onclick="openCreateModal()" class="w-full bg-bull text-black font-bold py-3 rounded-xl text-sm">＋ CREAR GLADIADOR · DEMO</button>
+      <p class="text-[10px] text-muted text-center mt-1">Modo invitado: el gladiador es de demostración (local, no se guarda en el servidor) · Conecta tu wallet para reclutar gladiadores reales</p>`;
+    }
   }
   document.getElementById('barracks-grid').innerHTML = demoNote + (list.length===0
     ? `<div class="col-span-2 bg-panel border border-gray-800 rounded-xl p-4 text-center">
@@ -1266,6 +1403,7 @@ function openNFTDetail(id) {
   const nft=inventory.find(n=>n.id===id); if(!nft) return;
   const lg=LINEAGES[nft.lineage]||LINEAGES.BTC, rr=RARITIES[nft.rarity]||RARITIES.Cobre;
   const s=getStats(nft);
+  const ab=abilityOf(nft);
   const xpNeed=nft.level>=MAX_LEVEL?'MAX':xpToNextLevel(nft.level);
   const xpPct=nft.level>=MAX_LEVEL?100:Math.round(nft.xp/xpToNextLevel(nft.level)*100);
   document.getElementById('nft-detail-content').innerHTML=`
@@ -1273,9 +1411,14 @@ function openNFTDetail(id) {
       <img src="${raceImg(nft.race)}" class="w-full object-cover" style="max-height:220px"/>
     </div>
     <div class="bg-panel2 rounded-xl p-3 space-y-1.5 mb-3">
+      <div class="flex justify-between"><span class="text-xs text-muted">Nombre</span><span class="text-xs font-bold">${gladiatorName(nft)}</span></div>
       <div class="flex justify-between"><span class="text-xs text-muted">Raza</span><span class="text-xs font-bold">${nft.race}</span></div>
       <div class="flex justify-between"><span class="text-xs text-muted">Linaje</span><span class="text-xs font-bold" style="color:${lg.color}">${nft.lineage} — ${lg.attr}</span></div>
       <div class="flex justify-between"><span class="text-xs text-muted">Rareza</span><span class="text-xs font-bold" style="color:${rr.color}">${nft.rarity}</span></div>
+      <div class="pt-1 border-t border-gray-800">
+        <div class="flex justify-between"><span class="text-xs text-muted">Habilidad</span><span class="text-xs font-bold text-purple-300">✨ ${ab.nombre}</span></div>
+        <p class="text-[10px] text-muted mt-0.5">${ab.descripcion} · cada ${ab.cooldown} rondas</p>
+      </div>
       <div class="flex justify-between"><span class="text-xs text-muted">Nivel</span><span class="text-xs font-bold">${nft.level} / ${MAX_LEVEL} ${nft.rebirths?`· 🔄×${nft.rebirths}`:''}</span></div>
       <div><div class="flex justify-between text-xs mb-1"><span class="text-muted">XP</span><span class="font-mono">${nft.xp} / ${xpNeed}</span></div><div class="xp-bar"><div class="xp-fill" style="width:${xpPct}%"></div></div></div>
     </div>
@@ -1862,8 +2005,8 @@ function renderArenaSelect() {
     return `<div id="arena-card-${nft.id}" onclick="selectFighter(${nft.id})" class="bg-panel border-2 rounded-xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform relative" style="border-color:${sel?'#00C853':rr.color};${sel?'box-shadow:0 0 15px rgba(0,200,83,.5);':''}">
       ${sel?'<div class="absolute top-1 left-1 z-10 bg-bull text-black text-[8px] font-bold px-1.5 py-0.5 rounded">✓ SELECCIONADO</div>':''}
       <img src="${raceImg(nft.race)}" class="nft-img" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231E2329%22/><text y=%2250%25%22 x=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2228%22>⚔️</text></svg>'"/>
-      <div class="p-1.5 text-center"><p class="text-[10px] font-bold">${nft.race}</p>
-      <p class="text-[9px] font-mono text-muted">Lv${nft.level} · ${nft.rarity}</p>
+      <div class="p-1.5 text-center"><p class="text-[10px] font-bold">${gladiatorName(nft)}</p>
+      <p class="text-[9px] font-mono text-muted">${nft.race} · Lv${nft.level} · ${nft.rarity}</p>
       <p class="text-[9px] font-mono text-bear">ATQ ${s.atq.toLocaleString()}</p></div>
     </div>`;
   }).join('');
@@ -1872,7 +2015,7 @@ function renderArenaSelect() {
 function updateArenaSelectedLabel(){
   const el=document.getElementById('arena-selected-label'); if(!el) return;
   el.textContent = selectedFighter
-    ? `Luchador: ${selectedFighter.race} · ${selectedFighter.rarity} · Lv${selectedFighter.level}`
+    ? `Luchador: ${gladiatorName(selectedFighter)} · ${selectedFighter.rarity} · Lv${selectedFighter.level}`
     : 'Elige un gladiador para pelear';
 }
 function selectFighter(id) {
@@ -1953,19 +2096,19 @@ function runDemoBattle(opp) {
   battleResultApplied=false;
   document.getElementById('arena-preview').classList.add('hidden');
   const s1=getStats(selectedFighter), s2=getStats(opp);
-  battleState={p1:{...selectedFighter,curHp:s1.hp,maxHp:s1.hp,stats:s1},
-               p2:{...opp,curHp:s2.hp,maxHp:s2.hp,stats:s2},round:0,done:false};
+  battleState={p1:{...selectedFighter,curHp:s1.hp,maxHp:s1.hp,stats:s1,cd:0,block_next:false,reduce_next:false},
+               p2:{...opp,curHp:s2.hp,maxHp:s2.hp,stats:s2,cd:0,block_next:false,reduce_next:false},round:0,done:false};
   document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(selectedFighter.race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
   document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(opp.race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
-  document.getElementById('p1-name').textContent=selectedFighter.race;
-  document.getElementById('p2-name').textContent=opp.race;
+  document.getElementById('p1-name').textContent=gladiatorName(selectedFighter);
+  document.getElementById('p2-name').textContent=gladiatorName(opp);
   document.getElementById('p1-hp').textContent=s1.hp.toLocaleString();
   document.getElementById('p2-hp').textContent=s2.hp.toLocaleString();
   document.getElementById('p1-bar').style.width='100%';
   document.getElementById('p2-bar').style.width='100%';
   document.getElementById('battle-log').innerHTML='';
   document.getElementById('battle-round').textContent='RONDA 1';
-  document.getElementById('battle-status').textContent=`⚔ ¡Que comience! Rival: ${opp.race} · ${opp.rarity} Lv${opp.level}`;
+  document.getElementById('battle-status').textContent=`⚔ ¡Que comience! Rival: ${gladiatorName(opp)} · ${opp.rarity} Lv${opp.level}`;
   document.getElementById('arena-select').classList.add('hidden');
   document.getElementById('arena-battle').classList.remove('hidden');
   if(battleTimer) clearTimeout(battleTimer);
@@ -1995,10 +2138,49 @@ function battleNextStep() {
   document.getElementById('battle-round').textContent='RONDA '+battleState.round;
   const log=document.getElementById('battle-log');
   const arena=document.getElementById('arena-battle');
-  function atk(att,def,isP1){
-    const crit=Math.random()<0.18, blocked=Math.random()<0.08;
+  // El enfriamiento de habilidad baja 1 al empezar cada ronda (igual
+  // que el servidor): con cd 0 la habilidad se dispara al atacar y
+  // cd pasa a ser su cooldown (rondas 1, 1+cooldown, ...).
+  for(const s of [p1,p2]) if(s.cd>0) s.cd--;
+  function atk(att,def,isP1,allowAbility=true){
+    let forceCrit=false, dmgMult=1, extra=false;
+    // Habilidad de la raza (tabla espejo RACE_ABILITIES): se dispara
+    // sola al atacar si el enfriamiento está listo. En batallas reales
+    // manda el servidor; aquí es solo la demo de invitado.
+    if(allowAbility && att.cd===0){
+      const ab=RACE_ABILITIES[att.race]||RACE_ABILITIES['Humano'];
+      att.cd=ab.cooldown;
+      const entry={round:battleState.round,type:'ability',attacker:att.race,
+        ability:ab.nombre,ability_id:ab.id,effect:ab.kind,value:ab.value};
+      if(ab.kind==='heal'){
+        const amount=Math.min(Math.floor(att.maxHp*ab.value),att.maxHp-att.curHp);
+        att.curHp+=amount; entry.healed=amount;
+        document.getElementById(isP1?'p1-hp':'p2-hp').textContent=att.curHp.toLocaleString();
+        document.getElementById(isP1?'p1-bar':'p2-bar').style.width=Math.round(att.curHp/att.maxHp*100)+'%';
+      }
+      else if(ab.kind==='block') att.block_next=true;
+      else if(ab.kind==='reduce') att.reduce_next=true;
+      else if(ab.kind==='crit') forceCrit=true;
+      else if(ab.kind==='damage_mult') dmgMult=ab.value;
+      else if(ab.kind==='extra_attack') extra=true;
+      const ae=document.createElement('div'); ae.className='log-entry';
+      ae.innerHTML=formatServerLogLine(entry, isP1);
+      log.appendChild(ae); log.scrollTop=log.scrollHeight;
+    }
+    // El bloqueo por habilidad protege del próximo ataque (sin sorteo);
+    // el sorteo actual de crítico/bloqueo se queda como está y la
+    // habilidad se suma encima.
+    const blocked=def.block_next||Math.random()<0.08;
+    if(def.block_next) def.block_next=false;
+    const crit=forceCrit||Math.random()<0.18;
     let dmg=Math.max(5,Math.round((att.stats.atq*(0.80+Math.random()*0.45))-(def.stats.def*0.55)));
-    if(blocked) dmg=0; else if(crit) dmg=Math.round(dmg*2.1);
+    if(blocked) dmg=0;
+    else {
+      if(crit) dmg=Math.round(dmg*2.1);
+      if(dmgMult!==1) dmg=Math.round(dmg*dmgMult);
+      // La reducción por habilidad amortigua el próximo ataque (1−value).
+      if(def.reduce_next){ def.reduce_next=false; const rv=(RACE_ABILITIES[def.race]||RACE_ABILITIES['Humano']).value||0; dmg=Math.max(1,Math.round(dmg*(1-rv))); }
+    }
     def.curHp=Math.max(0,def.curHp-dmg);
     const pct=Math.round(def.curHp/def.maxHp*100);
     const e=document.createElement('div'); e.className='log-entry';
@@ -2015,6 +2197,9 @@ function battleNextStep() {
     log.appendChild(e); log.scrollTop=log.scrollHeight;
     if(isP1){document.getElementById('p2-hp').textContent=def.curHp.toLocaleString();document.getElementById('p2-bar').style.width=pct+'%';}
     else    {document.getElementById('p1-hp').textContent=def.curHp.toLocaleString();document.getElementById('p1-bar').style.width=pct+'%';}
+    // Segundo golpe en la misma ronda (habilidad extra_attack): sin
+    // volver a disparar la habilidad y sin crítico forzado.
+    if(extra && def.curHp>0) return atk(att,def,isP1,false);
     return def.curHp<=0;
   }
   const firstP1=p1.stats.vel>=p2.stats.vel;
@@ -2060,7 +2245,7 @@ function showBattleResult() {
     <p class="text-[10px] text-muted font-bold tracking-widest mb-2">RECOMPENSAS</p>
     <div class="flex justify-between text-xs"><span class="text-muted">$TICK</span><span class="text-tick font-mono font-bold">+${tick}</span></div>
     <div class="flex justify-between text-xs"><span class="text-muted">XP</span><span class="text-purple-400 font-mono">+${xpGained}</span></div>
-    ${fighter?`<div class="mt-1"><div class="flex justify-between text-[10px]"><span class="text-muted">${fighter.race} · Lv${fighter.level}</span><span class="font-mono">${fighter.xp}/${xpNeed} XP</span></div><div class="xp-bar mt-0.5"><div class="xp-fill" style="width:${xpPct}%"></div></div></div>`:''}
+    ${fighter?`<div class="mt-1"><div class="flex justify-between text-[10px]"><span class="text-muted">${gladiatorName(fighter)} · Lv${fighter.level}</span><span class="font-mono">${fighter.xp}/${xpNeed} XP</span></div><div class="xp-bar mt-0.5"><div class="xp-fill" style="width:${xpPct}%"></div></div></div>`:''}
     <div class="flex justify-between text-xs"><span class="text-muted">Trofeos</span><span class="${win?'text-bull':'text-bear'} font-mono">${win?'+25':'-10'}</span></div>`;
 }
 function resetArena(){renderArenaSelect();}
@@ -2089,6 +2274,27 @@ async function startBattleReal() {
   }
 }
 
+// Una línea del log de batalla del servidor, en HTML. Mismo formato
+// que la batalla demo: atacante → defensor. Las entradas de habilidad
+// (type "ability") NO llevan damage: el daño, si lo hay, va en la
+// entrada de ataque siguiente. Si trae `healed`, es la vida real curada.
+// Standalone para poder probarla en Node.
+function formatServerLogLine(e, isP1) {
+  const atkCls = isP1 ? 'text-bull' : 'text-bear';
+  const defCls = isP1 ? 'text-bear' : 'text-bull';
+  const att = `<span class="${atkCls}">${e.attacker}</span>`;
+  const def = e.defender || 'Rival';
+  if(e.type === 'ability'){
+    const heal = (e.healed != null)
+      ? ` <span class="text-bull font-bold">+${(e.healed || 0).toLocaleString()} HP</span>` : '';
+    return `${att} <span class="text-purple-400">✨ usa ${e.ability || ''}</span>${heal}`;
+  }
+  if(e.type === 'block') return `${att} → ${def} <span class="text-muted">🛡 BLOQUEADO</span>`;
+  if(e.type === 'crit') return `${att} → ${def} <span class="text-tick font-bold">💥 CRÍTICO −${(e.damage || 0).toLocaleString()} HP</span>`;
+  if(e.type === 'reflect') return `${att} → ${def} <span class="text-purple-400">−${(e.damage || 0).toLocaleString()} HP · ${def} refleja −${(e.reflected || 0).toLocaleString()} HP</span>`;
+  return `${att} → ${def} <span class="${defCls}">−${(e.damage || 0).toLocaleString()} HP</span>`;
+}
+
 function playServerBattle(fighter, res) {
   const s1 = getStats(fighter); // stats del servidor (computed_stats)
   const isP1Hit = e => e.attacker===fighter.race; // si ambos tienen la misma raza, es ambiguo
@@ -2100,32 +2306,33 @@ function playServerBattle(fighter, res) {
   const p1Max = s1.hp;
   let p1Hp = p1Max, p2Hp = p2Max;
   const p2Race = (res.opponent && res.opponent.race) || (res.log.map(e=>e.attacker).find(r=>r!==fighter.race)) || 'Rival';
+  const p2Name = (res.opponent && res.opponent.display_name) || (res.opponent && res.opponent.lineage ? defaultName(res.opponent) : p2Race);
   document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(fighter.race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
   document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(p2Race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
-  document.getElementById('p1-name').textContent=fighter.race;
-  document.getElementById('p2-name').textContent=p2Race;
+  document.getElementById('p1-name').textContent=gladiatorName(fighter);
+  document.getElementById('p2-name').textContent=p2Name;
   document.getElementById('p1-hp').textContent=p1Max.toLocaleString();
   document.getElementById('p2-hp').textContent=p2Max.toLocaleString();
   document.getElementById('p1-bar').style.width='100%';
   document.getElementById('p2-bar').style.width='100%';
   document.getElementById('battle-round').textContent='RONDA 1';
   document.getElementById('battle-status').textContent = res.opponent
-    ? `Rival: ${p2Race} · ${res.opponent.rarity} Lv${res.opponent.level} · ${p2Max.toLocaleString()} HP`
+    ? `Rival: ${p2Name} · ${res.opponent.rarity} Lv${res.opponent.level} · ${p2Max.toLocaleString()} HP`
     : '⚔ ¡Que comience!';
   const logEl=document.getElementById('battle-log');
   let i=0, curRound=0;
   const step=()=>{
-    if(i>=res.log.length){ showServerBattleResult(fighter, res, p2Race); return; }
+    if(i>=res.log.length){ showServerBattleResult(fighter, res, p2Name); return; }
     const e=res.log[i++];
     if(e.round!==curRound){ curRound=e.round; document.getElementById('battle-round').textContent='RONDA '+curRound; }
     const isP1 = isP1Hit(e);
     const div=document.createElement('div'); div.className='log-entry';
-    // Mismo formato que la batalla demo: atacante → defensor.
-    if(e.type==='block') div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> → ${e.defender||'Rival'} <span class="text-muted">🛡 BLOQUEADO</span>`;
-    else if(e.type==='crit') div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> → ${e.defender||'Rival'} <span class="text-tick font-bold">💥 CRÍTICO −${(e.damage||0).toLocaleString()} HP</span>`;
-    else if(e.type==='reflect') div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> → ${e.defender||'Rival'} <span class="text-purple-400">−${(e.damage||0).toLocaleString()} HP · ${e.defender||'Rival'} refleja −${(e.reflected||0).toLocaleString()} HP</span>`;
-    else div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> → ${e.defender||'Rival'} <span class="${isP1?'text-bear':'text-bull'}">−${(e.damage||0).toLocaleString()} HP</span>`;
+    div.innerHTML=formatServerLogLine(e, isP1);
     logEl.appendChild(div); logEl.scrollTop=logEl.scrollHeight;
+    if(e.healed!=null){ // la habilidad de curación suma vida al que la usó (con tope)
+      if(isP1){ p1Hp=Math.min(p1Max,p1Hp+e.healed); document.getElementById('p1-hp').textContent=p1Hp.toLocaleString(); document.getElementById('p1-bar').style.width=Math.round(p1Hp/p1Max*100)+'%'; }
+      else { p2Hp=Math.min(p2Max,p2Hp+e.healed); document.getElementById('p2-hp').textContent=p2Hp.toLocaleString(); document.getElementById('p2-bar').style.width=Math.round(p2Hp/p2Max*100)+'%'; }
+    }
     if(e.damage){
       if(isP1){ p2Hp=Math.max(0,p2Hp-e.damage); document.getElementById('p2-hp').textContent=p2Hp.toLocaleString(); document.getElementById('p2-bar').style.width=Math.round(p2Hp/p2Max*100)+'%'; }
       else { p1Hp=Math.max(0,p1Hp-e.damage); document.getElementById('p1-hp').textContent=p1Hp.toLocaleString(); document.getElementById('p1-bar').style.width=Math.round(p1Hp/p1Max*100)+'%'; }
@@ -2172,7 +2379,7 @@ function showServerBattleResult(fighter, res, p2Race) {
     if(!el) return;
     const xpNeed=fighter.level>=MAX_LEVEL?'MAX':xpToNextLevel(fighter.level);
     const pct=fighter.level>=MAX_LEVEL?100:Math.min(100,Math.round(fighter.xp/xpNeed*100));
-    el.innerHTML=`<div class="flex justify-between text-[10px]"><span class="text-muted">${fighter.race} · Lv${fighter.level}</span><span class="font-mono">${fighter.xp}/${xpNeed} XP</span></div><div class="xp-bar mt-0.5"><div class="xp-fill" style="width:${pct}%"></div></div>`;
+    el.innerHTML=`<div class="flex justify-between text-[10px]"><span class="text-muted">${gladiatorName(fighter)} · Lv${fighter.level}</span><span class="font-mono">${fighter.xp}/${xpNeed} XP</span></div><div class="xp-bar mt-0.5"><div class="xp-fill" style="width:${pct}%"></div></div>`;
   });
   document.getElementById('battle-status').textContent = win?'⚔ ¡VICTORIA!':draw?'🤝 Empate':'💀 Derrota...';
   document.getElementById('arena-battle').classList.add('hidden');
