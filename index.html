@@ -43,26 +43,62 @@
 .tab-active-bull{background:#00C853!important;color:black!important}
 .xp-bar{height:4px;background:#1E2329;border-radius:2px;overflow:hidden}
 .xp-fill{height:100%;background:linear-gradient(90deg,#9945FF,#FFD700);border-radius:2px;transition:width .5s}
-/* Escena de arena: los gladiadores se VEN pelear — embestida, sacudida
-   al recibir el golpe, números de daño flotantes, destello de habilidad
+/* Sin Tailwind (CDN lento o caído) la app no debe romperse: en la
+   prueba real la Arena se vio con los retratos gigantes (~932 px)
+   porque `grid`/`grid-cols-2`/`hidden` son clases del CDN y aún no
+   existían al abrir la vista: las cartas se apilaban a ancho completo
+   y las imágenes 1024px ocupaban toda la pantalla, con título,
+   filtros y botón a miles de px de distancia. Estas reglas propias
+   cubren lo crítico aunque el CDN no haya cargado. */
+.hidden{display:none!important}
+#arena-fighter-grid,#barracks-grid,#p2p-my-nfts,#forge-select-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#create-race-grid,#create-lineage-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+/* La cabecera también depende de Tailwind: sin el CDN, el avatar
+   (imagen 1024px sin tamaño propio) se mostraba gigante y tapaba
+   la vista antes que la Arena. */
+#app-header{position:fixed;top:0;left:0;right:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;z-index:50;background:#181A20;border-bottom:1px solid rgba(255,255,255,.08)}
+#hdr-avatar-img{width:40px;height:40px;object-fit:cover;display:block}
+/* Escena de arena: duelo grande y centrado con escenario visible —
+   los gladiadores se VEN pelear: embestida, sacudida al recibir el
+   golpe, números de daño flotantes y legibles, destello de habilidad
    y KO. Solo CSS; las clases las pone/quita el JS de la escena. */
-.stage-fighter{position:relative}
+.battle-stage{position:relative;max-width:560px;margin:0 auto;border-radius:16px;overflow:visible;
+  background:radial-gradient(ellipse at 50% 0%,rgba(255,215,0,.16) 0%,transparent 55%),
+             radial-gradient(ellipse at 50% 115%,rgba(0,200,83,.18) 0%,transparent 55%),
+             linear-gradient(180deg,#242b34 0%,#151a21 62%,#0d1117 100%);
+  border:1px solid #2b333f;padding:12px 8px 8px}
+.battle-stage::after{content:'';position:absolute;left:10%;right:10%;bottom:30px;height:16px;border-radius:50%;
+  background:radial-gradient(ellipse at center,rgba(0,0,0,.55),transparent 70%);pointer-events:none}
+.stage-fighter{position:relative;z-index:2;width:clamp(150px,42vw,240px);flex:none;text-align:center}
+.stage-art{width:100%;aspect-ratio:1}
+.stage-vs{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:3;width:44px;height:44px;border-radius:50%;
+  background:#FF3D00;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px;
+  box-shadow:0 0 18px rgba(255,61,0,.65);border:2px solid rgba(255,255,255,.35);pointer-events:none}
+.stage-flash{position:absolute;inset:0;border-radius:16px;pointer-events:none;opacity:0;z-index:4;
+  background:radial-gradient(ellipse at center,rgba(168,85,247,.55) 0%,rgba(168,85,247,.18) 55%,transparent 78%)}
+.stage-flash-on{animation:stageFlash .9s ease}
+@keyframes stageFlash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+/* La vista de batalla llena la pantalla: sin esto, debajo del
+   registro quedaba ~40% de negro vacío. El registro crece para
+   ocupar lo que sobra. */
+#arena-battle{min-height:calc(100vh - 180px);min-height:calc(100dvh - 180px)}
+#battle-log{flex:1 1 auto;min-height:9rem}
 .float-layer{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:5}
-.dmg-num{position:absolute;left:50%;top:6px;transform:translateX(-50%);font-weight:800;font-family:'Space Mono',monospace;pointer-events:none;text-shadow:0 2px 6px rgba(0,0,0,.85);white-space:nowrap;animation:floatUp .95s ease forwards}
-.dmg-normal{color:#fff;font-size:15px}
-.dmg-crit{color:#FFD700;font-size:20px}
-.dmg-heal{color:#00C853;font-size:15px}
-.dmg-block{color:#848E9C;font-size:12px}
-.dmg-reflect{color:#C084FC;font-size:13px}
-@keyframes floatUp{0%{opacity:0;transform:translate(-50%,8px) scale(.9)}15%{opacity:1;transform:translate(-50%,0) scale(1.05)}100%{opacity:0;transform:translate(-50%,-44px) scale(1)}}
-@keyframes lungeP1{0%{transform:translateX(0)}40%{transform:translateX(26px)}100%{transform:translateX(0)}}
-@keyframes lungeP2{0%{transform:translateX(0)}40%{transform:translateX(-26px)}100%{transform:translateX(0)}}
-@keyframes hitShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
-@keyframes abilityGlow{0%{box-shadow:0 0 0 rgba(168,85,247,0)}30%{box-shadow:0 0 26px rgba(168,85,247,.9)}100%{box-shadow:0 0 0 rgba(168,85,247,0)}}
-.fighter-lunge-p1{animation:lungeP1 .38s ease}
-.fighter-lunge-p2{animation:lungeP2 .38s ease}
-.fighter-hit{animation:hitShake .32s ease}
-.fighter-ability{animation:abilityGlow .7s ease}
+.dmg-num{position:absolute;left:50%;top:28%;transform:translateX(-50%);font-weight:800;font-family:'Space Mono',monospace;pointer-events:none;text-shadow:0 2px 0 #000,0 0 10px rgba(0,0,0,.9);white-space:nowrap;animation:floatUp 1.4s ease forwards}
+.dmg-normal{color:#fff;font-size:20px}
+.dmg-crit{color:#FFD700;font-size:28px}
+.dmg-heal{color:#00E676;font-size:20px}
+.dmg-block{color:#E5E7EB;font-size:17px}
+.dmg-reflect{color:#C084FC;font-size:18px}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,10px) scale(.85)}12%{opacity:1;transform:translate(-50%,0) scale(1.08)}25%{transform:translate(-50%,-6px) scale(1)}100%{opacity:0;transform:translate(-50%,-60px) scale(1)}}
+@keyframes lungeP1{0%{transform:translateX(0) scale(1)}40%{transform:translateX(46px) scale(1.07)}100%{transform:translateX(0) scale(1)}}
+@keyframes lungeP2{0%{transform:translateX(0) scale(1)}40%{transform:translateX(-46px) scale(1.07)}100%{transform:translateX(0) scale(1)}}
+@keyframes hitShake{0%,100%{transform:translateX(0);filter:brightness(1)}15%{transform:translateX(-9px);filter:brightness(1.7)}35%{transform:translateX(8px)}55%{transform:translateX(-6px);filter:brightness(1.3)}75%{transform:translateX(4px)}}
+@keyframes abilityGlow{0%{box-shadow:0 0 0 rgba(168,85,247,0);transform:scale(1)}30%{box-shadow:0 0 34px 8px rgba(168,85,247,.95);transform:scale(1.05)}100%{box-shadow:0 0 0 rgba(168,85,247,0);transform:scale(1)}}
+.fighter-lunge-p1{animation:lungeP1 .5s ease}
+.fighter-lunge-p2{animation:lungeP2 .5s ease}
+.fighter-hit{animation:hitShake .45s ease}
+.fighter-ability{animation:abilityGlow .9s ease}
 .fighter-ko{opacity:.35;filter:grayscale(1);transform:rotate(10deg) translateY(8px);transition:all .6s ease}
 </style>
 </head>
@@ -311,24 +347,29 @@
         <div class="flex items-center gap-0.5"><span class="sword-green text-xl">⚔</span><span class="sword-red text-xl">⚔</span></div>
         <div class="flex-1"><div class="flex justify-between text-xs font-mono mb-1"><span id="p2-hp" class="text-bear">100</span><span id="p2-name" class="text-bear font-bold text-[10px]">RIVAL</span></div><div class="battle-hp"><div id="p2-bar" class="hp-fill h-full bg-bear rounded" style="width:100%"></div></div></div>
       </div>
-      <!-- Escena de arena: los luchadores se VEN pelear (embestida,
-           sacudida, números flotantes, destello de habilidad, KO).
-           Las imágenes las ponen runDemoBattle/playServerBattle. -->
-      <div class="flex justify-between items-start mb-1 gap-2">
-        <div id="battle-p1-fighter" class="stage-fighter w-32 flex-none text-center">
-          <div id="battle-p1-art" class="w-32 h-32 rounded-xl overflow-hidden border-2 border-bull"></div>
-          <div id="p1-float" class="float-layer"></div>
-          <p id="p1-stage-name" class="text-[10px] font-bold mt-1 truncate"></p>
+      <!-- Escena de arena: duelo grande y centrado con escenario
+           (embestida, sacudida, números flotantes, destello de
+           habilidad, KO). Las imágenes las ponen runDemoBattle /
+           playServerBattle. -->
+      <div class="text-center mb-2"><p id="battle-round" class="text-xs font-mono text-muted">RONDA 1</p><p id="battle-status" class="text-sm font-bold text-white mt-0.5">En combate...</p></div>
+      <div class="battle-stage mb-2">
+        <div class="flex justify-between items-start">
+          <div id="battle-p1-fighter" class="stage-fighter">
+            <div id="battle-p1-art" class="stage-art rounded-xl overflow-hidden border-2 border-bull"></div>
+            <div id="p1-float" class="float-layer"></div>
+            <p id="p1-stage-name" class="text-[11px] font-bold mt-1 truncate"></p>
+          </div>
+          <div id="battle-p2-fighter" class="stage-fighter">
+            <div id="battle-p2-art" class="stage-art rounded-xl overflow-hidden border-2 border-bear"></div>
+            <div id="p2-float" class="float-layer"></div>
+            <p id="p2-stage-name" class="text-[11px] font-bold mt-1 truncate"></p>
+          </div>
         </div>
-        <div class="text-center flex-1 pt-10"><p id="battle-round" class="text-xs font-mono text-muted">RONDA 1</p><p id="battle-status" class="text-sm font-bold text-white mt-1">En combate...</p></div>
-        <div id="battle-p2-fighter" class="stage-fighter w-32 flex-none text-center">
-          <div id="battle-p2-art" class="w-32 h-32 rounded-xl overflow-hidden border-2 border-bear"></div>
-          <div id="p2-float" class="float-layer"></div>
-          <p id="p2-stage-name" class="text-[10px] font-bold mt-1 truncate"></p>
-        </div>
+        <div class="stage-vs">VS</div>
+        <div id="battle-flash" class="stage-flash"></div>
       </div>
       <div id="battle-ability" class="text-center text-sm font-bold text-purple-400 h-5 mb-2"></div>
-      <div id="battle-log" class="bg-panel2 rounded-xl p-3 h-36 overflow-y-auto space-y-1 text-xs font-mono"></div>
+      <div id="battle-log" class="bg-panel2 rounded-xl p-3 flex-1 overflow-y-auto space-y-1 text-xs font-mono"></div>
       <button onclick="skipBattle()" class="mt-3 w-full bg-panel2 border border-gray-700 text-muted font-bold py-2 rounded-xl text-xs">⏩ SALTAR AL RESULTADO</button>
     </div>
     <div id="arena-result" class="hidden flex flex-col items-center py-6">
@@ -2130,7 +2171,7 @@ function runDemoBattle(opp) {
   document.getElementById('arena-preview').classList.add('hidden');
   const s1=getStats(selectedFighter), s2=getStats(opp);
   battleState={p1:{...selectedFighter,curHp:s1.hp,maxHp:s1.hp,stats:s1,cd:0,block_next:false,reduce_next:false},
-               p2:{...opp,curHp:s2.hp,maxHp:s2.hp,stats:s2,cd:0,block_next:false,reduce_next:false},round:0,done:false};
+               p2:{...opp,curHp:s2.hp,maxHp:s2.hp,stats:s2,cd:0,block_next:false,reduce_next:false},round:0,done:false,step:0,firstP1:true};
   document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(selectedFighter.race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
   document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(opp.race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
   document.getElementById('p1-name').textContent=gladiatorName(selectedFighter);
@@ -2149,15 +2190,18 @@ function runDemoBattle(opp) {
   document.getElementById('p2-stage-name').textContent=gladiatorName(opp);
   serverBattle=null; // una batalla demo nueva invalida la real anterior
   if(battleTimer) clearTimeout(battleTimer);
-  battleTimer=setTimeout(autoBattleLoop,900);
+  // Pausa de presentación: que se vean los dos gladiadores y el
+  // "¡Que comience!" antes del primer golpe.
+  battleTimer=setTimeout(autoBattleLoop,1300);
 }
+// La batalla demo se reproduce ATAQUE a ATAQUE (~1 s por ataque), no
+// ronda a ronda: antes los dos golpes de una ronda caían a la vez y
+// una pelea de 3 rondas duraba 5 s sin dar tiempo a ver nada.
 function autoBattleLoop() {
-  if(!battleState||battleState.done){setTimeout(showBattleResult,1200);return;}
-  battleNextStep();
+  if(!battleState||battleState.done){setTimeout(showBattleResult,1500);return;}
+  battleAttackStep();
   if(!battleState.done){
-    const vel=(battleState.p1.stats.vel+battleState.p2.stats.vel);
-    // Ritmo legible para la escena: nunca más rápido que 650 ms por ronda.
-    battleTimer=setTimeout(autoBattleLoop,Math.max(650,1400-vel*5));
+    battleTimer=setTimeout(autoBattleLoop,1050);
   } else {
     setTimeout(showBattleResult,1500);
   }
@@ -2173,19 +2217,14 @@ function skipBattle() {
   stageSkip=false;
   showBattleResult();
 }
-function battleNextStep() {
-  if(!battleState||battleState.done) return;
-  const {p1,p2}=battleState;
-  battleState.round++;
-  if(battleState.round>25){battleState.done=true;return;}
-  document.getElementById('battle-round').textContent='RONDA '+battleState.round;
+// Un ataque dentro de una ronda demo (con su habilidad si toca).
+// Antes era un closure dentro de battleNextStep; ahora es función
+// propia para poder reproducir la batalla ataque a ataque (un tick
+// ~1 s por ataque) en vez de ronda a ronda. battleNextStep sigue
+// existiendo para SALTAR (ronda completa de una vez).
+function battleAtk(att,def,isP1,allowAbility=true){
   const log=document.getElementById('battle-log');
   const arena=document.getElementById('arena-battle');
-  // El enfriamiento de habilidad baja 1 al empezar cada ronda (igual
-  // que el servidor): con cd 0 la habilidad se dispara al atacar y
-  // cd pasa a ser su cooldown (rondas 1, 1+cooldown, ...).
-  for(const s of [p1,p2]) if(s.cd>0) s.cd--;
-  function atk(att,def,isP1,allowAbility=true){
     let forceCrit=false, dmgMult=1, extra=false;
     // Habilidad de la raza (tabla espejo RACE_ABILITIES): se dispara
     // sola al atacar si el enfriamiento está listo. En batallas reales
@@ -2253,16 +2292,53 @@ function battleNextStep() {
     if(def.curHp<=0) stageKO(isP1?'p2':'p1');
     // Segundo golpe en la misma ronda (habilidad extra_attack): sin
     // volver a disparar la habilidad y sin crítico forzado.
-    if(extra && def.curHp>0) return atk(att,def,isP1,false);
+    if(extra && def.curHp>0) return battleAtk(att,def,isP1,false);
     return def.curHp<=0;
-  }
-  const firstP1=p1.stats.vel>=p2.stats.vel;
-  let ended=firstP1?atk(p1,p2,true):atk(p2,p1,false);
-  if(!ended) ended=firstP1?atk(p2,p1,false):atk(p1,p2,true);
+}
+// Empieza una ronda demo: contador, enfriamientos y orden por velocidad.
+function battleRoundStart(){
+  const {p1,p2}=battleState;
+  battleState.round++;
+  if(battleState.round>25){battleState.done=true;return;}
+  document.getElementById('battle-round').textContent='RONDA '+battleState.round;
+  // El enfriamiento de habilidad baja 1 al empezar cada ronda (igual
+  // que el servidor): con cd 0 la habilidad se dispara al atacar y
+  // cd pasa a ser su cooldown (rondas 1, 1+cooldown, ...).
+  for(const s of [p1,p2]) if(s.cd>0) s.cd--;
+  battleState.firstP1=p1.stats.vel>=p2.stats.vel;
+  battleState.step=0;
+}
+// Uno de los dos ataques de la ronda (isFirst: el más rápido primero).
+function battleRoundAttack(isFirst){
+  const {p1,p2}=battleState;
+  const att=isFirst?(battleState.firstP1?p1:p2):(battleState.firstP1?p2:p1);
+  const def=att===p1?p2:p1;
+  const ended=battleAtk(att,def,att===p1);
   if(ended||battleState.round>=25){
     battleState.done=true;
     document.getElementById('battle-status').textContent=p2.curHp<=0?'⚔ ¡VICTORIA!':p1.curHp<=0?'💀 Derrota...':'🤝 Empate';
   }
+  return ended;
+}
+// Ronda completa de una vez (la usa SALTAR; el bucle visible usa
+// battleAttackStep, un ataque por tick).
+function battleNextStep(){
+  if(!battleState||battleState.done) return;
+  if(battleState.step===0) battleRoundStart();
+  if(battleState.done) return;
+  while(battleState.step<2 && !battleState.done){
+    battleRoundAttack(battleState.step===0);
+    battleState.step++;
+  }
+  battleState.step=0;
+}
+// Un ataque por tick: la reproducción visible de la batalla demo.
+function battleAttackStep(){
+  if(!battleState||battleState.done) return;
+  if(battleState.step===0) battleRoundStart();
+  if(battleState.done) return;
+  battleRoundAttack(battleState.step===0);
+  battleState.step=battleState.step===0?1:0;
 }
 function showBattleResult() {
   const {p1,p2,round}=battleState;
@@ -2317,7 +2393,7 @@ function stageFloat(side,text,cls){
   if(stageSkip) return;
   const layer=document.getElementById(side+'-float'); if(!layer) return;
   const s=document.createElement('span'); s.className='dmg-num '+cls; s.textContent=text;
-  layer.appendChild(s); setTimeout(()=>s.remove(),960);
+  layer.appendChild(s); setTimeout(()=>s.remove(),1420);
 }
 function stageAnim(side,cls,ms){
   if(stageSkip) return;
@@ -2325,11 +2401,28 @@ function stageAnim(side,cls,ms){
   el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
   setTimeout(()=>el.classList.remove(cls),ms);
 }
-function stageLunge(side){ stageAnim(side, side==='p1'?'fighter-lunge-p1':'fighter-lunge-p2', 400); }
-function stageShake(side){ stageAnim(side,'fighter-hit',340); }
+// La embestida y la sacudida mueven el RETRATO (el div del arte),
+// no el luchador entero: el destello de habilidad (abilityGlow) anima
+// `transform: scale` en el luchador, y con dos animaciones sobre el
+// mismo `transform` solo gana una — la embestida quedaba anulada
+// justo cuando había habilidad (ronda 1, siempre). Con el movimiento
+// en el hijo y el brillo en el padre, ambas se ven a la vez.
+function stageArtAnim(side,cls,ms){
+  if(stageSkip) return;
+  const el=document.getElementById('battle-'+side+'-art'); if(!el) return;
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  setTimeout(()=>el.classList.remove(cls),ms);
+}
+function stageLunge(side){ stageArtAnim(side, side==='p1'?'fighter-lunge-p1':'fighter-lunge-p2', 520); }
+function stageShake(side){ stageArtAnim(side,'fighter-hit',460); }
 function stageAbility(side,name){
   if(stageSkip) return;
-  stageAnim(side,'fighter-ability',720);
+  stageAnim(side,'fighter-ability',920);
+  // Destello morado en TODO el escenario, no solo un brillo tenue en
+  // el luchador: antes solo se leía el nombre en texto morado.
+  const f=document.getElementById('battle-flash');
+  if(f){ f.classList.remove('stage-flash-on'); void f.offsetWidth; f.classList.add('stage-flash-on');
+    setTimeout(()=>f.classList.remove('stage-flash-on'),920); }
   const b=document.getElementById('battle-ability');
   if(b){ b.textContent='✨ '+name; setTimeout(()=>{ if(b.textContent==='✨ '+name) b.textContent=''; },1500); }
 }
@@ -2341,13 +2434,17 @@ function stageReset(){
   stageSkip=false;
   ['p1','p2'].forEach(s=>{
     const el=document.getElementById('battle-'+s+'-fighter');
-    if(el) el.classList.remove('fighter-lunge-p1','fighter-lunge-p2','fighter-hit','fighter-ability','fighter-ko');
+    if(el) el.classList.remove('fighter-ability','fighter-ko');
+    const art=document.getElementById('battle-'+s+'-art');
+    if(art) art.classList.remove('fighter-lunge-p1','fighter-lunge-p2','fighter-hit');
     const l=document.getElementById(s+'-float'); if(l) l.innerHTML='';
   });
+  const f=document.getElementById('battle-flash'); if(f) f.classList.remove('stage-flash-on');
   const b=document.getElementById('battle-ability'); if(b) b.textContent='';
 }
 function stageClearFloats(){
   ['p1','p2'].forEach(s=>{ const l=document.getElementById(s+'-float'); if(l) l.innerHTML=''; });
+  const f=document.getElementById('battle-flash'); if(f) f.classList.remove('stage-flash-on');
   const b=document.getElementById('battle-ability'); if(b) b.textContent='';
 }
 
@@ -2432,9 +2529,11 @@ function playServerBattle(fighter, res) {
     const sb=serverBattle; if(!sb||sb.done) return;
     if(sb.i>=sb.res.log.length){ sb.done=true; showServerBattleResult(sb.fighter, sb.res, sb.p2Name); return; }
     applyServerBattleEntry(sb.res.log[sb.i++], true);
-    serverBattleTimer=setTimeout(step, 750);
+    serverBattleTimer=setTimeout(step, 1000);
   };
-  step();
+  // Pausa de presentación (~1,2 s): que se vean los dos gladiadores
+  // antes del primer golpe; luego ~1 s por entrada del log.
+  serverBattleTimer=setTimeout(step, 1200);
 }
 
 // Aplica UNA entrada del log del servidor: línea de texto, barras de
