@@ -43,6 +43,27 @@
 .tab-active-bull{background:#00C853!important;color:black!important}
 .xp-bar{height:4px;background:#1E2329;border-radius:2px;overflow:hidden}
 .xp-fill{height:100%;background:linear-gradient(90deg,#9945FF,#FFD700);border-radius:2px;transition:width .5s}
+/* Escena de arena: los gladiadores se VEN pelear — embestida, sacudida
+   al recibir el golpe, números de daño flotantes, destello de habilidad
+   y KO. Solo CSS; las clases las pone/quita el JS de la escena. */
+.stage-fighter{position:relative}
+.float-layer{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:5}
+.dmg-num{position:absolute;left:50%;top:6px;transform:translateX(-50%);font-weight:800;font-family:'Space Mono',monospace;pointer-events:none;text-shadow:0 2px 6px rgba(0,0,0,.85);white-space:nowrap;animation:floatUp .95s ease forwards}
+.dmg-normal{color:#fff;font-size:15px}
+.dmg-crit{color:#FFD700;font-size:20px}
+.dmg-heal{color:#00C853;font-size:15px}
+.dmg-block{color:#848E9C;font-size:12px}
+.dmg-reflect{color:#C084FC;font-size:13px}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,8px) scale(.9)}15%{opacity:1;transform:translate(-50%,0) scale(1.05)}100%{opacity:0;transform:translate(-50%,-44px) scale(1)}}
+@keyframes lungeP1{0%{transform:translateX(0)}40%{transform:translateX(26px)}100%{transform:translateX(0)}}
+@keyframes lungeP2{0%{transform:translateX(0)}40%{transform:translateX(-26px)}100%{transform:translateX(0)}}
+@keyframes hitShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+@keyframes abilityGlow{0%{box-shadow:0 0 0 rgba(168,85,247,0)}30%{box-shadow:0 0 26px rgba(168,85,247,.9)}100%{box-shadow:0 0 0 rgba(168,85,247,0)}}
+.fighter-lunge-p1{animation:lungeP1 .38s ease}
+.fighter-lunge-p2{animation:lungeP2 .38s ease}
+.fighter-hit{animation:hitShake .32s ease}
+.fighter-ability{animation:abilityGlow .7s ease}
+.fighter-ko{opacity:.35;filter:grayscale(1);transform:rotate(10deg) translateY(8px);transition:all .6s ease}
 </style>
 </head>
 <body class="bg-main text-textmain font-sans flex flex-col" style="height:100dvh;height:100vh">
@@ -290,11 +311,23 @@
         <div class="flex items-center gap-0.5"><span class="sword-green text-xl">⚔</span><span class="sword-red text-xl">⚔</span></div>
         <div class="flex-1"><div class="flex justify-between text-xs font-mono mb-1"><span id="p2-hp" class="text-bear">100</span><span id="p2-name" class="text-bear font-bold text-[10px]">RIVAL</span></div><div class="battle-hp"><div id="p2-bar" class="hp-fill h-full bg-bear rounded" style="width:100%"></div></div></div>
       </div>
-      <div class="flex justify-between items-center mb-3 gap-2">
-        <div id="battle-p1-art" class="w-28 h-28 rounded-xl overflow-hidden border-2 border-bull flex-none"></div>
-        <div class="text-center flex-1"><p id="battle-round" class="text-xs font-mono text-muted">RONDA 1</p><p id="battle-status" class="text-sm font-bold text-white mt-1">En combate...</p></div>
-        <div id="battle-p2-art" class="w-28 h-28 rounded-xl overflow-hidden border-2 border-bear flex-none"></div>
+      <!-- Escena de arena: los luchadores se VEN pelear (embestida,
+           sacudida, números flotantes, destello de habilidad, KO).
+           Las imágenes las ponen runDemoBattle/playServerBattle. -->
+      <div class="flex justify-between items-start mb-1 gap-2">
+        <div id="battle-p1-fighter" class="stage-fighter w-32 flex-none text-center">
+          <div id="battle-p1-art" class="w-32 h-32 rounded-xl overflow-hidden border-2 border-bull"></div>
+          <div id="p1-float" class="float-layer"></div>
+          <p id="p1-stage-name" class="text-[10px] font-bold mt-1 truncate"></p>
+        </div>
+        <div class="text-center flex-1 pt-10"><p id="battle-round" class="text-xs font-mono text-muted">RONDA 1</p><p id="battle-status" class="text-sm font-bold text-white mt-1">En combate...</p></div>
+        <div id="battle-p2-fighter" class="stage-fighter w-32 flex-none text-center">
+          <div id="battle-p2-art" class="w-32 h-32 rounded-xl overflow-hidden border-2 border-bear"></div>
+          <div id="p2-float" class="float-layer"></div>
+          <p id="p2-stage-name" class="text-[10px] font-bold mt-1 truncate"></p>
+        </div>
       </div>
+      <div id="battle-ability" class="text-center text-sm font-bold text-purple-400 h-5 mb-2"></div>
       <div id="battle-log" class="bg-panel2 rounded-xl p-3 h-36 overflow-y-auto space-y-1 text-xs font-mono"></div>
       <button onclick="skipBattle()" class="mt-3 w-full bg-panel2 border border-gray-700 text-muted font-bold py-2 rounded-xl text-xs">⏩ SALTAR AL RESULTADO</button>
     </div>
@@ -2111,6 +2144,10 @@ function runDemoBattle(opp) {
   document.getElementById('battle-status').textContent=`⚔ ¡Que comience! Rival: ${gladiatorName(opp)} · ${opp.rarity} Lv${opp.level}`;
   document.getElementById('arena-select').classList.add('hidden');
   document.getElementById('arena-battle').classList.remove('hidden');
+  stageReset();
+  document.getElementById('p1-stage-name').textContent=gladiatorName(selectedFighter);
+  document.getElementById('p2-stage-name').textContent=gladiatorName(opp);
+  serverBattle=null; // una batalla demo nueva invalida la real anterior
   if(battleTimer) clearTimeout(battleTimer);
   battleTimer=setTimeout(autoBattleLoop,900);
 }
@@ -2119,15 +2156,21 @@ function autoBattleLoop() {
   battleNextStep();
   if(!battleState.done){
     const vel=(battleState.p1.stats.vel+battleState.p2.stats.vel);
-    battleTimer=setTimeout(autoBattleLoop,Math.max(350,1400-vel*5));
+    // Ritmo legible para la escena: nunca más rápido que 650 ms por ronda.
+    battleTimer=setTimeout(autoBattleLoop,Math.max(650,1400-vel*5));
   } else {
     setTimeout(showBattleResult,1500);
   }
 }
 function skipBattle() {
+  // Batalla real en curso: el salto lo maneja skipServerBattle (el
+  // guard battleResultApplied sigue mandando).
+  if(serverBattle && !serverBattle.done){ skipServerBattle(); return; }
   if(battleTimer) clearTimeout(battleTimer);
   if(!battleState) return;
+  stageSkip=true; stageClearFloats();
   while(!battleState.done&&battleState.round<25) battleNextStep();
+  stageSkip=false;
   showBattleResult();
 }
 function battleNextStep() {
@@ -2166,6 +2209,9 @@ function battleNextStep() {
       const ae=document.createElement('div'); ae.className='log-entry';
       ae.innerHTML=formatServerLogLine(entry, isP1);
       log.appendChild(ae); log.scrollTop=log.scrollHeight;
+      // Escena: destello de habilidad + número verde si cura.
+      stageAbility(isP1?'p1':'p2', ab.nombre);
+      if(entry.healed>0) stageFloat(isP1?'p1':'p2', '+'+entry.healed.toLocaleString()+' HP', 'dmg-heal');
     }
     // El bloqueo por habilidad protege del próximo ataque (sin sorteo);
     // el sorteo actual de crítico/bloqueo se queda como está y la
@@ -2197,6 +2243,14 @@ function battleNextStep() {
     log.appendChild(e); log.scrollTop=log.scrollHeight;
     if(isP1){document.getElementById('p2-hp').textContent=def.curHp.toLocaleString();document.getElementById('p2-bar').style.width=pct+'%';}
     else    {document.getElementById('p1-hp').textContent=def.curHp.toLocaleString();document.getElementById('p1-bar').style.width=pct+'%';}
+    // Escena: embestida del atacante, sacudida y número flotante del defensor.
+    stageLunge(isP1?'p1':'p2');
+    if(blocked) stageFloat(isP1?'p2':'p1','🛡 BLOQUEADO','dmg-block');
+    else {
+      stageShake(isP1?'p2':'p1');
+      stageFloat(isP1?'p2':'p1',(crit?'💥 CRÍTICO −':'−')+dmg.toLocaleString()+' HP', crit?'dmg-crit':'dmg-normal');
+    }
+    if(def.curHp<=0) stageKO(isP1?'p2':'p1');
     // Segundo golpe en la misma ronda (habilidad extra_attack): sin
     // volver a disparar la habilidad y sin crítico forzado.
     if(extra && def.curHp>0) return atk(att,def,isP1,false);
@@ -2251,6 +2305,53 @@ function showBattleResult() {
 function resetArena(){renderArenaSelect();}
 
 // =============================================
+// ESCENA DE ARENA (VISUAL)
+// =============================================
+// Los gladiadores se VEN pelear: embestida, sacudida al recibir el
+// golpe, números de daño flotantes, destello de habilidad y KO.
+// Solo CSS + clases; no toca costos, energía, recompensas ni el flujo.
+// `stageSkip=true` mientras dura SALTAR: la escena no anima (el
+// resultado se aplica de una vez, sin duplicar nada).
+let stageSkip=false;
+function stageFloat(side,text,cls){
+  if(stageSkip) return;
+  const layer=document.getElementById(side+'-float'); if(!layer) return;
+  const s=document.createElement('span'); s.className='dmg-num '+cls; s.textContent=text;
+  layer.appendChild(s); setTimeout(()=>s.remove(),960);
+}
+function stageAnim(side,cls,ms){
+  if(stageSkip) return;
+  const el=document.getElementById('battle-'+side+'-fighter'); if(!el) return;
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  setTimeout(()=>el.classList.remove(cls),ms);
+}
+function stageLunge(side){ stageAnim(side, side==='p1'?'fighter-lunge-p1':'fighter-lunge-p2', 400); }
+function stageShake(side){ stageAnim(side,'fighter-hit',340); }
+function stageAbility(side,name){
+  if(stageSkip) return;
+  stageAnim(side,'fighter-ability',720);
+  const b=document.getElementById('battle-ability');
+  if(b){ b.textContent='✨ '+name; setTimeout(()=>{ if(b.textContent==='✨ '+name) b.textContent=''; },1500); }
+}
+function stageKO(side){
+  if(stageSkip) return;
+  const el=document.getElementById('battle-'+side+'-fighter'); if(el) el.classList.add('fighter-ko');
+}
+function stageReset(){
+  stageSkip=false;
+  ['p1','p2'].forEach(s=>{
+    const el=document.getElementById('battle-'+s+'-fighter');
+    if(el) el.classList.remove('fighter-lunge-p1','fighter-lunge-p2','fighter-hit','fighter-ability','fighter-ko');
+    const l=document.getElementById(s+'-float'); if(l) l.innerHTML='';
+  });
+  const b=document.getElementById('battle-ability'); if(b) b.textContent='';
+}
+function stageClearFloats(){
+  ['p1','p2'].forEach(s=>{ const l=document.getElementById(s+'-float'); if(l) l.innerHTML=''; });
+  const b=document.getElementById('battle-ability'); if(b) b.textContent='';
+}
+
+// =============================================
 // ARENA REAL (SERVIDOR)
 // =============================================
 // Batalla real: el servidor simula y devuelve el log completo y los
@@ -2261,6 +2362,7 @@ async function startBattleReal() {
   battleResultApplied=false;
   document.getElementById('arena-select').classList.add('hidden');
   document.getElementById('arena-battle').classList.remove('hidden');
+  stageReset(); // limpia la escena de la batalla anterior (KO, números, destellos)
   document.getElementById('battle-status').textContent = 'Buscando oponente en el servidor...';
   document.getElementById('battle-log').innerHTML = '';
   try {
@@ -2295,6 +2397,10 @@ function formatServerLogLine(e, isP1) {
   return `${att} → ${def} <span class="${defCls}">−${(e.damage || 0).toLocaleString()} HP</span>`;
 }
 
+// Estado de la batalla real en curso (para SALTAR: aplica el resto del
+// log de una vez sin animar y muestra el resultado una sola vez).
+let serverBattle=null, serverBattleTimer=null;
+
 function playServerBattle(fighter, res) {
   const s1 = getStats(fighter); // stats del servidor (computed_stats)
   const isP1Hit = e => e.attacker===fighter.race; // si ambos tienen la misma raza, es ambiguo
@@ -2304,13 +2410,14 @@ function playServerBattle(fighter, res) {
   // la vida final no cuadraban con el log.
   const p2Max = (res.opponent && res.opponent.vida) || Math.max(1, dmgToP2);
   const p1Max = s1.hp;
-  let p1Hp = p1Max, p2Hp = p2Max;
   const p2Race = (res.opponent && res.opponent.race) || (res.log.map(e=>e.attacker).find(r=>r!==fighter.race)) || 'Rival';
   const p2Name = (res.opponent && res.opponent.display_name) || (res.opponent && res.opponent.lineage ? defaultName(res.opponent) : p2Race);
   document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(fighter.race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
   document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(p2Race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
   document.getElementById('p1-name').textContent=gladiatorName(fighter);
   document.getElementById('p2-name').textContent=p2Name;
+  document.getElementById('p1-stage-name').textContent=gladiatorName(fighter);
+  document.getElementById('p2-stage-name').textContent=p2Name;
   document.getElementById('p1-hp').textContent=p1Max.toLocaleString();
   document.getElementById('p2-hp').textContent=p2Max.toLocaleString();
   document.getElementById('p1-bar').style.width='100%';
@@ -2319,33 +2426,82 @@ function playServerBattle(fighter, res) {
   document.getElementById('battle-status').textContent = res.opponent
     ? `Rival: ${p2Name} · ${res.opponent.rarity} Lv${res.opponent.level} · ${p2Max.toLocaleString()} HP`
     : '⚔ ¡Que comience!';
-  const logEl=document.getElementById('battle-log');
-  let i=0, curRound=0;
+  stageReset();
+  serverBattle={fighter,res,p2Name,p1Hp:p1Max,p2Hp:p2Max,p1Max,p2Max,i:0,curRound:0,done:false,isP1Hit};
   const step=()=>{
-    if(i>=res.log.length){ showServerBattleResult(fighter, res, p2Name); return; }
-    const e=res.log[i++];
-    if(e.round!==curRound){ curRound=e.round; document.getElementById('battle-round').textContent='RONDA '+curRound; }
-    const isP1 = isP1Hit(e);
-    const div=document.createElement('div'); div.className='log-entry';
-    div.innerHTML=formatServerLogLine(e, isP1);
-    logEl.appendChild(div); logEl.scrollTop=logEl.scrollHeight;
-    if(e.healed!=null){ // la habilidad de curación suma vida al que la usó (con tope)
-      if(isP1){ p1Hp=Math.min(p1Max,p1Hp+e.healed); document.getElementById('p1-hp').textContent=p1Hp.toLocaleString(); document.getElementById('p1-bar').style.width=Math.round(p1Hp/p1Max*100)+'%'; }
-      else { p2Hp=Math.min(p2Max,p2Hp+e.healed); document.getElementById('p2-hp').textContent=p2Hp.toLocaleString(); document.getElementById('p2-bar').style.width=Math.round(p2Hp/p2Max*100)+'%'; }
-    }
-    if(e.damage){
-      if(isP1){ p2Hp=Math.max(0,p2Hp-e.damage); document.getElementById('p2-hp').textContent=p2Hp.toLocaleString(); document.getElementById('p2-bar').style.width=Math.round(p2Hp/p2Max*100)+'%'; }
-      else { p1Hp=Math.max(0,p1Hp-e.damage); document.getElementById('p1-hp').textContent=p1Hp.toLocaleString(); document.getElementById('p1-bar').style.width=Math.round(p1Hp/p1Max*100)+'%'; }
-    }
-    if(e.reflected){ // el reflejo daña al atacante
-      if(isP1){ p1Hp=Math.max(0,p1Hp-e.reflected); document.getElementById('p1-hp').textContent=p1Hp.toLocaleString(); document.getElementById('p1-bar').style.width=Math.round(p1Hp/p1Max*100)+'%'; }
-      else { p2Hp=Math.max(0,p2Hp-e.reflected); document.getElementById('p2-hp').textContent=p2Hp.toLocaleString(); document.getElementById('p2-bar').style.width=Math.round(p2Hp/p2Max*100)+'%'; }
-    }
-    setTimeout(step, 450);
+    const sb=serverBattle; if(!sb||sb.done) return;
+    if(sb.i>=sb.res.log.length){ sb.done=true; showServerBattleResult(sb.fighter, sb.res, sb.p2Name); return; }
+    applyServerBattleEntry(sb.res.log[sb.i++], true);
+    serverBattleTimer=setTimeout(step, 750);
   };
   step();
 }
 
+// Aplica UNA entrada del log del servidor: línea de texto, barras de
+// vida y (si withStage) animación de la escena. Sin withStage solo
+// números — es lo que usa SALTAR para terminar de una vez.
+// Tipo desconocido: se registra en el log y se aplican sus números,
+// pero no anima nada (la escena nunca se rompe por un tipo nuevo).
+// Standalone para poder probarla en Node.
+function applyServerBattleEntry(e, withStage){
+  const sb=serverBattle; if(!sb) return;
+  const logEl=document.getElementById('battle-log');
+  if(e.round!==sb.curRound){ sb.curRound=e.round; document.getElementById('battle-round').textContent='RONDA '+sb.curRound; }
+  const isP1 = sb.isP1Hit(e);
+  const div=document.createElement('div'); div.className='log-entry';
+  div.innerHTML=formatServerLogLine(e, isP1);
+  logEl.appendChild(div); logEl.scrollTop=logEl.scrollHeight;
+  const attSide=isP1?'p1':'p2', defSide=isP1?'p2':'p1';
+  const setHp=(side,hp,max)=>{ document.getElementById(side+'-hp').textContent=hp.toLocaleString(); document.getElementById(side+'-bar').style.width=Math.round(hp/max*100)+'%'; };
+  if(e.type==='ability'){
+    if(withStage){
+      stageAbility(attSide, e.ability||'Habilidad');
+      if(e.healed!=null && e.healed>0) stageFloat(attSide,'+'+e.healed.toLocaleString()+' HP','dmg-heal');
+    }
+  } else if(e.type==='block'){
+    if(withStage){ stageLunge(attSide); stageFloat(defSide,'🛡 BLOQUEADO','dmg-block'); }
+  } else if(e.type==='crit'){
+    if(withStage){ stageLunge(attSide); stageShake(defSide); stageFloat(defSide,'💥 CRÍTICO −'+(e.damage||0).toLocaleString()+' HP','dmg-crit'); }
+  } else if(e.type==='reflect'){
+    if(withStage){
+      stageLunge(attSide); stageShake(defSide);
+      stageFloat(defSide,'−'+(e.damage||0).toLocaleString()+' HP','dmg-normal');
+      if(e.reflected){ stageShake(attSide); stageFloat(attSide,'−'+e.reflected.toLocaleString()+' HP · REFLEJO','dmg-reflect'); }
+    }
+  } else if(e.type==='normal' && e.damage){
+    if(withStage){ stageLunge(attSide); stageShake(defSide); stageFloat(defSide,'−'+(e.damage||0).toLocaleString()+' HP','dmg-normal'); }
+  }
+  // Números (siempre, con o sin animación): la barra y la vida final
+  // deben cuadrar con el log aunque se salte la animación.
+  if(e.healed!=null){
+    if(isP1){ sb.p1Hp=Math.min(sb.p1Max,sb.p1Hp+e.healed); setHp('p1',sb.p1Hp,sb.p1Max); }
+    else { sb.p2Hp=Math.min(sb.p2Max,sb.p2Hp+e.healed); setHp('p2',sb.p2Hp,sb.p2Max); }
+  }
+  if(e.damage){
+    if(isP1){ sb.p2Hp=Math.max(0,sb.p2Hp-e.damage); setHp('p2',sb.p2Hp,sb.p2Max); }
+    else { sb.p1Hp=Math.max(0,sb.p1Hp-e.damage); setHp('p1',sb.p1Hp,sb.p1Max); }
+  }
+  if(e.reflected){ // el reflejo daña al atacante
+    if(isP1){ sb.p1Hp=Math.max(0,sb.p1Hp-e.reflected); setHp('p1',sb.p1Hp,sb.p1Max); }
+    else { sb.p2Hp=Math.max(0,sb.p2Hp-e.reflected); setHp('p2',sb.p2Hp,sb.p2Max); }
+  }
+  if(withStage){
+    if(sb.p1Hp<=0) stageKO('p1');
+    if(sb.p2Hp<=0) stageKO('p2');
+  }
+}
+
+// SALTAR en batalla real: aplica el resto del log de una vez (sin
+// animar) y muestra el resultado. El guard battleResultApplied sigue
+// mandando: las recompensas se aplican una sola vez.
+function skipServerBattle(){
+  const sb=serverBattle; if(!sb||sb.done) return;
+  if(serverBattleTimer) clearTimeout(serverBattleTimer);
+  sb.done=true; stageSkip=true; stageClearFloats();
+  while(sb.i<sb.res.log.length) applyServerBattleEntry(sb.res.log[sb.i++], false);
+  stageSkip=false;
+  showServerBattleResult(sb.fighter, sb.res, sb.p2Name);
+}
 function showServerBattleResult(fighter, res, p2Race) {
   const win = res.result==='p1', draw = res.result==='draw';
   // Historial local del lobby (la lista en sí sigue siendo simulada).
