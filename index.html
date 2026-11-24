@@ -70,12 +70,53 @@
 .battle-stage::after{content:'';position:absolute;left:10%;right:10%;bottom:30px;height:16px;border-radius:50%;
   background:radial-gradient(ellipse at center,rgba(0,0,0,.55),transparent 70%);pointer-events:none}
 .stage-fighter{position:relative;z-index:2;width:clamp(150px,42vw,240px);flex:none;text-align:center}
-.stage-art{width:100%;aspect-ratio:1}
+.stage-art{width:100%;aspect-ratio:3/4;overflow:visible}
+.fighter-svg{width:100%;height:100%;display:block}
+/* Peleador SVG articulado: las extremidades rotan sobre sus
+   articulaciones (transform-origin en unidades del viewBox). La
+   embestida/sacudida del div padre se conserva; las poses del SVG
+   son las que mueven brazos y piernas. */
+.fighter-svg .f-arm-front,.fighter-svg .f-elbow-front,.fighter-svg .f-arm-back,.fighter-svg .f-elbow-back,
+.fighter-svg .f-leg-front,.fighter-svg .f-knee-front,.fighter-svg .f-leg-back,.fighter-svg .f-knee-back,
+.fighter-svg .f-jump,.fighter-svg .f-fall,.fighter-svg .f-idle{transform-box:view-box}
+.fighter-svg .f-arm-front{transform-origin:68px 52px}
+.fighter-svg .f-elbow-front{transform-origin:76px 70px}
+.fighter-svg .f-arm-back{transform-origin:56px 52px}
+.fighter-svg .f-elbow-back{transform-origin:46px 72px}
+.fighter-svg .f-leg-front{transform-origin:62px 92px}
+.fighter-svg .f-knee-front{transform-origin:72px 122px}
+.fighter-svg .f-leg-back{transform-origin:54px 92px}
+.fighter-svg .f-knee-back{transform-origin:44px 122px}
+.fighter-svg .f-jump,.fighter-svg .f-fall,.fighter-svg .f-idle{transform-origin:60px 156px}
+.fighter-svg .f-idle{animation:idleBob 2.4s ease-in-out infinite}
+@keyframes idleBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@keyframes punchArm{0%{transform:rotate(0)}25%{transform:rotate(10deg)}55%{transform:rotate(-48deg) translateX(4px)}100%{transform:rotate(0)}}
+@keyframes punchFore{0%{transform:rotate(0)}25%{transform:rotate(6deg)}55%{transform:rotate(-42deg) translateX(14px)}100%{transform:rotate(0)}}
+@keyframes kickLeg{0%{transform:rotate(0)}25%{transform:rotate(12deg)}55%{transform:rotate(-68deg)}100%{transform:rotate(0)}}
+@keyframes kickKnee{0%{transform:rotate(0)}25%{transform:rotate(-8deg)}55%{transform:rotate(42deg) translateX(10px)}100%{transform:rotate(0)}}
+@keyframes jumpBody{0%{transform:translateY(0)}40%{transform:translateY(-26px)}100%{transform:translateY(0)}}
+@keyframes guardArmF{0%{transform:rotate(0)}30%,70%{transform:rotate(-34deg) translateX(2px)}100%{transform:rotate(0)}}
+@keyframes guardArmB{0%{transform:rotate(0)}30%,70%{transform:rotate(-26deg)}100%{transform:rotate(0)}}
+@keyframes healCrouch{0%{transform:translateY(0)}40%{transform:translateY(7px)}100%{transform:translateY(0)}}
+@keyframes koFall{0%{transform:rotate(0) scale(1)}100%{transform:rotate(52deg) scale(.72)}}
+.f-punch .f-arm-front{animation:punchArm .5s ease}
+.f-punch .f-elbow-front{animation:punchFore .5s ease}
+.f-kick .f-leg-front{animation:kickLeg .5s ease}
+.f-kick .f-knee-front{animation:kickKnee .5s ease}
+.f-crit .f-jump{animation:jumpBody .55s ease}
+.f-crit .f-arm-front{animation:punchArm .55s ease}
+.f-crit .f-elbow-front{animation:punchFore .55s ease}
+.f-guard .f-arm-front{animation:guardArmF .55s ease}
+.f-guard .f-arm-back{animation:guardArmB .55s ease}
+.f-heal .f-idle{animation:healCrouch .9s ease}
+.f-ko .f-idle{animation:none}
+.f-ko .f-fall{animation:koFall .7s ease forwards}
 .stage-vs{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:3;width:44px;height:44px;border-radius:50%;
   background:#FF3D00;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px;
   box-shadow:0 0 18px rgba(255,61,0,.65);border:2px solid rgba(255,255,255,.35);pointer-events:none}
 .stage-flash{position:absolute;inset:0;border-radius:16px;pointer-events:none;opacity:0;z-index:4;
   background:radial-gradient(ellipse at center,rgba(168,85,247,.55) 0%,rgba(168,85,247,.18) 55%,transparent 78%)}
+.stage-flash-green{background:radial-gradient(ellipse at center,rgba(0,230,118,.5) 0%,rgba(0,230,118,.15) 55%,transparent 78%)}
 .stage-flash-on{animation:stageFlash .9s ease}
 @keyframes stageFlash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
 /* La vista de batalla llena la pantalla: sin esto, debajo del
@@ -355,12 +396,12 @@
       <div class="battle-stage mb-2">
         <div class="flex justify-between items-start">
           <div id="battle-p1-fighter" class="stage-fighter">
-            <div id="battle-p1-art" class="stage-art rounded-xl overflow-hidden border-2 border-bull"></div>
+            <div id="battle-p1-art" class="stage-art rounded-xl border-2 border-bull"></div>
             <div id="p1-float" class="float-layer"></div>
             <p id="p1-stage-name" class="text-[11px] font-bold mt-1 truncate"></p>
           </div>
           <div id="battle-p2-fighter" class="stage-fighter">
-            <div id="battle-p2-art" class="stage-art rounded-xl overflow-hidden border-2 border-bear"></div>
+            <div id="battle-p2-art" class="stage-art rounded-xl border-2 border-bear"></div>
             <div id="p2-float" class="float-layer"></div>
             <p id="p2-stage-name" class="text-[11px] font-bold mt-1 truncate"></p>
           </div>
@@ -635,6 +676,118 @@ const RACE_ABILITIES = {
   'Alienígena':{id:'mente_colmena',     nombre:'Mente Colmena',     descripcion:'Recupera 10% de su vida máxima.',                 kind:'heal',         value:0.10, cooldown:4},
 };
 function abilityOf(nft){ return nft.ability || RACE_ABILITIES[nft.race] || RACE_ABILITIES['Humano']; }
+// Peleador 2D de perfil dibujado con SVG (cuerpo completo articulado:
+// cabeza, torso, 2 brazos y 2 piernas con articulaciones). Las cartas,
+// Barracas, la ficha y la selección siguen usando la PNG de raza; SOLO
+// la escena de batalla usa este SVG. El jugador mira a la derecha; el
+// rival es el mismo dibujo espejado (scale(-1,1)).
+// skin: piel; armor: torso/manga; pants: piernas; accent: detalles.
+// Rasgos: horns big/small (cuernos), ear point/long/cat (orejas),
+// beard (barba), hat (gorro), tusks (colmillos), tail (cola),
+// metal (placas), eye big/glow (ojo grande o brillante).
+const FIGHTER_STYLE = {
+  'Humano':    {skin:'#E8B88A', armor:'#3B5BDB', pants:'#2B3A67', accent:'#FFD700'},
+  'Elfo':      {skin:'#F2C9A0', armor:'#2E7D32', pants:'#1B4D1B', accent:'#C0C0C0', ear:'point'},
+  'Enano':     {skin:'#E0A878', armor:'#8D6E63', pants:'#4E342E', accent:'#FF8C00', beard:true},
+  'Orco':      {skin:'#7CB342', armor:'#5D4037', pants:'#3E2723', accent:'#FF3D00', tusks:true},
+  'Goblin':    {skin:'#9CCC65', armor:'#6A1B9A', pants:'#3E1361', accent:'#FFD700', ear:'long'},
+  'Mediano':   {skin:'#E8B88A', armor:'#795548', pants:'#4E342E', accent:'#FFD700'},
+  'Gnomo':     {skin:'#F2C9A0', armor:'#1565C0', pants:'#0D3B66', accent:'#FF4081', hat:true},
+  'Dracónido': {skin:'#C62828', armor:'#37474F', pants:'#263238', accent:'#FFD700', horns:'small', tail:true},
+  'Tiefling':  {skin:'#8E24AA', armor:'#212121', pants:'#171717', accent:'#FF3D00', horns:'small', tail:true},
+  'H.Lagarto': {skin:'#558B2F', armor:'#33691E', pants:'#1B4D1B', accent:'#FFD700', tail:true},
+  'Tabaxi':    {skin:'#D7CCC8', armor:'#4E342E', pants:'#3E2723', accent:'#FFD700', ear:'cat', tail:true},
+  'Minotauro': {skin:'#8D6E63', armor:'#3E2723', pants:'#281A12', accent:'#FFD700', horns:'big'},
+  'Forjado':   {skin:'#90A4AE', armor:'#455A64', pants:'#37474F', accent:'#00E5FF', metal:true},
+  'Cíborg':    {skin:'#B0BEC5', armor:'#263238', pants:'#1C262B', accent:'#00E676', metal:true, eye:'glow'},
+  'Alienígena':{skin:'#80CBC4', armor:'#00695C', pants:'#004D40', accent:'#B388FF', eye:'big'},
+};
+// Rasgos de la cabeza (vista de perfil mirando a la derecha, cabeza
+// centrada en (70,34) r=11). Se dibujan sobre el círculo de la cabeza.
+function fighterHeadFeatures(st){
+  let f='';
+  if(st.horns==='big') f+=`<path d="M62 27 Q52 10 44 13 Q53 20 58 29 Z" fill="#E8DCC8"/><path d="M78 27 Q88 10 96 13 Q87 20 82 29 Z" fill="#E8DCC8"/>`;
+  else if(st.horns==='small') f+=`<path d="M63 26 L60 15 L68 24 Z" fill="#E8DCC8"/><path d="M77 24 L80 15 L82 26 Z" fill="#E8DCC8"/>`;
+  if(st.ear==='point') f+=`<path d="M78 30 L93 23 L80 39 Z" fill="${st.skin}"/>`;
+  else if(st.ear==='long') f+=`<path d="M78 29 L97 21 L81 40 Z" fill="${st.skin}"/>`;
+  else if(st.ear==='cat') f+=`<path d="M62 27 L63 14 L71 24 Z" fill="${st.skin}"/><path d="M73 24 L80 13 L81 26 Z" fill="${st.skin}"/>`;
+  if(st.hat) f+=`<path d="M58 29 L70 7 L82 29 Z" fill="${st.accent}"/><rect x="57" y="27" width="26" height="5" rx="2.5" fill="${st.accent}"/>`;
+  if(st.metal) f+=`<rect x="60" y="23" width="20" height="7" rx="3" fill="#546E7A"/><circle cx="70" cy="26.5" r="1.6" fill="${st.accent}"/>`;
+  if(st.beard) f+=`<ellipse cx="70" cy="45" rx="8" ry="6.5" fill="#6D4C41"/>`;
+  if(st.tusks) f+=`<path d="M73 42 L75 37 L77 42 Z" fill="#FFF"/><path d="M78 42 L80 37 L82 42 Z" fill="#FFF"/>`;
+  else if(!st.beard) f+=`<path d="M74 41 Q77 43.5 80 41" stroke="#1A1A1A" stroke-width="1.2" fill="none" stroke-linecap="round"/>`;
+  if(st.eye==='big') f+=`<ellipse cx="75" cy="31" rx="3" ry="5.5" fill="#111"/><circle cx="76" cy="29" r="1" fill="#FFF"/>`;
+  else if(st.eye==='glow') f+=`<circle cx="75" cy="32" r="2.6" fill="${st.accent}"/>`;
+  else f+=`<circle cx="75" cy="32" r="1.8" fill="#1A1A1A"/>`;
+  return f;
+}
+// SVG del peleador, viewBox 120×160, de perfil. side 'p1' mira a la
+// derecha; 'p2' mira a la izquierda (espejo). Las clases de pose
+// (f-punch, f-kick, f-crit, f-guard, f-heal, f-ko) se ponen en el <svg>
+// y las animaciones CSS rotan los grupos sobre sus articulaciones.
+function buildFighterSVG(race, side){
+  const st=FIGHTER_STYLE[race]||FIGHTER_STYLE['Humano'];
+  const inner=`
+  <g class="f-jump"><g class="f-fall"><g class="f-idle">
+    ${st.tail?`<path d="M56 90 Q42 98 38 114 Q46 112 52 98 Z" fill="${st.skin}"/>`:''}
+    <g class="f-leg-back">
+      <line x1="54" y1="92" x2="44" y2="122" stroke="${st.pants}" stroke-width="8" stroke-linecap="round"/>
+      <g class="f-knee-back">
+        <line x1="44" y1="122" x2="40" y2="152" stroke="${st.pants}" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="42" cy="154" rx="9" ry="4.5" fill="#222"/>
+      </g>
+    </g>
+    <g class="f-arm-back">
+      <line x1="56" y1="52" x2="46" y2="72" stroke="${st.armor}" stroke-width="7" stroke-linecap="round"/>
+      <g class="f-elbow-back">
+        <line x1="46" y1="72" x2="54" y2="58" stroke="${st.skin}" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="54" cy="57" r="4.5" fill="${st.skin}"/>
+      </g>
+    </g>
+    <g class="f-torso">
+      <rect x="51" y="46" width="25" height="49" rx="9" fill="${st.armor}"/>
+      <rect x="51" y="86" width="25" height="7" rx="3" fill="${st.accent}"/>
+      <circle cx="63" cy="62" r="3.5" fill="${st.accent}"/>
+    </g>
+    <g class="f-leg-front">
+      <line x1="62" y1="92" x2="72" y2="122" stroke="${st.pants}" stroke-width="8" stroke-linecap="round"/>
+      <g class="f-knee-front">
+        <line x1="72" y1="122" x2="78" y2="152" stroke="${st.pants}" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="80" cy="154" rx="9" ry="4.5" fill="#222"/>
+      </g>
+    </g>
+    <g class="f-arm-front">
+      <line x1="68" y1="52" x2="76" y2="70" stroke="${st.armor}" stroke-width="7" stroke-linecap="round"/>
+      <g class="f-elbow-front">
+        <line x1="76" y1="70" x2="70" y2="54" stroke="${st.skin}" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="70" cy="53" r="4.5" fill="${st.skin}"/>
+      </g>
+    </g>
+    <g class="f-head">
+      <circle cx="70" cy="34" r="11" fill="${st.skin}"/>
+      ${fighterHeadFeatures(st)}
+    </g>
+  </g></g></g>`;
+  const body=side==='p2'?`<g transform="translate(120,0) scale(-1,1)">${inner}</g>`:inner;
+  return `<svg viewBox="0 0 120 160" class="fighter-svg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${body}</svg>`;
+}
+// Poses del peleador SVG en la escena: pone la clase en el <svg> y la
+// quita a los ms (salvo keep=true, para el KO, que queda tumbado hasta
+// stageReset). No anima nada si SALTAR está activo.
+const FIGHTER_POSES=['f-punch','f-kick','f-crit','f-guard','f-heal','f-ko'];
+let fighterMoveAlt={p1:0,p2:0};
+function fighterPose(side,cls,ms,keep){
+  if(stageSkip) return;
+  const art=document.getElementById('battle-'+side+'-art'); if(!art) return;
+  const svg=art.querySelector('svg.fighter-svg'); if(!svg) return;
+  svg.classList.remove(cls); void svg.offsetWidth; svg.classList.add(cls);
+  if(!keep) setTimeout(()=>svg.classList.remove(cls),ms);
+}
+// Puño y patada se alternan para que no se repita siempre el mismo golpe.
+function fighterNextMove(side){
+  const m=fighterMoveAlt[side]%2===0?'f-punch':'f-kick';
+  fighterMoveAlt[side]++; return m;
+}
 // Nombre que se muestra: el elegido en el creador, o por defecto
 // "Raza · Linaje" (igual que display_name del servidor).
 function defaultName(nft){ return nft.race + ' · ' + nft.lineage; }
@@ -2172,8 +2325,8 @@ function runDemoBattle(opp) {
   const s1=getStats(selectedFighter), s2=getStats(opp);
   battleState={p1:{...selectedFighter,curHp:s1.hp,maxHp:s1.hp,stats:s1,cd:0,block_next:false,reduce_next:false},
                p2:{...opp,curHp:s2.hp,maxHp:s2.hp,stats:s2,cd:0,block_next:false,reduce_next:false},round:0,done:false,step:0,firstP1:true};
-  document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(selectedFighter.race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
-  document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(opp.race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
+  document.getElementById('battle-p1-art').innerHTML=buildFighterSVG(selectedFighter.race,'p1');
+  document.getElementById('battle-p2-art').innerHTML=buildFighterSVG(opp.race,'p2');
   document.getElementById('p1-name').textContent=gladiatorName(selectedFighter);
   document.getElementById('p2-name').textContent=gladiatorName(opp);
   document.getElementById('p1-hp').textContent=s1.hp.toLocaleString();
@@ -2248,9 +2401,11 @@ function battleAtk(att,def,isP1,allowAbility=true){
       const ae=document.createElement('div'); ae.className='log-entry';
       ae.innerHTML=formatServerLogLine(entry, isP1);
       log.appendChild(ae); log.scrollTop=log.scrollHeight;
-      // Escena: destello de habilidad + número verde si cura.
-      stageAbility(isP1?'p1':'p2', ab.nombre);
-      if(entry.healed>0) stageFloat(isP1?'p1':'p2', '+'+entry.healed.toLocaleString()+' HP', 'dmg-heal');
+      // Escena: destello de habilidad + pose según el efecto (cura: se
+      // agacha y brilla verde; bloqueo/reducción: guardia).
+      stageAbility(isP1?'p1':'p2', ab.nombre, ab.kind==='heal');
+      if(ab.kind==='heal' && entry.healed>0){ fighterPose(isP1?'p1':'p2','f-heal',900); stageFloat(isP1?'p1':'p2', '+'+entry.healed.toLocaleString()+' HP', 'dmg-heal'); }
+      else if(ab.kind==='block'||ab.kind==='reduce') fighterPose(isP1?'p1':'p2','f-guard',900);
     }
     // El bloqueo por habilidad protege del próximo ataque (sin sorteo);
     // el sorteo actual de crítico/bloqueo se queda como está y la
@@ -2282,10 +2437,14 @@ function battleAtk(att,def,isP1,allowAbility=true){
     log.appendChild(e); log.scrollTop=log.scrollHeight;
     if(isP1){document.getElementById('p2-hp').textContent=def.curHp.toLocaleString();document.getElementById('p2-bar').style.width=pct+'%';}
     else    {document.getElementById('p1-hp').textContent=def.curHp.toLocaleString();document.getElementById('p1-bar').style.width=pct+'%';}
-    // Escena: embestida del atacante, sacudida y número flotante del defensor.
+    // Escena: movimiento del ataque (puño o patada, crítico con salto),
+    // embestida, sacudida y número flotante del defensor. Bloqueo: el
+    // defensor sube la guardia y no se sacude.
     stageLunge(isP1?'p1':'p2');
-    if(blocked) stageFloat(isP1?'p2':'p1','🛡 BLOQUEADO','dmg-block');
+    if(blocked){ fighterPose(isP1?'p2':'p1','f-guard',520); stageFloat(isP1?'p2':'p1','🛡 BLOQUEADO','dmg-block'); }
     else {
+      if(crit) fighterPose(isP1?'p1':'p2','f-crit',560);
+      else fighterPose(isP1?'p1':'p2', fighterNextMove(isP1?'p1':'p2'), 520);
       stageShake(isP1?'p2':'p1');
       stageFloat(isP1?'p2':'p1',(crit?'💥 CRÍTICO −':'−')+dmg.toLocaleString()+' HP', crit?'dmg-crit':'dmg-normal');
     }
@@ -2415,36 +2574,44 @@ function stageArtAnim(side,cls,ms){
 }
 function stageLunge(side){ stageArtAnim(side, side==='p1'?'fighter-lunge-p1':'fighter-lunge-p2', 520); }
 function stageShake(side){ stageArtAnim(side,'fighter-hit',460); }
-function stageAbility(side,name){
+function stageAbility(side,name,heal){
   if(stageSkip) return;
   stageAnim(side,'fighter-ability',920);
-  // Destello morado en TODO el escenario, no solo un brillo tenue en
-  // el luchador: antes solo se leía el nombre en texto morado.
+  // Destello en TODO el escenario: morado para habilidades, verde si
+  // cura (antes solo se leía el nombre en texto morado).
   const f=document.getElementById('battle-flash');
-  if(f){ f.classList.remove('stage-flash-on'); void f.offsetWidth; f.classList.add('stage-flash-on');
-    setTimeout(()=>f.classList.remove('stage-flash-on'),920); }
+  if(f){ f.classList.remove('stage-flash-on','stage-flash-green'); void f.offsetWidth;
+    if(heal) f.classList.add('stage-flash-green');
+    f.classList.add('stage-flash-on');
+    setTimeout(()=>f.classList.remove('stage-flash-on','stage-flash-green'),920); }
   const b=document.getElementById('battle-ability');
   if(b){ b.textContent='✨ '+name; setTimeout(()=>{ if(b.textContent==='✨ '+name) b.textContent=''; },1500); }
 }
 function stageKO(side){
   if(stageSkip) return;
   const el=document.getElementById('battle-'+side+'-fighter'); if(el) el.classList.add('fighter-ko');
+  // El peleador SVG cae al suelo (rotación hasta quedar tumbado) y
+  // queda así hasta stageReset; el contenedor además se atenúa.
+  fighterPose(side,'f-ko',700,true);
 }
 function stageReset(){
   stageSkip=false;
+  fighterMoveAlt={p1:0,p2:0};
   ['p1','p2'].forEach(s=>{
     const el=document.getElementById('battle-'+s+'-fighter');
     if(el) el.classList.remove('fighter-ability','fighter-ko');
     const art=document.getElementById('battle-'+s+'-art');
-    if(art) art.classList.remove('fighter-lunge-p1','fighter-lunge-p2','fighter-hit');
+    if(art){ art.classList.remove('fighter-lunge-p1','fighter-lunge-p2','fighter-hit');
+      const svg=art.querySelector('svg.fighter-svg');
+      if(svg) svg.classList.remove(...FIGHTER_POSES); }
     const l=document.getElementById(s+'-float'); if(l) l.innerHTML='';
   });
-  const f=document.getElementById('battle-flash'); if(f) f.classList.remove('stage-flash-on');
+  const f=document.getElementById('battle-flash'); if(f) f.classList.remove('stage-flash-on','stage-flash-green');
   const b=document.getElementById('battle-ability'); if(b) b.textContent='';
 }
 function stageClearFloats(){
   ['p1','p2'].forEach(s=>{ const l=document.getElementById(s+'-float'); if(l) l.innerHTML=''; });
-  const f=document.getElementById('battle-flash'); if(f) f.classList.remove('stage-flash-on');
+  const f=document.getElementById('battle-flash'); if(f) f.classList.remove('stage-flash-on','stage-flash-green');
   const b=document.getElementById('battle-ability'); if(b) b.textContent='';
 }
 
@@ -2509,8 +2676,8 @@ function playServerBattle(fighter, res) {
   const p1Max = s1.hp;
   const p2Race = (res.opponent && res.opponent.race) || (res.log.map(e=>e.attacker).find(r=>r!==fighter.race)) || 'Rival';
   const p2Name = (res.opponent && res.opponent.display_name) || (res.opponent && res.opponent.lineage ? defaultName(res.opponent) : p2Race);
-  document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(fighter.race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
-  document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(p2Race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
+  document.getElementById('battle-p1-art').innerHTML=buildFighterSVG(fighter.race,'p1');
+  document.getElementById('battle-p2-art').innerHTML=buildFighterSVG(p2Race,'p2');
   document.getElementById('p1-name').textContent=gladiatorName(fighter);
   document.getElementById('p2-name').textContent=p2Name;
   document.getElementById('p1-stage-name').textContent=gladiatorName(fighter);
@@ -2554,21 +2721,26 @@ function applyServerBattleEntry(e, withStage){
   const setHp=(side,hp,max)=>{ document.getElementById(side+'-hp').textContent=hp.toLocaleString(); document.getElementById(side+'-bar').style.width=Math.round(hp/max*100)+'%'; };
   if(e.type==='ability'){
     if(withStage){
-      stageAbility(attSide, e.ability||'Habilidad');
-      if(e.healed!=null && e.healed>0) stageFloat(attSide,'+'+e.healed.toLocaleString()+' HP','dmg-heal');
+      // Pose según el efecto: cura → se agacha y brilla verde;
+      // bloqueo/reducción → guardia; daño/crítico → puñetazo grande.
+      const heal=e.effect==='heal';
+      stageAbility(attSide, e.ability||'Habilidad', heal);
+      if(e.healed!=null && e.healed>0){ fighterPose(attSide,'f-heal',900); stageFloat(attSide,'+'+e.healed.toLocaleString()+' HP','dmg-heal'); }
+      else if(e.effect==='block'||e.effect==='reduce') fighterPose(attSide,'f-guard',900);
+      else if(e.effect==='damage_mult'||e.effect==='crit') fighterPose(attSide,'f-punch',520);
     }
   } else if(e.type==='block'){
-    if(withStage){ stageLunge(attSide); stageFloat(defSide,'🛡 BLOQUEADO','dmg-block'); }
+    if(withStage){ stageLunge(attSide); fighterPose(defSide,'f-guard',520); stageFloat(defSide,'🛡 BLOQUEADO','dmg-block'); }
   } else if(e.type==='crit'){
-    if(withStage){ stageLunge(attSide); stageShake(defSide); stageFloat(defSide,'💥 CRÍTICO −'+(e.damage||0).toLocaleString()+' HP','dmg-crit'); }
+    if(withStage){ fighterPose(attSide,'f-crit',560); stageLunge(attSide); stageShake(defSide); stageFloat(defSide,'💥 CRÍTICO −'+(e.damage||0).toLocaleString()+' HP','dmg-crit'); }
   } else if(e.type==='reflect'){
     if(withStage){
-      stageLunge(attSide); stageShake(defSide);
+      stageLunge(attSide); fighterPose(defSide,'f-guard',520); stageShake(defSide);
       stageFloat(defSide,'−'+(e.damage||0).toLocaleString()+' HP','dmg-normal');
       if(e.reflected){ stageShake(attSide); stageFloat(attSide,'−'+e.reflected.toLocaleString()+' HP · REFLEJO','dmg-reflect'); }
     }
   } else if(e.type==='normal' && e.damage){
-    if(withStage){ stageLunge(attSide); stageShake(defSide); stageFloat(defSide,'−'+(e.damage||0).toLocaleString()+' HP','dmg-normal'); }
+    if(withStage){ fighterPose(attSide, fighterNextMove(attSide), 520); stageLunge(attSide); stageShake(defSide); stageFloat(defSide,'−'+(e.damage||0).toLocaleString()+' HP','dmg-normal'); }
   }
   // Números (siempre, con o sin animación): la barra y la vida final
   // deben cuadrar con el log aunque se salte la animación.
