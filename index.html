@@ -180,6 +180,7 @@
       <div class="mb-4 text-center">
         <p class="text-[10px] text-muted font-bold mb-1 tracking-widest">GLADIADOR PRINCIPAL</p>
         <div id="forge-main" onclick="openForgeSelect('main','asc')" class="forge-slot w-32 h-32 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden mx-auto"><span class="text-gray-500 text-3xl">+</span></div>
+        <div id="forge-main-info" class="hidden mt-2 text-center"></div>
       </div>
       <div class="mb-4 text-center w-full">
         <p class="text-[10px] text-muted font-bold mb-2 tracking-widest">SACRIFICIOS (×3 idénticos)</p>
@@ -188,10 +189,12 @@
           <div id="forge-s2" onclick="openForgeSelect('s2','asc')" class="forge-slot w-20 h-20 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden"><span class="text-gray-600 text-xl">+</span></div>
           <div id="forge-s3" onclick="openForgeSelect('s3','asc')" class="forge-slot w-20 h-20 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden"><span class="text-gray-600 text-xl">+</span></div>
         </div>
+        <div id="forge-sac-info" class="hidden mt-2 text-center text-[11px] text-muted"></div>
       </div>
       <div id="forge-preview" class="hidden mb-3 p-3 bg-panel2 border border-gray-700 rounded-xl text-center w-full max-w-xs"><p class="text-[10px] text-muted font-bold mb-1">RESULTADO</p><p id="forge-result-text" class="text-sm font-bold"></p></div>
       <div id="forge-cost" class="hidden text-xs text-muted mb-3 text-center">Costo: <span class="text-tick font-bold">50 $TICK</span></div>
       <button onclick="autoFillAscend()" class="w-full max-w-xs bg-panel2 border border-gray-700 text-white font-bold py-2 rounded-xl text-xs mb-2">✨ AUTO-SELECCIONAR IDÉNTICOS</button>
+      <p id="forge-auto-msg" class="hidden text-[11px] text-center mb-2 max-w-xs"></p>
       <p id="forge-hint" class="hidden text-[11px] text-yellow-300 text-center mb-2 max-w-xs"></p>
       <button id="forge-btn" onclick="executeForge()" class="w-full max-w-xs bg-bear text-white font-bold py-4 rounded-xl opacity-40 cursor-not-allowed" disabled>FUNDIR EN LA FORJA</button>
     </div>
@@ -234,13 +237,16 @@
       <div class="mb-4 text-center">
         <p class="text-[10px] text-muted font-bold mb-1 tracking-widest">GLADIADOR (LVL 50)</p>
         <div id="ren-main" onclick="openForgeSelect('ren-main','ren')" class="forge-slot w-32 h-32 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden mx-auto"><span class="text-gray-500 text-3xl">+</span></div>
+        <div id="ren-main-info" class="hidden mt-2 text-center"></div>
       </div>
       <div class="mb-4 text-center">
         <p class="text-[10px] text-muted font-bold mb-1 tracking-widest">SACRIFICIO IDÉNTICO (LVL 50)</p>
         <div id="ren-sac" onclick="openForgeSelect('ren-sac','ren')" class="forge-slot w-32 h-32 border-2 border-dashed border-red-900 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden mx-auto"><span class="text-red-800 text-3xl">+</span></div>
+        <div id="ren-sac-info" class="hidden mt-2 text-center"></div>
       </div>
       <div id="ren-preview" class="hidden mb-3 p-3 bg-panel2 border border-gray-700 rounded-xl text-center w-full max-w-xs"><p id="ren-preview-text" class="text-sm font-bold text-tick"></p></div>
       <button onclick="autoFillRebirth()" class="w-full max-w-xs bg-panel2 border border-gray-700 text-white font-bold py-2 rounded-xl text-xs mb-2">✨ BUSCAR COPIA IDÉNTICA LV50</button>
+      <p id="ren-auto-msg" class="hidden text-[11px] text-center mb-2 max-w-xs"></p>
       <button id="ren-btn" onclick="executeRebirth()" class="w-full max-w-xs bg-purple-700 text-white font-bold py-4 rounded-xl opacity-40 cursor-not-allowed" disabled>🔄 RENACER · 100 $TICK</button>
     </div>
   </div>
@@ -890,6 +896,7 @@ function nftCard(nft, opts={}) {
         ${opts.foot||''}
         <div class="xp-bar mb-1.5"><div class="xp-fill" style="width:${xpPct}%"></div></div>
         <div class="space-y-0.5">
+          <div class="flex justify-between text-[9px]"><span class="text-bull">HP</span><span class="font-mono">${s.hp.toLocaleString()}</span></div>
           <div class="flex justify-between text-[9px]"><span class="text-bear">ATQ</span><span class="font-mono">${s.atq.toLocaleString()}</span></div>
           ${nft.level>=10?`<div class="flex justify-between text-[9px]"><span class="text-bull">DEF</span><span class="font-mono">${s.def.toLocaleString()}</span></div>`:''}
           ${nft.level>=25?`<div class="flex justify-between text-[9px]"><span class="text-tick">VEL</span><span class="font-mono">${s.vel.toLocaleString()}</span></div>`:''}
@@ -1202,6 +1209,9 @@ function resetAllForge() {
   document.getElementById('forge-preview')?.classList.add('hidden');
   document.getElementById('forge-cost')?.classList.add('hidden');
   document.getElementById('forge-hint')?.classList.add('hidden');
+  document.getElementById('forge-main-info')?.classList.add('hidden');
+  document.getElementById('forge-sac-info')?.classList.add('hidden');
+  document.getElementById('forge-auto-msg')?.classList.add('hidden');
   const fb=document.getElementById('forge-btn');
   if(fb){fb.disabled=true;fb.classList.add('opacity-40','cursor-not-allowed');}
   // Reset Level
@@ -1224,6 +1234,9 @@ function resetAllForge() {
     el.style.borderColor=''; el.style.borderStyle='dashed';
   });
   document.getElementById('ren-preview')?.classList.add('hidden');
+  document.getElementById('ren-main-info')?.classList.add('hidden');
+  document.getElementById('ren-sac-info')?.classList.add('hidden');
+  document.getElementById('ren-auto-msg')?.classList.add('hidden');
   const rb=document.getElementById('ren-btn');
   if(rb){rb.disabled=true;rb.classList.add('opacity-40','cursor-not-allowed');}
 }
@@ -1351,11 +1364,63 @@ function setForgeSlotVisual(slot, nft){
   el.innerHTML=`<img src="${raceImg(nft.race)}" class="w-full h-full object-cover rounded-xl"/>`;
   const rr=RARITIES[nft.rarity]||RARITIES.Cobre;
   el.style.borderColor=rr.color; el.style.borderStyle='solid';
+  // El hueco también muestra quién se eligió: antes solo se veía la
+  // imagen (en Ascender ni el nombre), igual que pasaba en Nivel antes
+  // de updateLvlMainInfo. La info usa getStats, la misma función que
+  // la ficha, la arena y la batalla, así que los números coinciden.
+  if(['main','s1','s2','s3'].includes(slot)) updateForgeAscInfo();
+  if(['ren-main','ren-sac'].includes(slot)) updateForgeRenInfo();
+}
+// Texto de un gladiador elegido en un hueco de la forja: nombre,
+// linaje, rareza, nivel y los 4 stats visibles (los mismos de la ficha).
+function forgeSlotInfo(nft){
+  const s=getStats(nft);
+  return `<p class="text-[11px] font-bold">${nft.race} · ${nft.lineage} · ${nft.rarity} · Lv${nft.level}</p><p class="text-[10px] font-mono text-muted">HP ${s.hp.toLocaleString()} · ATQ ${s.atq.toLocaleString()} · DEF ${s.def.toLocaleString()} · VEL ${s.vel.toLocaleString()}</p>`;
+}
+function updateForgeAscInfo(){
+  const info=document.getElementById('forge-main-info');
+  if(info){
+    const m=forgeSlots.main;
+    if(m){ info.innerHTML=forgeSlotInfo(m); info.classList.remove('hidden'); }
+    else { info.innerHTML=''; info.classList.add('hidden'); }
+  }
+  const sac=document.getElementById('forge-sac-info');
+  if(sac){
+    const filled=['s1','s2','s3'].map(k=>forgeSlots[k]).filter(Boolean);
+    if(filled.length){ sac.innerHTML=filled.map(n=>`${n.race} · ${n.lineage} · ${n.rarity} · Lv${n.level}`).join('<br>'); sac.classList.remove('hidden'); }
+    else { sac.innerHTML=''; sac.classList.add('hidden'); }
+  }
+}
+function updateForgeRenInfo(){
+  const info=document.getElementById('ren-main-info');
+  if(info){
+    const m=renSlots['ren-main'];
+    if(m){ info.innerHTML=forgeSlotInfo(m); info.classList.remove('hidden'); }
+    else { info.innerHTML=''; info.classList.add('hidden'); }
+  }
+  const sac=document.getElementById('ren-sac-info');
+  if(sac){
+    const s=renSlots['ren-sac'];
+    if(s){ sac.innerHTML=forgeSlotInfo(s); sac.classList.remove('hidden'); }
+    else { sac.innerHTML=''; sac.classList.add('hidden'); }
+  }
+}
+// Mensaje visible EN LA PÁGINA para los botones de auto-selección.
+// CAUSA de los items 2 y 3: el feedback solo existía como alert() del
+// navegador, que en la prueba no se veía (se cierra solo / no queda en
+// pantalla), así que el botón parecía no responder. Ahora el mensaje
+// queda escrito bajo el botón, sin depender del alert ni del aviso
+// inferior genérico.
+function showForgeMsg(id, text, ok){
+  const el=document.getElementById(id); if(!el) return;
+  el.textContent=text;
+  el.classList.remove('hidden','text-yellow-300','text-bull');
+  el.classList.add(ok?'text-bull':'text-yellow-300');
 }
 // Ascender: busca los 3 idénticos al principal y los coloca en s1-s3.
 function autoFillAscend(){
   const main=forgeSlots.main;
-  if(!main){ alert('Elige primero el gladiador principal.'); return; }
+  if(!main){ showForgeMsg('forge-auto-msg','Elige primero el gladiador principal.',false); return; }
   ['s1','s2','s3'].forEach(s=>{
     if(forgeSlots[s]) return; // respetar lo ya elegido a mano
     const next=inventory.find(n=>n.id!==main.id&&n.race===main.race&&n.lineage===main.lineage&&n.rarity===main.rarity
@@ -1364,20 +1429,22 @@ function autoFillAscend(){
   });
   checkForgeAscReady();
   const missing=['s1','s2','s3'].filter(s=>!forgeSlots[s]).length;
-  if(missing>0) alert(`No tienes ${missing===3?'ningún':missing} gladiador(es) idéntico(s) a ${main.race}/${main.lineage} ${main.rarity} para sacrificar.\nPara ascender necesitas 3 copias idénticas (misma raza, linaje y rareza).`);
-  else alert('✓ Los 3 sacrificios idénticos están seleccionados.');
+  if(missing===3) showForgeMsg('forge-auto-msg',`No tienes ningún gladiador idéntico a ${main.race}/${main.lineage} ${main.rarity} para sacrificar. Para ascender necesitas 3 copias idénticas (misma raza, linaje y rareza).`,false);
+  else if(missing>0) showForgeMsg('forge-auto-msg',`Seleccioné ${3-missing} idéntico(s) a ${main.race}/${main.lineage} ${main.rarity}. Te faltan ${missing} para ascender.`,false);
+  else showForgeMsg('forge-auto-msg','✓ Los 3 sacrificios idénticos están seleccionados.',true);
 }
 // Renacer: busca una copia idéntica Lv50 para el sacrificio.
 function autoFillRebirth(){
   const main=renSlots['ren-main'];
   if(!main){
     const maxLv=inventory.length?Math.max(...inventory.map(n=>n.level)):0;
-    alert(`Elige primero el gladiador a renacer (Nivel 50).\nTu nivel máximo ahora es Lv${maxLv}.`);
+    showForgeMsg('ren-auto-msg',`Primero elige un gladiador principal para renacer (Nivel 50). Tu nivel máximo ahora es Lv${maxLv}.`,false);
     return;
   }
   const cand=inventory.find(n=>n.id!==main.id&&n.level>=MAX_LEVEL&&n.race===main.race&&n.lineage===main.lineage);
-  if(!cand){ alert(`No hay ninguna copia idéntica a ${main.race}/${main.lineage} en Nivel 50 para sacrificar.\nNecesitas otro gladiador igual (misma raza y linaje) también en Nivel 50.`); return; }
+  if(!cand){ showForgeMsg('ren-auto-msg',`No tienes una copia idéntica Lv50 de ${main.race}/${main.lineage}. Necesitas otro gladiador igual (misma raza y linaje) también en Nivel 50.`,false); return; }
   renSlots['ren-sac']=cand; setForgeSlotVisual('ren-sac',cand); checkForgeRenReady();
+  showForgeMsg('ren-auto-msg',`✓ Copia idéntica Lv50 seleccionada: ${cand.race}/${cand.lineage} Lv50.`,true);
 }
 
 function selectForgeSlot(id) {
@@ -1385,6 +1452,9 @@ function selectForgeSlot(id) {
   closeModal('modal-forge-select');
   const mode=forgeMode, slot=forgeSelectSlot;
   setForgeSlotVisual(slot, nft);
+  // Al elegir a mano, el mensaje del botón automático queda obsoleto.
+  if(mode==='asc') document.getElementById('forge-auto-msg')?.classList.add('hidden');
+  if(mode==='ren') document.getElementById('ren-auto-msg')?.classList.add('hidden');
   if(mode==='asc') { forgeSlots[slot]=nft; checkForgeAscReady(); }
   else if(mode==='lvl') { lvlSlots[slot]=nft; updateLvlMainInfo(); updateLvlFoodInfo(); checkForgeLvlReady(); }
   else if(mode==='ren') { renSlots[slot]=nft; checkForgeRenReady(); }
@@ -1413,6 +1483,7 @@ function updateLvlFoodInfo(){
 // ASCENDER — validación
 function checkForgeAscReady() {
   const {main,s1,s2,s3}=forgeSlots;
+  updateForgeAscInfo();
   // Pista cuando faltan sacrificios: antes el botón quedaba deshabilitado
   // sin decir por qué (y con "Solo compatibles" el selector se veía
   // vacío sin explicación).
@@ -1504,6 +1575,7 @@ function executeFeed() {
 // RENACIMIENTO — validación y ejecución
 function checkForgeRenReady() {
   const {main,sac}={'main':renSlots['ren-main'],'sac':renSlots['ren-sac']};
+  updateForgeRenInfo();
   const btn=document.getElementById('ren-btn');
   const prev=document.getElementById('ren-preview');
   if(!main||!sac){prev.classList.add('hidden');btn.disabled=true;btn.classList.add('opacity-40','cursor-not-allowed');return;}
