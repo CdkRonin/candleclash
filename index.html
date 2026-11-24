@@ -59,7 +59,7 @@
     </div>
   </div>
   <div class="flex-1 mx-3 ticker-wrap text-[10px] font-mono font-bold bg-black/30 rounded px-2 py-1">
-    <div id="ticker-inner" class="ticker-inner text-gray-300">BTC <span class="text-bull">+2.4%</span> &nbsp;|&nbsp; ETH <span class="text-bear">-0.8%</span> &nbsp;|&nbsp; SOL <span class="text-bull">+4.1%</span> &nbsp;|&nbsp; BNB <span class="text-bear">-1.2%</span> &nbsp;|&nbsp; DOGE <span class="text-bull">+6.3%</span> &nbsp;|&nbsp; ADA <span class="text-bull">+0.9%</span></div>
+    <div id="ticker-inner" class="ticker-inner text-gray-300">Cargando precios en vivo…</div>
   </div>
   <div class="flex flex-col items-end leading-tight">
     <div class="flex items-center gap-2">
@@ -68,7 +68,7 @@
     </div>
     <div class="flex items-center gap-2">
       <span id="hdr-energy" class="text-[10px] font-mono font-bold text-yellow-300">⚡ 10/10</span>
-      <span class="text-[10px] text-muted">Billetera</span>
+      <button onclick="openWallet()" class="text-[10px] text-muted font-bold underline">Billetera</button>
     </div>
   </div>
 </header>
@@ -86,11 +86,15 @@
     <div class="w-full max-w-xs flex flex-col gap-3">
       <div class="bg-panel2 border border-gray-700 rounded-xl p-4 text-center">
         <p class="text-xs text-muted mb-1">Precios en vivo</p>
-        <div class="flex justify-around text-xs font-mono">
-          <span>BTC <span class="text-bull">+2.4%</span></span>
-          <span>ETH <span class="text-bear">-0.8%</span></span>
-          <span>SOL <span class="text-bull">+4.1%</span></span>
+        <div id="login-prices" class="flex justify-around text-xs font-mono">
+          <span class="text-muted">Cargando precios…</span>
         </div>
+      </div>
+      <div class="bg-panel2 border border-gray-700 rounded-xl p-3 text-left space-y-1">
+        <p class="text-xs font-bold text-white">¿Cómo se juega?</p>
+        <p class="text-[11px] text-muted">⚔️ Recluta gladiadores y pelea en la Arena para ganar $TICK.</p>
+        <p class="text-[11px] text-muted">📈 Cada gladiador está ligado a una cripto: sus stats cambian con el precio real.</p>
+        <p class="text-[11px] text-muted">👤 Invitado = modo demo: saldo simulado y tu progreso <b class="text-white">no se guarda</b>. Conecta tu wallet para jugar de verdad.</p>
       </div>
       <button onclick="connectWallet()" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base shadow-[0_0_20px_rgba(0,200,83,.35)] flex items-center justify-center gap-2">🦊 CONECTAR WALLET</button>
       <p class="text-[10px] text-muted text-center">🔒 La firma es gratuita y no mueve fondos: solo demuestra que eres dueño de tu wallet.</p>
@@ -112,21 +116,23 @@
     <div class="bg-panel border border-gray-800 rounded-xl p-3">
       <h3 class="text-[10px] font-bold text-muted mb-2 tracking-widest">MISIONES DIARIAS</h3>
       <div class="space-y-2">
-        <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-lg">⚔️</span><div><p class="text-xs font-semibold">Ganar 3 batallas</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div id="m1-bar" class="h-full bg-bull rounded" style="width:33%"></div></div></div></div><span class="text-xs font-mono text-tick">+10 $TICK</span></div>
-        <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-lg">📦</span><div><p class="text-xs font-semibold">Abrir 1 caja</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div id="m2-bar" class="h-full bg-bull rounded" style="width:0%"></div></div></div></div><span class="text-xs font-mono text-tick">+5 $TICK</span></div>
-        <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-lg">🔥</span><div><p class="text-xs font-semibold">Usar la Forja</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div id="m3-bar" class="h-full bg-bull rounded" style="width:0%"></div></div></div></div><span class="text-xs font-mono text-tick">+15 $TICK</span></div>
+        <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-lg">⚔️</span><div><p class="text-xs font-semibold">Ganar 3 batallas</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div id="m1-bar" class="h-full bg-bull rounded" style="width:0%"></div></div></div></div><span class="flex flex-col items-end"><span id="m1-count" class="text-[10px] font-mono text-muted">0/3</span><span class="text-xs font-mono text-tick">+10 $TICK</span></span></div>
+        <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-lg">📦</span><div><p class="text-xs font-semibold">Abrir 1 caja</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div id="m2-bar" class="h-full bg-bull rounded" style="width:0%"></div></div></div></div><span class="flex flex-col items-end"><span id="m2-count" class="text-[10px] font-mono text-muted">0/1</span><span class="text-xs font-mono text-tick">+5 $TICK</span></span></div>
+        <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-lg">🔥</span><div><p class="text-xs font-semibold">Usar la Forja</p><div class="w-24 h-1.5 bg-gray-800 rounded mt-1"><div id="m3-bar" class="h-full bg-bull rounded" style="width:0%"></div></div></div></div><span class="flex flex-col items-end"><span id="m3-count" class="text-[10px] font-mono text-muted">0/1</span><span class="text-xs font-mono text-tick">+15 $TICK</span></span></div>
       </div>
     </div>
     <div class="bg-panel border border-tick rounded-xl p-4 relative shadow-[0_0_12px_rgba(255,215,0,.15)]">
-      <div class="absolute top-0 right-0 bg-tick text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">LVL 25+</div>
+      <div class="absolute top-0 right-0 bg-tick text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">Requisito: gladiador Lv25+</div>
       <h3 class="text-tick font-bold text-sm mb-1">🏆 Gran Torneo Semanal</h3>
       <p class="text-xs text-muted mb-3">Premio: <span class="text-bull font-bold">500 USDT</span> · 128/256 participantes</p>
-      <button class="w-full bg-gray-800 text-muted font-bold py-2 rounded-lg cursor-not-allowed text-sm">🔒 BLOQUEADO</button>
+      <button id="gran-torneo-btn" onclick="explainGranTorneo()" class="w-full bg-gray-800 text-muted font-bold py-2 rounded-lg text-sm">🔒 BLOQUEADO</button>
+      <p id="gran-torneo-note" class="text-[10px] text-muted text-center mt-2"></p>
     </div>
     <div class="bg-panel border border-gray-800 rounded-xl p-4">
       <h3 class="text-white font-bold text-sm mb-1">⚔️ Torneo de Liga</h3>
-      <p class="text-xs text-muted mb-3">Premio: <span class="text-bull font-bold">50 USDT</span> · Clasificatorio diario</p>
-      <button onclick="showView('view-arena')" class="w-full bg-bull text-black font-bold py-2 rounded-lg text-sm">ENTRAR</button>
+      <p class="text-xs text-muted mb-3">Premio: <span class="text-bull font-bold">50 USDT</span> · Clasificatorio diario · <span class="text-yellow-300">Próximamente</span></p>
+      <button onclick="showView('view-arena')" class="w-full bg-bull text-black font-bold py-2 rounded-lg text-sm">⚔ PRACTICAR EN LA ARENA</button>
+      <p class="text-[10px] text-muted text-center mt-2">El Torneo de Liga aún no está activo. Tus batallas en la Arena son de práctica por ahora.</p>
     </div>
     <div class="bg-panel border border-gray-800 rounded-xl p-3">
       <h3 class="text-[10px] font-bold text-muted mb-2 tracking-widest">HISTORIAL</h3>
@@ -138,16 +144,21 @@
   <div id="view-barracks" class="hidden view p-4">
     <div class="flex items-center justify-between mb-3">
       <h2 class="font-bold text-base">Mis Gladiadores</h2>
-      <span id="barracks-count" class="text-xs text-muted font-mono"></span>
+      <div class="flex items-center gap-2">
+        <button id="barracks-clear-filter" onclick="filterRarity('all')" class="hidden text-[10px] font-bold text-bull">× Limpiar filtro</button>
+        <span id="barracks-count" class="text-xs text-muted font-mono"></span>
+      </div>
     </div>
     <!-- Solo visible con sesión real: reclutar (mint) en el backend -->
     <div id="barracks-api" class="hidden mb-3"></div>
     <div class="flex gap-2 mb-3 overflow-x-auto pb-1">
       <button onclick="filterRarity('all')" id="filter-all" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-bull text-black">TODOS</button>
-      <button onclick="filterRarity('Legendario')" id="filter-Legendario" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">LEGENDARIO</button>
-      <button onclick="filterRarity('Oro')" id="filter-Oro" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">ORO</button>
-      <button onclick="filterRarity('Plata')" id="filter-Plata" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">PLATA</button>
       <button onclick="filterRarity('Cobre')" id="filter-Cobre" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">COBRE</button>
+      <button onclick="filterRarity('Bronce')" id="filter-Bronce" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">BRONCE</button>
+      <button onclick="filterRarity('Plata')" id="filter-Plata" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">PLATA</button>
+      <button onclick="filterRarity('Oro')" id="filter-Oro" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">ORO</button>
+      <button onclick="filterRarity('Diamante')" id="filter-Diamante" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">DIAMANTE</button>
+      <button onclick="filterRarity('Legendario')" id="filter-Legendario" class="filter-btn flex-none text-[10px] font-bold px-3 py-1.5 rounded-full bg-panel2 border border-gray-700 text-muted">LEGENDARIO</button>
     </div>
     <div id="barracks-grid" class="grid grid-cols-2 gap-3"></div>
   </div>
@@ -165,6 +176,7 @@
     <!-- PANEL: ASCENDER RAREZA -->
     <div id="forge-panel-asc" class="flex flex-col items-center">
       <p class="text-xs text-muted mb-4 text-center">4 NFTs idénticos → sube rareza · Cuesta 50 $TICK</p>
+      <p class="text-[10px] text-muted mb-3 text-center max-w-xs">El principal puede ser de cualquier rareza <b class="text-white">salvo Legendario</b> (ya está en el tope, no se puede ascender). Los 3 sacrificios deben ser <b class="text-white">idénticos</b> al principal: misma raza, linaje y rareza.</p>
       <div class="mb-4 text-center">
         <p class="text-[10px] text-muted font-bold mb-1 tracking-widest">GLADIADOR PRINCIPAL</p>
         <div id="forge-main" onclick="openForgeSelect('main','asc')" class="forge-slot w-32 h-32 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden mx-auto"><span class="text-gray-500 text-3xl">+</span></div>
@@ -180,12 +192,14 @@
       <div id="forge-preview" class="hidden mb-3 p-3 bg-panel2 border border-gray-700 rounded-xl text-center w-full max-w-xs"><p class="text-[10px] text-muted font-bold mb-1">RESULTADO</p><p id="forge-result-text" class="text-sm font-bold"></p></div>
       <div id="forge-cost" class="hidden text-xs text-muted mb-3 text-center">Costo: <span class="text-tick font-bold">50 $TICK</span></div>
       <button onclick="autoFillAscend()" class="w-full max-w-xs bg-panel2 border border-gray-700 text-white font-bold py-2 rounded-xl text-xs mb-2">✨ AUTO-SELECCIONAR IDÉNTICOS</button>
+      <p id="forge-hint" class="hidden text-[11px] text-yellow-300 text-center mb-2 max-w-xs"></p>
       <button id="forge-btn" onclick="executeForge()" class="w-full max-w-xs bg-bear text-white font-bold py-4 rounded-xl opacity-40 cursor-not-allowed" disabled>FUNDIR EN LA FORJA</button>
     </div>
 
     <!-- PANEL: SUBIR NIVEL -->
     <div id="forge-panel-lvl" class="hidden flex flex-col items-center">
       <p class="text-xs text-muted mb-4 text-center">Usa NFTs como alimento para dar XP a tu gladiador</p>
+      <p class="text-[10px] text-muted mb-3 text-center">Costo: gratis — solo consumes los NFTs que uses como alimento.</p>
       <div class="mb-4 text-center">
         <p class="text-[10px] text-muted font-bold mb-1 tracking-widest">GLADIADOR A SUBIR</p>
         <div id="lvl-main" onclick="openForgeSelect('lvl-main','lvl')" class="forge-slot w-32 h-32 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center bg-black/30 cursor-pointer overflow-hidden mx-auto"><span class="text-gray-500 text-3xl">+</span></div>
@@ -204,6 +218,7 @@
         <p class="text-[10px] text-muted font-bold mb-1">PREVISUALIZACIÓN</p>
         <div id="lvl-preview-text" class="space-y-1 text-xs"></div>
       </div>
+      <div id="lvl-food-info" class="hidden mb-3 text-[11px] text-purple-300 text-center max-w-xs"></div>
       <button id="lvl-btn" onclick="executeFeed()" class="w-full max-w-xs bg-purple-600 text-white font-bold py-4 rounded-xl opacity-40 cursor-not-allowed" disabled>⬆ ALIMENTAR Y SUBIR NIVEL</button>
     </div>
 
@@ -211,8 +226,9 @@
     <div id="forge-panel-ren" class="hidden flex flex-col items-center">
       <div class="bg-panel2 border border-gray-700 rounded-xl p-3 mb-4 w-full max-w-xs text-xs space-y-1">
         <p class="text-tick font-bold text-center mb-2">🔄 ¿Qué es el Renacimiento?</p>
-        <p class="text-muted">Un NFT en <span class="text-white font-bold">Nivel 50</span> puede renacer sacrificando una copia idéntica (misma raza + linaje) también al <span class="text-white font-bold">Nivel 50</span>.</p>
-        <p class="text-muted">El NFT vuelve al <span class="text-bull font-bold">Nivel 1</span> conservando un <span class="text-tick font-bold">+20% permanente</span> en todos sus stats. ¡Puede hacerse hasta 5 veces!</p>
+        <p class="text-muted">• Requisito: un gladiador en Nivel 50 y una copia idéntica (misma raza y linaje) también en Nivel 50.</p>
+        <p class="text-muted">• Al renacer vuelve al Nivel 1 con +20% permanente en todos sus stats.</p>
+        <p class="text-muted">• Se puede renacer hasta 5 veces.</p>
         <p class="text-muted">Costo: <span class="text-tick font-bold">100 $TICK</span></p>
       </div>
       <div class="mb-4 text-center">
@@ -248,8 +264,19 @@
       </div>
       <p id="arena-count" class="text-[10px] text-muted text-center mb-3"></p>
       <div id="arena-fighter-grid" class="grid grid-cols-2 gap-3 mb-4"></div>
+      <p id="arena-selected-label" class="text-center text-xs font-bold text-bull mb-2"></p>
       <p id="arena-energy" class="text-center text-xs font-mono font-bold text-yellow-300 mb-2">⚡ Energía: 10/10</p>
       <button onclick="startBattle()" id="arena-fight-btn" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base opacity-40 cursor-not-allowed" disabled>BUSCAR OPONENTE</button>
+    </div>
+    <!-- Vista previa del rival: se muestra antes de gastar energía -->
+    <div id="arena-preview" class="hidden flex flex-col items-center">
+      <h2 class="font-bold text-base mb-1 text-center">⚔️ Tu rival</h2>
+      <p class="text-[10px] text-muted text-center mb-3">Rival de poder similar al tuyo · Si no te gusta, busca otro</p>
+      <div id="preview-card" class="w-full max-w-xs mb-3"></div>
+      <p id="preview-power" class="text-xs font-mono text-muted text-center mb-4"></p>
+      <button onclick="confirmBattle()" class="w-full max-w-xs bg-bull text-black font-bold py-4 rounded-xl text-base mb-2">⚔ ¡PELEAR!</button>
+      <button onclick="rerollOpponent()" class="w-full max-w-xs bg-panel2 border border-gray-700 text-white font-bold py-3 rounded-xl text-sm mb-2">🔄 OTRO RIVAL</button>
+      <button onclick="cancelPreview()" class="w-full max-w-xs text-muted font-bold py-2 rounded-xl text-xs">← Volver a elegir gladiador</button>
     </div>
     <div id="arena-battle" class="hidden flex flex-col">
       <div class="flex justify-between items-center mb-3 gap-4">
@@ -289,7 +316,7 @@
       <p class="text-[10px] text-muted text-center">El Paquete Recluta es real (1 por cuenta). Las demás cajas siguen en modo demo: usan saldo simulado, no dinero real todavía.</p>
       <div class="bg-panel border-2 border-tick rounded-xl p-4 relative shadow-[0_0_15px_rgba(255,215,0,.15)]">
         <div class="absolute top-0 right-0 bg-tick text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">PRIMERA VEZ</div>
-        <div class="flex items-center gap-3 mb-3"><span class="text-3xl">🎖️</span><div><h3 class="font-bold text-tick">Paquete Recluta</h3><p class="text-xs text-muted">5 cajas + 100 $TICK + 1 NFT Lvl 25</p></div></div>
+        <div class="flex items-center gap-3 mb-3"><span class="text-3xl">🎖️</span><div><h3 class="font-bold text-tick">Paquete Recluta</h3><p class="text-xs text-muted">5 NFTs (uno en Nivel 25) + 100 $TICK</p></div></div>
         <button id="recluta-btn" onclick="openPackModal('recluta')" class="w-full bg-tick text-black font-bold py-3 rounded-xl text-sm">COMPRAR · 15 USDT</button>
         <p id="recluta-note" class="text-[10px] text-muted text-center mt-1">1 por cuenta · los 5 NFTs son reales y aparecen en tus Barracas</p>
       </div>
@@ -303,7 +330,7 @@
       </div>
       <div class="bg-panel border border-[#C0C0C0] rounded-xl p-4 flex items-center justify-between shadow-[0_0_10px_rgba(192,192,192,.15)]">
         <div class="flex items-center gap-3"><span class="text-2xl">💎</span><div><h3 class="font-bold text-sm text-[#C0C0C0]">Batallón</h3><p class="text-xs text-muted">10 NFTs · 1 de rareza Plata o mejor garantizado</p></div></div>
-        <button onclick="openPackModal('batallon')" class="bg-[#C0C0C0] text-black font-bold py-2 px-4 rounded-lg text-sm">20 USDT</button>
+        <button onclick="openPackModal('batallon')" class="bg-bull text-black font-bold py-2 px-4 rounded-lg text-sm">20 USDT</button>
       </div>
       <div class="bg-panel2 border border-gray-800 rounded-xl p-3">
         <h3 class="text-[10px] font-bold text-muted mb-2 tracking-widest">TASAS DE DROP</h3>
@@ -388,16 +415,23 @@
   <ul class="flex justify-around items-center h-full">
     <li onclick="showView('view-lobby')"    id="nav-lobby"    class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer"><span class="text-2xl mb-0.5">🏠</span><span class="text-[10px] font-bold">LOBBY</span></li>
     <li onclick="showView('view-barracks')" id="nav-barracks" class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer"><span class="text-2xl mb-0.5">🛡️</span><span class="text-[10px] font-bold">BARRACAS</span></li>
-    <li onclick="showView('view-forge')"    id="nav-forge"    class="nav-item flex-1 flex flex-col items-center justify-center cursor-pointer" style="color:#FF3D00"><span class="text-2xl mb-0.5">🔥</span><span class="text-[10px] font-bold">FORJA</span></li>
-    <li onclick="showView('view-arena')"    id="nav-arena"    class="nav-item flex-1 flex flex-col items-center justify-center cursor-pointer -translate-y-2">
-      <div class="bg-main border-2 border-bull w-14 h-14 rounded-full flex items-center justify-center arena-glow"><span class="sword-green text-xl">⚔</span><span class="sword-red text-xl">⚔</span></div>
-      <span class="text-[10px] font-bold text-bull mt-0.5">ARENA</span>
+    <li onclick="showView('view-forge')"    id="nav-forge"    class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer"><span class="text-2xl mb-0.5">🔥</span><span class="text-[10px] font-bold">FORJA</span></li>
+    <li onclick="showView('view-arena')"    id="nav-arena"    class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer -translate-y-2">
+      <div id="nav-arena-circle" class="bg-main border-2 border-gray-700 w-14 h-14 rounded-full flex items-center justify-center"><span class="sword-green text-xl">⚔</span><span class="sword-red text-xl">⚔</span></div>
+      <span class="text-[10px] font-bold mt-0.5">ARENA</span>
     </li>
     <li onclick="showView('view-market')"   id="nav-market"   class="nav-item flex-1 flex flex-col items-center justify-center text-muted cursor-pointer"><span class="text-2xl mb-0.5">📦</span><span class="text-[10px] font-bold">MERCADO</span></li>
   </ul>
 </nav>
 
 <!-- MODALES -->
+<div id="modal-wallet" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4 overflow-y-auto">
+  <div class="w-full max-w-xs">
+    <div id="wallet-content" class="bg-panel2 border border-gray-700 rounded-xl p-4 space-y-2"></div>
+    <button onclick="closeModal('modal-wallet')" class="mt-4 bg-panel2 border border-gray-700 text-white font-bold py-3 px-10 rounded-xl w-full">CERRAR</button>
+  </div>
+</div>
+
 <div id="modal-nft" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4 overflow-y-auto">
   <div id="nft-detail-content" class="w-full max-w-xs"></div>
   <button onclick="closeModal('modal-nft')" class="mt-4 bg-panel2 border border-gray-700 text-white font-bold py-3 px-10 rounded-xl w-full max-w-xs">CERRAR</button>
@@ -420,9 +454,9 @@
 
 <div id="modal-pack-result" class="hidden fixed inset-0 z-[100] bg-black/95 flex flex-col items-center p-4 overflow-y-auto">
   <div class="w-full max-w-md flex flex-col items-center pt-6">
-    <h2 class="text-tick font-extrabold text-xl mb-4 animate-pulse">¡PAQUETE ABIERTO!</h2>
+    <h2 id="pack-result-title" class="text-tick font-extrabold text-xl mb-4 animate-pulse">¡CAJA ABIERTA!</h2>
     <div id="pack-result-cards" class="flex flex-wrap justify-center gap-3 mb-6 w-full"></div>
-    <button onclick="closeModal('modal-pack-result');renderBarracks()" class="bg-bull text-black font-bold py-3 px-10 rounded-xl w-full max-w-xs mb-8">IR A BARRACAS →</button>
+    <button onclick="closeModal('modal-pack-result');showView('view-barracks')" class="bg-bull text-black font-bold py-3 px-10 rounded-xl w-full max-w-xs mb-8">IR A BARRACAS →</button>
   </div>
 </div>
 
@@ -581,6 +615,9 @@ let currentRarityFilter = 'all';
 let selectedFighter = null;
 let battleState = null;
 let battleTimer = null;
+// La recompensa de una batalla se aplica UNA sola vez (ver showBattleResult).
+let battleResultApplied = false;
+let appliedBattle = {tick:0, xpGained:0, levelMsg:''};
 let selectedP2PNFT = null;
 
 // =============================================
@@ -611,12 +648,50 @@ function guestConsumeEnergy(){
   const wasFull = s.energy>=ENERGY_MAX;
   localStorage.setItem('cc_energy',String(s.energy-1));
   if(wasFull) localStorage.setItem('cc_energy_ts',String(Date.now()));
-  return {energy:s.energy-1,nextInMin:s.nextInMin};
+  // BUG que dejaba la cabecera en "+1 en 0 min": al gastar desde lleno
+  // se devolvía nextInMin del estado PREVIO (0, porque estaba lleno).
+  // Al gastar desde lleno la próxima energía llega en 30 min.
+  return {energy:s.energy-1,nextInMin: wasFull ? 30 : s.nextInMin};
 }
 function energyText(){
+  // nextInMin nunca puede ser 0 con energía < MAX: 0 significa que la
+  // próxima energía ya llegó (y entonces energy debería ser mayor).
+  const m = energyState.energy<ENERGY_MAX ? Math.max(1, energyState.nextInMin||0) : 0;
   return energyState.energy<ENERGY_MAX
-    ? `⚡ ${energyState.energy}/${ENERGY_MAX} · +1 en ${energyState.nextInMin} min`
+    ? `⚡ ${energyState.energy}/${ENERGY_MAX} · +1 en ${m} min`
     : `⚡ ${energyState.energy}/${ENERGY_MAX}`;
+}
+// Cuenta atrás de energía en pantalla: el servidor solo da los minutos
+// restantes y el estado local solo se recalcularía al re-renderizar.
+// Sin este temporizador la cabecera se quedaba congelada en
+// "+1 en 0 min" aunque la energía ya se estuviera regenerando.
+// Cada 30 s descuenta los minutos; al llegar a 0 vuelve a pedir el
+// perfil al servidor (con sesión) o recalcula el estado local (invitado).
+let energyNextAt = 0; // ms epoch de la próxima energía (con sesión)
+let energyTickerStarted = false;
+function setEnergyFromServer(energy, nextInMin){
+  energyState={energy, nextInMin: nextInMin||0};
+  energyNextAt = (energy<ENERGY_MAX && nextInMin>0) ? Date.now()+nextInMin*60000 : 0;
+}
+function tickEnergy(){
+  if(!apiToken){
+    const s=guestEnergyState();
+    const changed = s.energy!==energyState.energy;
+    energyState=s;
+    updateHeader(); updateFightButton();
+    if(changed && !document.getElementById('view-arena')?.classList.contains('hidden')) renderArenaSelect();
+    return;
+  }
+  if(energyState.energy<ENERGY_MAX){
+    const left = energyNextAt ? Math.ceil((energyNextAt-Date.now())/60000) : energyState.nextInMin;
+    if(left<=0){ syncProfileFromServer(); return; }
+    energyState.nextInMin=left;
+    updateHeader(); updateFightButton();
+  }
+}
+function startEnergyTicker(){
+  if(energyTickerStarted) return; energyTickerStarted=true;
+  setInterval(tickEnergy, 30000);
 }
 // Sincroniza el perfil real desde el servidor: $TICK, trofeos,
 // victorias y energía. Se usa al entrar y tras cada batalla real.
@@ -626,7 +701,7 @@ async function syncProfileFromServer(){
     const u=await apiFetch('/api/auth/me');
     PLAYER.tick=u.tick_balance; PLAYER.trophies=u.trophies;
     PLAYER.wins=u.wins; PLAYER.losses=u.losses;
-    if(typeof u.energy==='number') energyState={energy:u.energy,nextInMin:u.energy_next_in_min||0};
+    if(typeof u.energy==='number') setEnergyFromServer(u.energy, u.energy_next_in_min||0);
     starterPackClaimed=!!u.starter_pack_claimed;
     updateReclutaButton();
     updateHeader(); updateFightButton();
@@ -641,11 +716,11 @@ function updateFightButton(){
   btn.classList.toggle('opacity-40',!canFight);
   btn.classList.toggle('cursor-not-allowed',!canFight);
   btn.textContent = noEnergy
-    ? 'SIN ENERGÍA · PRÓXIMA EN '+energyState.nextInMin+' MIN'
+    ? 'SIN ENERGÍA · PRÓXIMA EN '+Math.max(1,energyState.nextInMin||0)+' MIN'
     : 'BUSCAR OPONENTE';
   const eEl=document.getElementById('arena-energy');
   if(eEl) eEl.textContent = energyState.energy<ENERGY_MAX
-    ? `⚡ Energía: ${energyState.energy}/${ENERGY_MAX} · +1 en ${energyState.nextInMin} min`
+    ? `⚡ Energía: ${energyState.energy}/${ENERGY_MAX} · +1 en ${Math.max(1,energyState.nextInMin||0)} min`
     : `⚡ Energía: ${energyState.energy}/${ENERGY_MAX} (llena)`;
 }
 
@@ -702,16 +777,37 @@ async function apiFetch(path, opts={}) {
 // Oráculo real: multiplicadores según el precio de cada cripto.
 // Es público, se carga aunque no haya login. Si falla (Render dormido,
 // sin red), se quedan los valores simulados del HTML.
+// Ticker del oráculo: un solo formato en todas partes (×, p. ej. BTC ×1.03).
+// Antes la cabecera tenía % simulados y el login otros: parecía simulado.
+// Se carga el precio real del oráculo; mientras carga, dice "Cargando…".
+function renderTicker(){
+  const el=document.getElementById('ticker-inner');
+  const loginEl=document.getElementById('login-prices');
+  if(oracleMultipliers){
+    const html=Object.keys(oracleMultipliers).map(sym=>{
+      const m=oracleMultipliers[sym];
+      const cls=m>=1?'text-bull':'text-bear';
+      return `${sym} <span class="${cls}">×${m.toFixed(2)}</span> &nbsp;|&nbsp; `;
+    }).join('');
+    if(el) el.innerHTML=html;
+    if(loginEl){
+      loginEl.innerHTML=['BTC','ETH','SOL'].map(sym=>{
+        const m=oracleMultipliers[sym];
+        if(m==null) return '';
+        const cls=m>=1?'text-bull':'text-bear';
+        return `<span>${sym} <span class="${cls}">×${m.toFixed(2)}</span></span>`;
+      }).join('');
+    }
+  } else {
+    if(el) el.textContent='Cargando precios en vivo…';
+    if(loginEl) loginEl.innerHTML='<span class="text-muted">Cargando precios…</span>';
+  }
+}
 async function loadOracleMultipliers() {
   try {
     const mults = await apiFetch('/api/oracle/multipliers');
     oracleMultipliers = mults;
-    const el = document.getElementById('ticker-inner');
-    if(el) el.innerHTML = Object.keys(mults).map(sym=>{
-      const m = mults[sym];
-      const cls = m>=1 ? 'text-bull' : 'text-bear';
-      return `${sym} <span class="${cls}">×${m.toFixed(2)}</span> &nbsp;|&nbsp; `;
-    }).join('');
+    renderTicker();
   } catch(e) { /* sin conexión al oráculo: se usa la simulación */ }
 }
 
@@ -787,10 +883,11 @@ function nftCard(nft, opts={}) {
         ${nft.level>=25?'<div class="absolute bottom-1 right-1 bg-bull text-black text-[7px] font-bold px-1 rounded">TORNEO ✓</div>':''}
       </div>
       <div class="p-2">
-        <div class="flex justify-between items-center mb-1">
-          <span class="text-[11px] font-bold text-white truncate">${nft.race}</span>
-          <span class="text-[8px] font-mono font-bold flex-none ml-1" style="color:${rr.color}">${nft.rarity.slice(0,4).toUpperCase()}</span>
+        <div class="mb-1">
+          <p class="text-[11px] font-bold text-white truncate leading-tight">${nft.race}</p>
+          <p class="text-[8px] font-mono font-bold leading-tight" style="color:${rr.color}">${nft.rarity.toUpperCase()}</p>
         </div>
+        ${opts.foot||''}
         <div class="xp-bar mb-1.5"><div class="xp-fill" style="width:${xpPct}%"></div></div>
         <div class="space-y-0.5">
           <div class="flex justify-between text-[9px]"><span class="text-bear">ATQ</span><span class="font-mono">${s.atq.toLocaleString()}</span></div>
@@ -811,7 +908,19 @@ function showView(id) {
   document.getElementById(id)?.classList.remove('hidden');
   document.querySelectorAll('.nav-item').forEach(n=>n.style.color='');
   const map={'view-lobby':'nav-lobby','view-barracks':'nav-barracks','view-forge':'nav-forge','view-arena':'nav-arena','view-market':'nav-market'};
-  if(map[id]&&id!=='view-arena') document.getElementById(map[id]).style.color='#00C853';
+  if(map[id]) document.getElementById(map[id]).style.color='#00C853';
+  // El círculo de ARENA solo se ilumina cuando la Arena es la vista
+  // actual: antes llevaba border-bull/arena-glow fijos en el HTML y
+  // showView saltaba la arena, así que ARENA siempre parecía activa.
+  const circle=document.getElementById('nav-arena-circle');
+  if(circle){
+    circle.classList.toggle('border-bull', id==='view-arena');
+    circle.classList.toggle('arena-glow', id==='view-arena');
+    circle.classList.toggle('border-gray-700', id!=='view-arena');
+  }
+  // El filtro de Barracas no persiste de forma confusa: al salir de la
+  // vista se limpia, así al volver se ven todos los gladiadores.
+  if(id!=='view-barracks' && currentRarityFilter!=='all') filterRarity('all');
   if(id==='view-barracks') renderBarracks();
   if(id==='view-lobby')    renderLobby();
   if(id==='view-arena')    renderArenaSelect();
@@ -877,6 +986,101 @@ function updateHeader() {
   const nameEl = document.getElementById('lobby-player-name');
   if(nameEl) nameEl.textContent = apiWallet ? apiWallet.slice(0,6)+'…'+apiWallet.slice(-4) : 'Jugador_001';
 }
+// El botón "Billetera" de la cabecera no hacía nada: ahora abre un
+// resumen con la dirección (con sesión), los saldos y la energía.
+function openWallet(){
+  const el=document.getElementById('wallet-content'); if(!el) return;
+  const addr = apiWallet || null;
+  el.innerHTML=`
+    <p class="text-tick font-bold text-center mb-1">👛 MI BILLETERA</p>
+    ${addr
+      ? `<div class="flex justify-between text-xs"><span class="text-muted">Dirección</span><span class="font-mono">${addr.slice(0,6)}…${addr.slice(-4)}</span></div>
+         <button onclick="copyWallet()" class="w-full bg-panel border border-gray-700 text-white font-bold py-2 rounded-lg text-xs">📋 COPIAR DIRECCIÓN COMPLETA</button>`
+      : `<p class="text-xs text-yellow-300 text-center">Modo invitado (demo): sin wallet conectada.<br>Tu progreso no se guarda.</p>`}
+    <div class="flex justify-between text-xs"><span class="text-muted">$TICK</span><span class="text-tick font-mono font-bold">${PLAYER.tick.toLocaleString()}</span></div>
+    <div class="flex justify-between text-xs"><span class="text-muted">USDT</span><span class="text-bull font-mono font-bold">${PLAYER.usdt.toLocaleString()}</span></div>
+    <div class="flex justify-between text-xs"><span class="text-muted">Trofeos</span><span class="font-mono">🏆 ${PLAYER.trophies.toLocaleString()}</span></div>
+    <div class="flex justify-between text-xs"><span class="text-muted">Energía</span><span class="font-mono">${energyText()}</span></div>
+    <div class="flex justify-between text-xs"><span class="text-muted">Gladiadores</span><span class="font-mono">${inventory.length} (${apiToken?inventory.filter(n=>n.fromApi).length+' reales':'demo'})</span></div>
+    ${addr?'':'<p class="text-[10px] text-muted text-center">Conecta tu wallet con MetaMask para jugar con gladiadores reales.</p>'}`;
+  openModal('modal-wallet');
+}
+function copyWallet(){
+  if(!apiWallet) return;
+  if(navigator.clipboard?.writeText){ navigator.clipboard.writeText(apiWallet).then(()=>alert('Dirección copiada.')).catch(()=>alert(apiWallet)); }
+  else alert(apiWallet);
+}
+
+// =============================================
+// MISIONES DIARIAS
+// =============================================
+// Antes eran estáticas: las barras estaban fijas en el HTML (33%/0%/0%)
+// y nada las actualizaba — "Ganar 3 batallas" parecía avanzar por el
+// 33% fijo, y "Abrir 1 caja" nunca contaba. Ahora hay estado real en
+// localStorage (se reinicia cada día) y cada acción suma su progreso
+// y abona el premio cuando se completa.
+const MISSIONS = [
+  {key:'battles', target:3, reward:10, label:'Ganar 3 batallas'},
+  {key:'boxes',   target:1, reward:5,  label:'Abrir 1 caja'},
+  {key:'forge',   target:1, reward:15, label:'Usar la Forja'},
+];
+let missionState = {date:'', battles:0, boxes:0, forge:0, done:{}};
+function loadMissions(){
+  try {
+    const saved = JSON.parse(localStorage.getItem('cc_missions')||'null');
+    const today = new Date().toISOString().slice(0,10);
+    if(saved && saved.date===today){ missionState=saved; return; }
+  } catch(e) {}
+  missionState={date:new Date().toISOString().slice(0,10), battles:0, boxes:0, forge:0, done:{}};
+  localStorage.setItem('cc_missions', JSON.stringify(missionState));
+}
+function saveMissions(){ localStorage.setItem('cc_missions', JSON.stringify(missionState)); }
+function renderMissions(){
+  if(!missionState.date) loadMissions();
+  MISSIONS.forEach((m,i)=>{
+    const n=i+1;
+    const val=Math.min(missionState[m.key]||0, m.target);
+    const bar=document.getElementById('m'+n+'-bar');
+    if(bar) bar.style.width=Math.round(val/m.target*100)+'%';
+    const cnt=document.getElementById('m'+n+'-count');
+    if(cnt) cnt.textContent = missionState.done[m.key] ? '✓ Completada' : val+'/'+m.target;
+  });
+}
+function bumpMission(key){
+  const m=MISSIONS.find(x=>x.key===key); if(!m) return;
+  if(missionState.done[key]) return;
+  missionState[key]=Math.min((missionState[key]||0)+1, m.target);
+  if(missionState[key]>=m.target){
+    missionState.done[key]=true;
+    PLAYER.tick+=m.reward;
+    updateHeader();
+    alert(`🎯 ¡Misión completada: ${m.label}!\n+${m.reward} $TICK`);
+  }
+  saveMissions(); renderMissions();
+}
+// Gran Torneo: "LVL25+" sin explicación. El botón explica por qué
+// está bloqueado y qué falta (un gladiador en Nivel 25 o más).
+function renderTournaments(){
+  const btn=document.getElementById('gran-torneo-btn');
+  const note=document.getElementById('gran-torneo-note');
+  if(!btn) return;
+  const maxLv=inventory.length?Math.max(...inventory.map(n=>n.level)):0;
+  const has25=inventory.some(n=>n.level>=25);
+  if(has25){
+    btn.textContent='⏳ PRÓXIMAMENTE';
+    if(note) note.textContent='Tienes un gladiador en Nivel 25 o más ✓ — el torneo se activa pronto.';
+  } else {
+    btn.textContent='🔒 BLOQUEADO';
+    if(note) note.textContent=`Se desbloquea al tener un gladiador en Nivel 25 o más. Tu máximo ahora es Lv${maxLv}.`;
+  }
+}
+function explainGranTorneo(){
+  const maxLv=inventory.length?Math.max(...inventory.map(n=>n.level)):0;
+  const has25=inventory.some(n=>n.level>=25);
+  alert(has25
+    ? '🏆 Gran Torneo Semanal — Premio 500 USDT.\nAún no está activo: se anunciará cuando se abra la inscripción.'
+    : `🏆 Gran Torneo Semanal — Premio 500 USDT.\nEstá bloqueado porque necesitas un gladiador en Nivel 25 o más.\nTu máximo ahora es Lv${maxLv}.`);
+}
 
 // =============================================
 // LOBBY
@@ -886,6 +1090,8 @@ function renderLobby() {
   document.getElementById('lobby-usdt').textContent     = PLAYER.usdt.toLocaleString()+' USDT';
   document.getElementById('lobby-trophies').textContent = PLAYER.trophies.toLocaleString();
   document.getElementById('lobby-avatar-img').src = raceImg(inventory[0]?.race||'Humano');
+  renderMissions();
+  renderTournaments();
   document.getElementById('lobby-history').innerHTML = PLAYER.battleHistory.map(b=>`
     <div class="flex items-center justify-between text-xs">
       <span class="${b.result==='WIN'?'text-bull':'text-bear'} font-bold font-mono">${b.result==='WIN'?'✓ WIN':'✗ LOSS'}</span>
@@ -899,7 +1105,10 @@ function renderLobby() {
 // =============================================
 function renderBarracks() {
   const list = currentRarityFilter==='all' ? inventory : inventory.filter(n=>n.rarity===currentRarityFilter);
-  document.getElementById('barracks-count').textContent = list.length+'/'+inventory.length+' NFTs';
+  const countEl=document.getElementById('barracks-count');
+  if(countEl) countEl.textContent = list.length+'/'+inventory.length+' NFTs' + (currentRarityFilter!=='all' ? ' · filtro: '+currentRarityFilter : '');
+  const clearBtn=document.getElementById('barracks-clear-filter');
+  if(clearBtn) clearBtn.classList.toggle('hidden', currentRarityFilter==='all');
   // Aviso cuando hay gladiadores de demostración mezclados con los
   // reales (vienen de las cajas simuladas): no pelean batallas reales.
   const demoCount = apiToken ? inventory.filter(n=>!n.fromApi).length : 0;
@@ -992,6 +1201,7 @@ function resetAllForge() {
   });
   document.getElementById('forge-preview')?.classList.add('hidden');
   document.getElementById('forge-cost')?.classList.add('hidden');
+  document.getElementById('forge-hint')?.classList.add('hidden');
   const fb=document.getElementById('forge-btn');
   if(fb){fb.disabled=true;fb.classList.add('opacity-40','cursor-not-allowed');}
   // Reset Level
@@ -1003,6 +1213,7 @@ function resetAllForge() {
   });
   document.getElementById('lvl-main-info')?.classList.add('hidden');
   document.getElementById('lvl-preview')?.classList.add('hidden');
+  document.getElementById('lvl-food-info')?.classList.add('hidden');
   const lb=document.getElementById('lvl-btn');
   if(lb){lb.disabled=true;lb.classList.add('opacity-40','cursor-not-allowed');}
   // Reset Renacimiento
@@ -1063,6 +1274,41 @@ function forgeCompatible(nft, slot, mode){
   }
   return true;
 }
+// Mensaje cuando el selector de la Forja no tiene nada que mostrar.
+// Antes solo decía "No hay NFTs elegibles", sin decir por qué — p. ej.
+// el Orco Legendario no aparece en Ascender porque Legendario es el
+// tope de rareza, y los sacrificios solo aceptan copias idénticas.
+function forgeSelectEmptyMsg(){
+  const slot=forgeSelectSlot, mode=forgeSelectMode;
+  if(mode==='asc'){
+    if(slot==='main'){
+      const anyAscendable=inventory.some(n=>n.rarity!=='Legendario');
+      return anyAscendable
+        ? 'Ningún gladiador coincide con los filtros. Quita el filtro "Solo compatibles" o cambia los filtros.'
+        : 'Todos tus gladiadores son Legendarios: ya están en el tope de rareza y no se pueden ascender.';
+    }
+    const main=forgeSlots.main;
+    if(!main) return 'Elige primero el gladiador principal.';
+    return `No tienes más copias idénticas a ${main.race}/${main.lineage} ${main.rarity}. Para ascender necesitas 3 iguales (misma raza, linaje y rareza).`;
+  }
+  if(mode==='lvl'){
+    if(slot==='lvl-main'){
+      const maxLv=inventory.length?Math.max(...inventory.map(n=>n.level)):0;
+      return `Ningún gladiador puede subir de nivel (todos están en Lv${MAX_LEVEL}). Tu nivel máximo ahora es Lv${maxLv}.`;
+    }
+    return 'No hay gladiadores disponibles como alimento.';
+  }
+  if(mode==='ren'){
+    const maxLv=inventory.length?Math.max(...inventory.map(n=>n.level)):0;
+    const any50=inventory.some(n=>n.level>=MAX_LEVEL);
+    if(!any50) return `Ningún gladiador está en Nivel 50 todavía. Tu nivel máximo ahora es Lv${maxLv}.`;
+    if(slot==='ren-main') return 'Ningún gladiador en Lv50 puede renacer más (máximo 5 renacimientos).';
+    const main=renSlots['ren-main'];
+    if(!main) return 'Elige primero el gladiador a renacer.';
+    return `No hay ninguna copia idéntica a ${main.race}/${main.lineage} en Nivel 50 para sacrificar.`;
+  }
+  return 'No hay NFTs elegibles';
+}
 function renderForgeSelectGrid(){
   const slot=forgeSelectSlot, mode=forgeSelectMode;
   const onlyCompatible=document.getElementById('forge-only-compatible')?.checked!==false;
@@ -1076,8 +1322,9 @@ function renderForgeSelectGrid(){
       &&(forgeFilterLineage==='all'||n.lineage===forgeFilterLineage));
   }
   document.getElementById('forge-select-grid').innerHTML = list.length===0
-    ? '<p class="text-muted text-sm col-span-2 text-center py-8">No hay NFTs elegibles</p>'
-    : list.map(n=>nftCard(n,{onclick:`selectForgeSlot(${n.id})`})).join('');
+    ? `<p class="text-muted text-sm col-span-2 text-center py-8">${forgeSelectEmptyMsg()}</p>`
+    : list.map(n=>nftCard(n,{onclick:`selectForgeSlot(${n.id})`,
+        foot: mode==='lvl'&&slot!=='lvl-main' ? `<p class="text-[9px] font-mono font-bold text-purple-400">+${xpFromNFT(n).toLocaleString()} XP al alimentar</p>` : ''})).join('');
 }
 function openForgeSelect(slot, mode) {
   forgeSelectSlot=slot; forgeSelectMode=mode;
@@ -1088,8 +1335,19 @@ function openForgeSelect(slot, mode) {
   openModal('modal-forge-select');
 }
 
+function forgeSlotElId(slot){
+  // CAUSA del bug de Ascender: los slots se pasan como 'main','s1'.. en
+  // el estado, pero sus elementos son 'forge-main','forge-s1'.. —
+  // getElementById('main') no existe y setForgeSlotVisual salía sin
+  // pintar nada (el estado SÍ cambiaba, por eso el Elfo elegido
+  // desaparecía de la lista al reabrir el selector). En Nivel y
+  // Renacer los ids sí coinciden ('lvl-main','ren-main'...), por eso
+  // esas pestañas no tenían este bug.
+  if(document.getElementById(slot)) return slot;
+  return 'forge-'+slot;
+}
 function setForgeSlotVisual(slot, nft){
-  const el=document.getElementById(slot); if(!el) return;
+  const el=document.getElementById(forgeSlotElId(slot)); if(!el) return;
   el.innerHTML=`<img src="${raceImg(nft.race)}" class="w-full h-full object-cover rounded-xl"/>`;
   const rr=RARITIES[nft.rarity]||RARITIES.Cobre;
   el.style.borderColor=rr.color; el.style.borderStyle='solid';
@@ -1106,14 +1364,19 @@ function autoFillAscend(){
   });
   checkForgeAscReady();
   const missing=['s1','s2','s3'].filter(s=>!forgeSlots[s]).length;
-  if(missing>0) alert(`Faltan ${missing} sacrificio(s) idéntico(s) en tu inventario.`);
+  if(missing>0) alert(`No tienes ${missing===3?'ningún':missing} gladiador(es) idéntico(s) a ${main.race}/${main.lineage} ${main.rarity} para sacrificar.\nPara ascender necesitas 3 copias idénticas (misma raza, linaje y rareza).`);
+  else alert('✓ Los 3 sacrificios idénticos están seleccionados.');
 }
 // Renacer: busca una copia idéntica Lv50 para el sacrificio.
 function autoFillRebirth(){
   const main=renSlots['ren-main'];
-  if(!main){ alert('Elige primero el gladiador a renacer (Lv50).'); return; }
+  if(!main){
+    const maxLv=inventory.length?Math.max(...inventory.map(n=>n.level)):0;
+    alert(`Elige primero el gladiador a renacer (Nivel 50).\nTu nivel máximo ahora es Lv${maxLv}.`);
+    return;
+  }
   const cand=inventory.find(n=>n.id!==main.id&&n.level>=MAX_LEVEL&&n.race===main.race&&n.lineage===main.lineage);
-  if(!cand){ alert('No hay ninguna copia idéntica en Lv50 para sacrificar.'); return; }
+  if(!cand){ alert(`No hay ninguna copia idéntica a ${main.race}/${main.lineage} en Nivel 50 para sacrificar.\nNecesitas otro gladiador igual (misma raza y linaje) también en Nivel 50.`); return; }
   renSlots['ren-sac']=cand; setForgeSlotVisual('ren-sac',cand); checkForgeRenReady();
 }
 
@@ -1123,14 +1386,52 @@ function selectForgeSlot(id) {
   const mode=forgeMode, slot=forgeSelectSlot;
   setForgeSlotVisual(slot, nft);
   if(mode==='asc') { forgeSlots[slot]=nft; checkForgeAscReady(); }
-  else if(mode==='lvl') { lvlSlots[slot]=nft; checkForgeLvlReady(); }
+  else if(mode==='lvl') { lvlSlots[slot]=nft; updateLvlMainInfo(); updateLvlFoodInfo(); checkForgeLvlReady(); }
   else if(mode==='ren') { renSlots[slot]=nft; checkForgeRenReady(); }
+}
+// Info del principal en Subir de nivel: nombre, nivel y XP (antes el
+// hueco solo mostraba la imagen, sin saber qué se había elegido).
+function updateLvlMainInfo(){
+  const info=document.getElementById('lvl-main-info');
+  const mainNFT=lvlSlots['lvl-main'];
+  if(!info) return;
+  if(!mainNFT){ info.classList.add('hidden'); return; }
+  const xpNeed=mainNFT.level>=MAX_LEVEL?'MAX':xpToNextLevel(mainNFT.level);
+  info.innerHTML=`<p class="text-[11px] font-bold">${mainNFT.race} · ${mainNFT.rarity} · Lv${mainNFT.level}</p><p class="text-[10px] font-mono text-muted">${mainNFT.xp}/${xpNeed} XP</p>`;
+  info.classList.remove('hidden');
+}
+// Cuánta XP da cada alimento elegido (antes no se veía hasta el final).
+function updateLvlFoodInfo(){
+  const el=document.getElementById('lvl-food-info');
+  const foods=['lvl-f1','lvl-f2','lvl-f3','lvl-f4'].map(k=>lvlSlots[k]).filter(Boolean);
+  if(!el) return;
+  if(foods.length===0){ el.classList.add('hidden'); return; }
+  el.innerHTML=foods.map(f=>`${f.race} Lv${f.level} → +${xpFromNFT(f).toLocaleString()} XP`).join(' · ');
+  el.classList.remove('hidden');
 }
 
 // ASCENDER — validación
 function checkForgeAscReady() {
   const {main,s1,s2,s3}=forgeSlots;
-  if(!main||!s1||!s2||!s3) return;
+  // Pista cuando faltan sacrificios: antes el botón quedaba deshabilitado
+  // sin decir por qué (y con "Solo compatibles" el selector se veía
+  // vacío sin explicación).
+  const hint=document.getElementById('forge-hint');
+  if(hint){
+    if(!main) hint.classList.add('hidden');
+    else {
+      const missing=['s1','s2','s3'].filter(s=>!forgeSlots[s]).length;
+      if(missing>0){ hint.textContent=`Te faltan ${missing} sacrificio(s) idéntico(s) a ${main.race}/${main.lineage} ${main.rarity}. Usa AUTO-SELECCIONAR o elige uno a uno.`; hint.classList.remove('hidden'); }
+      else hint.classList.add('hidden');
+    }
+  }
+  if(!main||!s1||!s2||!s3){
+    document.getElementById('forge-preview').classList.add('hidden');
+    document.getElementById('forge-cost').classList.add('hidden');
+    const btn=document.getElementById('forge-btn');
+    btn.disabled=true; btn.classList.add('opacity-40','cursor-not-allowed');
+    return;
+  }
   const ok=s1.race===main.race&&s2.race===main.race&&s3.race===main.race&&
             s1.lineage===main.lineage&&s2.lineage===main.lineage&&s3.lineage===main.lineage&&
             s1.rarity===main.rarity&&s2.rarity===main.rarity&&s3.rarity===main.rarity;
@@ -1156,6 +1457,7 @@ function executeForge() {
   const t=inventory.find(n=>n.id===main.id);
   if(t) t.rarity=nextRarity;
   updateHeader(); resetAllForge();
+  bumpMission('forge');
   alert(`🔥 ¡FUSIÓN EXITOSA!\n${main.race}/${main.lineage} → ${nextRarity.toUpperCase()}\n−50 $TICK`);
   showView('view-barracks');
 }
@@ -1173,12 +1475,12 @@ function checkForgeLvlReady() {
   const totalXP=foods.reduce((a,n)=>a+xpFromNFT(n),0);
   let simLevel=mainNFT.level, simXP=mainNFT.xp+totalXP, levelsGained=0;
   while(simLevel<MAX_LEVEL&&simXP>=xpToNextLevel(simLevel)){simXP-=xpToNextLevel(simLevel);simLevel++;levelsGained++;}
-  const info=document.getElementById('lvl-main-info');
-  info.innerHTML=`<p class="text-[10px] font-mono text-muted">Lv${mainNFT.level} · ${mainNFT.xp}/${xpToNextLevel(mainNFT.level)} XP</p>`;
-  info.classList.remove('hidden');
+  updateLvlMainInfo();
+  updateLvlFoodInfo();
   document.getElementById('lvl-preview').classList.remove('hidden');
   document.getElementById('lvl-preview-text').innerHTML=`
     <div class="flex justify-between"><span class="text-muted">XP que recibirá:</span><span class="text-purple-400 font-bold">+${totalXP.toLocaleString()} XP</span></div>
+    <div class="flex justify-between"><span class="text-muted">Alimento:</span><span class="text-purple-300 font-mono text-right">${foods.map(f=>f.race+' Lv'+f.level+' (+'+xpFromNFT(f).toLocaleString()+')').join(', ')}</span></div>
     <div class="flex justify-between"><span class="text-muted">Niveles ganados:</span><span class="${levelsGained>0?'text-bull':'text-muted'} font-bold">+${levelsGained} ${levelsGained>0?'🎉':''}</span></div>
     <div class="flex justify-between"><span class="text-muted">Nivel final:</span><span class="text-white font-bold">Lv ${simLevel}</span></div>`;
   const btn=document.getElementById('lvl-btn');
@@ -1196,7 +1498,7 @@ function executeFeed() {
     const levelsGained=addXP(target,totalXP);
     alert(`⬆ ¡NIVEL SUBIDO!\n${target.race}/${target.lineage}\n+${totalXP.toLocaleString()} XP · ${levelsGained>0?'+'+levelsGained+' nivel(es)':'XP acumulado'}\nNivel actual: ${target.level}`);
   }
-  updateHeader(); resetAllForge(); showView('view-barracks');
+  updateHeader(); resetAllForge(); bumpMission('forge'); showView('view-barracks');
 }
 
 // RENACIMIENTO — validación y ejecución
@@ -1226,7 +1528,7 @@ function executeRebirth() {
   inventory=inventory.filter(n=>n.id!==sac.id);
   const target=inventory.find(n=>n.id===main.id);
   if(target){target.level=1;target.xp=0;target.rebirths=(target.rebirths||0)+1;}
-  updateHeader(); resetAllForge();
+  updateHeader(); resetAllForge(); bumpMission('forge');
   alert(`🔄 ¡RENACIMIENTO COMPLETADO!\n${main.race}/${main.lineage} volvió al Lv1\n+${target.rebirths*20}% stats permanente\n−100 $TICK`);
   showView('view-barracks');
 }
@@ -1277,8 +1579,7 @@ async function retryLoadMyGladiators(){
   renderArenaSelect();
 }
 function renderArenaSelect() {
-  selectedFighter=null;
-  ['arena-select','arena-battle','arena-result'].forEach((id,i)=>
+  ['arena-select','arena-battle','arena-result','arena-preview'].forEach((id,i)=>
     document.getElementById(id)?.classList[i===0?'remove':'add']('hidden'));
   if(!apiToken) energyState=guestEnergyState(); // invitado: regenerar en local
   fillArenaControls();
@@ -1290,6 +1591,9 @@ function renderArenaSelect() {
   const realCount = apiToken ? inventory.filter(n=>n.fromApi).length : 0;
   const base = apiToken ? inventory.filter(n=>n.fromApi) : inventory;
   const list = applyArenaOrganizer(base);
+  // Conservar la selección si el gladiador sigue en la lista: antes se
+  // perdía al re-renderizar y no había marca visual de selección.
+  if(selectedFighter && !list.some(n=>n.id===selectedFighter.id)) selectedFighter=null;
   const countEl=document.getElementById('arena-count');
   if(countEl) countEl.textContent = apiToken
     ? `${list.length} de ${realCount} gladiadores reales`
@@ -1301,6 +1605,7 @@ function renderArenaSelect() {
       <p class="text-xs text-muted mb-3">Recluta uno gratis en Barracas, o reintenta cargar si acabas de entrar.</p>
       <button onclick="retryLoadMyGladiators()" class="bg-bull text-black font-bold py-2 px-4 rounded-lg text-xs">REINTENTAR CARGAR</button>
     </div>`;
+    updateArenaSelectedLabel();
     return;
   }
   grid.innerHTML=list.length===0
@@ -1308,24 +1613,81 @@ function renderArenaSelect() {
     : list.map(nft=>{
     const rr=RARITIES[nft.rarity]||RARITIES.Cobre;
     const s=getStats(nft);
-    return `<div id="arena-card-${nft.id}" onclick="selectFighter(${nft.id})" class="bg-panel border-2 rounded-xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform" style="border-color:${rr.color}">
-      <img src="${raceImg(nft.race)}" class="nft-img"/>
+    const sel=selectedFighter&&selectedFighter.id===nft.id;
+    return `<div id="arena-card-${nft.id}" onclick="selectFighter(${nft.id})" class="bg-panel border-2 rounded-xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform relative" style="border-color:${sel?'#00C853':rr.color};${sel?'box-shadow:0 0 15px rgba(0,200,83,.5);':''}">
+      ${sel?'<div class="absolute top-1 left-1 z-10 bg-bull text-black text-[8px] font-bold px-1.5 py-0.5 rounded">✓ SELECCIONADO</div>':''}
+      <img src="${raceImg(nft.race)}" class="nft-img" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231E2329%22/><text y=%2250%25%22 x=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2228%22>⚔️</text></svg>'"/>
       <div class="p-1.5 text-center"><p class="text-[10px] font-bold">${nft.race}</p>
       <p class="text-[9px] font-mono text-muted">Lv${nft.level} · ${nft.rarity}</p>
       <p class="text-[9px] font-mono text-bear">ATQ ${s.atq.toLocaleString()}</p></div>
     </div>`;
   }).join('');
+  updateArenaSelectedLabel();
+}
+function updateArenaSelectedLabel(){
+  const el=document.getElementById('arena-selected-label'); if(!el) return;
+  el.textContent = selectedFighter
+    ? `Luchador: ${selectedFighter.race} · ${selectedFighter.rarity} · Lv${selectedFighter.level}`
+    : 'Elige un gladiador para pelear';
 }
 function selectFighter(id) {
   selectedFighter=inventory.find(n=>n.id===id);
-  document.querySelectorAll('[id^="arena-card-"]').forEach(el=>{el.style.borderColor='';el.style.boxShadow='';});
-  const card=document.getElementById('arena-card-'+id);
-  if(card){card.style.borderColor='#00C853';card.style.boxShadow='0 0 15px rgba(0,200,83,.5)';}
-  updateFightButton();
+  renderArenaSelect(); // re-renderiza para pintar la marca de selección
 }
+// Rival de poder SIMILAR al jugador: antes el rival era nivel ±5 con
+// rareza al azar (máx. Plata), lo que daba 12016 HP contra 3831 HP.
+// Ahora se prueban hasta 40 candidatos y se queda el de poder más
+// cercano; si uno cae en ±30%, se toma ese. El servidor hace lo mismo
+// (services/battle_service.py).
+function generateOpponent(player){
+  const pPower=powerOf(player);
+  let best=null, bestGap=Infinity;
+  for(let i=0;i<40;i++){
+    const oppRace=RACES.filter(r=>r!==player.race)[Math.floor(Math.random()*(RACES.length-1))];
+    const oppLineage=LINEAGE_KEYS[Math.floor(Math.random()*LINEAGE_KEYS.length)];
+    const rarities=['Cobre','Cobre','Bronce','Bronce','Plata','Plata','Oro'];
+    const oppRarity=rarities[Math.floor(Math.random()*rarities.length)];
+    const oppLevel=Math.max(1,Math.min(MAX_LEVEL, player.level+Math.floor(Math.random()*11)-5));
+    const opp={id:999,race:oppRace,lineage:oppLineage,rarity:oppRarity,level:oppLevel,
+      xp:0,rebirths:0,baseHp:500,baseAtq:95,baseDef:45,baseVel:30};
+    const gap=Math.abs(powerOf(opp)-pPower)/pPower;
+    if(gap<bestGap){best=opp;bestGap=gap;}
+    if(gap<=0.30) break;
+  }
+  return best;
+}
+let previewOpponentNft=null;
+const FALLBACK_IMG="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231E2329%22/><text y=%2250%25%22 x=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2228%22>⚔️</text></svg>";
+// Vista previa del rival: se muestra ANTES de gastar energía, con su
+// nivel y poder. Si no gusta, "OTRO RIVAL" genera uno nuevo.
+function previewOpponent(){
+  if(!selectedFighter) return;
+  previewOpponentNft=generateOpponent(selectedFighter);
+  const opp=previewOpponentNft, s=getStats(opp);
+  const rr=RARITIES[opp.rarity]||RARITIES.Cobre;
+  document.getElementById('preview-card').innerHTML=`
+    <div class="bg-panel border-2 rounded-xl overflow-hidden" style="border-color:${rr.color}">
+      <img src="${raceImg(opp.race)}" class="nft-img" onerror="this.src='${FALLBACK_IMG}'"/>
+      <div class="p-3 text-center">
+        <p class="font-bold">${opp.race} · <span style="color:${rr.color}">${opp.rarity}</span></p>
+        <p class="text-[11px] text-muted font-mono">${opp.lineage} · Lv${opp.level}</p>
+        <p class="text-[11px] font-mono mt-1">HP ${s.hp.toLocaleString()} · ATQ ${s.atq.toLocaleString()}</p>
+      </div>
+    </div>`;
+  document.getElementById('preview-power').textContent=
+    `Tu poder: ${powerOf(selectedFighter).toLocaleString()} · Rival: ${powerOf(opp).toLocaleString()} (similar)`;
+  document.getElementById('arena-select').classList.add('hidden');
+  document.getElementById('arena-preview').classList.remove('hidden');
+}
+function rerollOpponent(){ previewOpponent(); }
+function cancelPreview(){
+  document.getElementById('arena-preview').classList.add('hidden');
+  document.getElementById('arena-select').classList.remove('hidden');
+}
+function confirmBattle(){ runDemoBattle(previewOpponentNft); }
 function startBattle() {
   if(!selectedFighter) return;
-  if(energyState.energy<1){ alert('Sin energía. Próxima energía en '+energyState.nextInMin+' min.'); return; }
+  if(energyState.energy<1){ alert('Sin energía. Próxima energía en '+Math.max(1,energyState.nextInMin||0)+' min.'); return; }
   // Con sesión, un gladiador de demostración (de una caja simulada) no
   // puede pelear: su batalla simulada no gastaba energía de ningún
   // lado, por eso la energía se quedaba en 10. La arena ya solo lista
@@ -1334,25 +1696,22 @@ function startBattle() {
     alert('Ese gladiador es de demostración (de una caja simulada) y no puede pelear batallas reales. Elige uno de tus gladiadores reales.');
     return;
   }
-  // Invitado (demo local): la energía se gasta en local. Con sesión,
-  // la cobra el servidor en /api/battle/fight.
-  if(!apiToken){ energyState=guestConsumeEnergy(); updateHeader(); }
   // Gladiador real: la batalla se simula en el servidor.
   if(selectedFighter.fromApi && apiToken) { startBattleReal(); return; }
-  const oppRace=RACES.filter(r=>r!==selectedFighter.race)[Math.floor(Math.random()*(RACES.length-1))];
-  const oppLineage=LINEAGE_KEYS[Math.floor(Math.random()*LINEAGE_KEYS.length)];
-  const rarities=['Cobre','Cobre','Bronce','Bronce','Plata','Plata'];
-  const oppRarity=rarities[Math.floor(Math.random()*rarities.length)];
-  const oppLevel=Math.max(1,selectedFighter.level+Math.floor(Math.random()*10)-4);
-  const mult=RARITIES[oppRarity]?.mult||1;
-  const lvlM=1+(oppLevel-1)*0.07;
-  const opp={id:999,race:oppRace,lineage:oppLineage,rarity:oppRarity,level:oppLevel,
-    xp:0,rebirths:0,baseHp:500,baseAtq:95,baseDef:45,baseVel:30};
+  // Invitado (demo): primero se muestra el rival para confirmar.
+  previewOpponent();
+}
+function runDemoBattle(opp) {
+  if(!opp){ cancelPreview(); return; }
+  // La energía se gasta al CONFIRMAR la pelea, no al ver el rival.
+  energyState=guestConsumeEnergy(); updateHeader(); updateFightButton();
+  battleResultApplied=false;
+  document.getElementById('arena-preview').classList.add('hidden');
   const s1=getStats(selectedFighter), s2=getStats(opp);
   battleState={p1:{...selectedFighter,curHp:s1.hp,maxHp:s1.hp,stats:s1},
                p2:{...opp,curHp:s2.hp,maxHp:s2.hp,stats:s2},round:0,done:false};
-  document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(selectedFighter.race)}" class="w-full h-full object-cover"/>`;
-  document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(opp.race)}" class="w-full h-full object-cover"/>`;
+  document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(selectedFighter.race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
+  document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(opp.race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
   document.getElementById('p1-name').textContent=selectedFighter.race;
   document.getElementById('p2-name').textContent=opp.race;
   document.getElementById('p1-hp').textContent=s1.hp.toLocaleString();
@@ -1361,7 +1720,7 @@ function startBattle() {
   document.getElementById('p2-bar').style.width='100%';
   document.getElementById('battle-log').innerHTML='';
   document.getElementById('battle-round').textContent='RONDA 1';
-  document.getElementById('battle-status').textContent='⚔ ¡Que comience!';
+  document.getElementById('battle-status').textContent=`⚔ ¡Que comience! Rival: ${opp.race} · ${opp.rarity} Lv${opp.level}`;
   document.getElementById('arena-select').classList.add('hidden');
   document.getElementById('arena-battle').classList.remove('hidden');
   if(battleTimer) clearTimeout(battleTimer);
@@ -1398,12 +1757,15 @@ function battleNextStep() {
     def.curHp=Math.max(0,def.curHp-dmg);
     const pct=Math.round(def.curHp/def.maxHp*100);
     const e=document.createElement('div'); e.className='log-entry';
-    if(blocked) e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> ⚔ <span class="text-muted">🛡 BLOQUEADO</span>`;
+    // El log decía "Orco −2593 HP" y se leía como que el Orco PERDÍA
+    // esa vida. En realidad era el daño que el Orco HACÍA al rival.
+    // Ahora el formato es atacante → defensor: −X HP, sin ambigüedad.
+    if(blocked) e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> → <span class="${isP1?'text-bear':'text-bull'}">${def.race}</span> <span class="text-muted">🛡 BLOQUEADO</span>`;
     else if(crit){
-      e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> ⚔ <span class="text-tick font-bold">💥 CRÍTICO −${dmg.toLocaleString()} HP</span>`;
+      e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> → <span class="${isP1?'text-bear':'text-bull'}">${def.race}</span> <span class="text-tick font-bold">💥 CRÍTICO −${dmg.toLocaleString()} HP</span>`;
       if(arena){arena.classList.add(isP1?'flash-red':'flash-green');setTimeout(()=>arena.classList.remove('flash-red','flash-green'),350);}
     } else {
-      e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> ⚔ <span class="${isP1?'text-bear':'text-bull'}">−${dmg.toLocaleString()} HP</span>`;
+      e.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${att.race}</span> → <span class="${isP1?'text-bear':'text-bull'}">${def.race}</span> <span class="${isP1?'text-bear':'text-bull'}">−${dmg.toLocaleString()} HP</span>`;
     }
     log.appendChild(e); log.scrollTop=log.scrollHeight;
     if(isP1){document.getElementById('p2-hp').textContent=def.curHp.toLocaleString();document.getElementById('p2-bar').style.width=pct+'%';}
@@ -1421,14 +1783,23 @@ function battleNextStep() {
 function showBattleResult() {
   const {p1,p2,round}=battleState;
   const win=p1.curHp>p2.curHp, draw=p1.curHp===p2.curHp;
-  const tick=win?Math.round(8+Math.random()*22):3;
-  const xpGained=win?Math.round(40+Math.random()*30):20;
-  if(win){PLAYER.wins++;PLAYER.trophies+=25;PLAYER.tick+=tick;PLAYER.battleHistory.unshift({result:'WIN',rival:`${p2.race}/${p2.lineage}`,rarity:p2.rarity,reward:`+${tick} $TICK`});}
-  else   {PLAYER.losses++;PLAYER.trophies=Math.max(0,PLAYER.trophies-10);PLAYER.tick+=3;PLAYER.battleHistory.unshift({result:'LOSS',rival:`${p2.race}/${p2.lineage}`,rarity:p2.rarity,reward:''});}
-  if(PLAYER.battleHistory.length>5) PLAYER.battleHistory.pop();
-  const fighter=inventory.find(n=>n.id===p1.id);
-  let levelMsg='';
-  if(fighter){const gained=addXP(fighter,xpGained);if(gained>0) levelMsg=` · Lv${fighter.level} 🎉`;}
+  // La recompensa se aplica UNA sola vez: antes, si el temporizador y
+  // "SALTAR AL RESULTADO" disparaban showBattleResult dos veces, el
+  // $TICK, la XP y la fila del historial se duplicaban (dos WIN iguales).
+  let tick, xpGained, levelMsg='';
+  if(!battleResultApplied){
+    battleResultApplied=true;
+    tick=win?Math.round(8+Math.random()*22):3;
+    xpGained=win?Math.round(40+Math.random()*30):20;
+    if(win){PLAYER.wins++;PLAYER.trophies+=25;PLAYER.tick+=tick;PLAYER.battleHistory.unshift({result:'WIN',rival:`${p2.race}/${p2.lineage}`,rarity:p2.rarity,reward:`+${tick} $TICK`}); bumpMission('battles');}
+    else   {PLAYER.losses++;PLAYER.trophies=Math.max(0,PLAYER.trophies-10);PLAYER.tick+=3;PLAYER.battleHistory.unshift({result:'LOSS',rival:`${p2.race}/${p2.lineage}`,rarity:p2.rarity,reward:''});}
+    if(PLAYER.battleHistory.length>5) PLAYER.battleHistory.pop();
+    const fighter=inventory.find(n=>n.id===p1.id);
+    if(fighter){const gained=addXP(fighter,xpGained);if(gained>0) levelMsg=` · Lv${fighter.level} 🎉`;}
+    appliedBattle={tick,xpGained,levelMsg};
+  } else {
+    tick=appliedBattle.tick; xpGained=appliedBattle.xpGained; levelMsg=appliedBattle.levelMsg;
+  }
   updateHeader();
   document.getElementById('arena-battle').classList.add('hidden');
   document.getElementById('arena-result').classList.remove('hidden');
@@ -1436,10 +1807,15 @@ function showBattleResult() {
   document.getElementById('result-title').textContent=win?'¡VICTORIA!':draw?'EMPATE':'DERROTA';
   document.getElementById('result-title').className=`text-2xl font-extrabold mb-1 ${win?'text-bull':draw?'text-tick':'text-bear'}`;
   document.getElementById('result-sub').textContent=`${round} rondas · vs ${p2.race}/${p2.lineage}${levelMsg}`;
+  // La XP ahora tiene destino visible: barra de XP del gladiador.
+  const fighter=inventory.find(n=>n.id===p1.id);
+  const xpNeed=fighter?(fighter.level>=MAX_LEVEL?'MAX':xpToNextLevel(fighter.level)):0;
+  const xpPct=fighter?(fighter.level>=MAX_LEVEL?100:Math.round(fighter.xp/xpToNextLevel(fighter.level)*100)):0;
   document.getElementById('result-rewards').innerHTML=`
     <p class="text-[10px] text-muted font-bold tracking-widest mb-2">RECOMPENSAS</p>
     <div class="flex justify-between text-xs"><span class="text-muted">$TICK</span><span class="text-tick font-mono font-bold">+${tick}</span></div>
     <div class="flex justify-between text-xs"><span class="text-muted">XP</span><span class="text-purple-400 font-mono">+${xpGained}</span></div>
+    ${fighter?`<div class="mt-1"><div class="flex justify-between text-[10px]"><span class="text-muted">${fighter.race} · Lv${fighter.level}</span><span class="font-mono">${fighter.xp}/${xpNeed} XP</span></div><div class="xp-bar mt-0.5"><div class="xp-fill" style="width:${xpPct}%"></div></div></div>`:''}
     <div class="flex justify-between text-xs"><span class="text-muted">Trofeos</span><span class="${win?'text-bull':'text-bear'} font-mono">${win?'+25':'-10'}</span></div>`;
 }
 function resetArena(){renderArenaSelect();}
@@ -1447,12 +1823,12 @@ function resetArena(){renderArenaSelect();}
 // =============================================
 // ARENA REAL (SERVIDOR)
 // =============================================
-// Batalla real: el servidor simula y devuelve el log completo.
+// Batalla real: el servidor simula y devuelve el log completo y los
+// datos del rival (raza, linaje, rareza, nivel y vida máxima).
 // Aquí solo se reproduce ese log entrada a entrada en la UI existente.
-// El HP del rival es estimado (daño total recibido): el servidor no
-// devuelve su HP máximo, solo el log y el resultado.
 async function startBattleReal() {
   const fighter = selectedFighter;
+  battleResultApplied=false;
   document.getElementById('arena-select').classList.add('hidden');
   document.getElementById('arena-battle').classList.remove('hidden');
   document.getElementById('battle-status').textContent = 'Buscando oponente en el servidor...';
@@ -1472,19 +1848,25 @@ function playServerBattle(fighter, res) {
   const s1 = getStats(fighter); // stats del servidor (computed_stats)
   const isP1Hit = e => e.attacker===fighter.race; // si ambos tienen la misma raza, es ambiguo
   const dmgToP2 = res.log.filter(e=>isP1Hit(e)&&e.damage).reduce((a,e)=>a+e.damage,0);
-  const p2Max = Math.max(1, dmgToP2);
+  // El HP máximo del rival es el REAL del servidor (res.opponent.vida);
+  // antes se estimaba con el daño total recibido, por eso la barra y
+  // la vida final no cuadraban con el log.
+  const p2Max = (res.opponent && res.opponent.vida) || Math.max(1, dmgToP2);
   const p1Max = s1.hp;
   let p1Hp = p1Max, p2Hp = p2Max;
-  const p2Race = (res.log.map(e=>e.attacker).find(r=>r!==fighter.race)) || 'Rival';
-  document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(fighter.race)}" class="w-full h-full object-cover"/>`;
-  document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(p2Race)}" class="w-full h-full object-cover"/>`;
+  const p2Race = (res.opponent && res.opponent.race) || (res.log.map(e=>e.attacker).find(r=>r!==fighter.race)) || 'Rival';
+  document.getElementById('battle-p1-art').innerHTML=`<img src="${raceImg(fighter.race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
+  document.getElementById('battle-p2-art').innerHTML=`<img src="${raceImg(p2Race)}" class="w-full h-full object-cover" onerror="this.src='${FALLBACK_IMG}'"/>`;
   document.getElementById('p1-name').textContent=fighter.race;
   document.getElementById('p2-name').textContent=p2Race;
   document.getElementById('p1-hp').textContent=p1Max.toLocaleString();
-  document.getElementById('p2-hp').textContent='?';
+  document.getElementById('p2-hp').textContent=p2Max.toLocaleString();
   document.getElementById('p1-bar').style.width='100%';
   document.getElementById('p2-bar').style.width='100%';
   document.getElementById('battle-round').textContent='RONDA 1';
+  document.getElementById('battle-status').textContent = res.opponent
+    ? `Rival: ${p2Race} · ${res.opponent.rarity} Lv${res.opponent.level} · ${p2Max.toLocaleString()} HP`
+    : '⚔ ¡Que comience!';
   const logEl=document.getElementById('battle-log');
   let i=0, curRound=0;
   const step=()=>{
@@ -1493,10 +1875,11 @@ function playServerBattle(fighter, res) {
     if(e.round!==curRound){ curRound=e.round; document.getElementById('battle-round').textContent='RONDA '+curRound; }
     const isP1 = isP1Hit(e);
     const div=document.createElement('div'); div.className='log-entry';
-    if(e.type==='block') div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> ⚔ <span class="text-muted">🛡 BLOQUEADO</span>`;
-    else if(e.type==='crit') div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> ⚔ <span class="text-tick font-bold">💥 CRÍTICO −${(e.damage||0).toLocaleString()} HP</span>`;
-    else if(e.type==='reflect') div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> ⚔ <span class="text-purple-400">−${(e.damage||0).toLocaleString()} HP · reflejo −${(e.reflected||0).toLocaleString()}</span>`;
-    else div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> ⚔ <span class="${isP1?'text-bear':'text-bull'}">−${(e.damage||0).toLocaleString()} HP</span>`;
+    // Mismo formato que la batalla demo: atacante → defensor.
+    if(e.type==='block') div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> → ${e.defender||'Rival'} <span class="text-muted">🛡 BLOQUEADO</span>`;
+    else if(e.type==='crit') div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> → ${e.defender||'Rival'} <span class="text-tick font-bold">💥 CRÍTICO −${(e.damage||0).toLocaleString()} HP</span>`;
+    else if(e.type==='reflect') div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> → ${e.defender||'Rival'} <span class="text-purple-400">−${(e.damage||0).toLocaleString()} HP · ${e.defender||'Rival'} refleja −${(e.reflected||0).toLocaleString()} HP</span>`;
+    else div.innerHTML=`<span class="${isP1?'text-bull':'text-bear'}">${e.attacker}</span> → ${e.defender||'Rival'} <span class="${isP1?'text-bear':'text-bull'}">−${(e.damage||0).toLocaleString()} HP</span>`;
     logEl.appendChild(div); logEl.scrollTop=logEl.scrollHeight;
     if(e.damage){
       if(isP1){ p2Hp=Math.max(0,p2Hp-e.damage); document.getElementById('p2-hp').textContent=p2Hp.toLocaleString(); document.getElementById('p2-bar').style.width=Math.round(p2Hp/p2Max*100)+'%'; }
@@ -1514,13 +1897,17 @@ function playServerBattle(fighter, res) {
 function showServerBattleResult(fighter, res, p2Race) {
   const win = res.result==='p1', draw = res.result==='draw';
   // Historial local del lobby (la lista en sí sigue siendo simulada).
-  if(win){PLAYER.wins++;PLAYER.battleHistory.unshift({result:'WIN',rival:p2Race,rarity:'',reward:`+${res.tick_reward} $TICK`});}
-  else if(!draw){PLAYER.losses++;PLAYER.battleHistory.unshift({result:'LOSS',rival:p2Race,rarity:'',reward:''});}
-  if(PLAYER.battleHistory.length>5) PLAYER.battleHistory.pop();
+  // Se aplica una sola vez (ver showBattleResult).
+  if(!battleResultApplied){
+    battleResultApplied=true;
+    if(win){PLAYER.wins++;PLAYER.battleHistory.unshift({result:'WIN',rival:p2Race,rarity:'',reward:`+${res.tick_reward} $TICK`}); bumpMission('battles');}
+    else if(!draw){PLAYER.losses++;PLAYER.battleHistory.unshift({result:'LOSS',rival:p2Race,rarity:'',reward:''});}
+    if(PLAYER.battleHistory.length>5) PLAYER.battleHistory.pop();
+  }
   // Energía tras la batalla (la cobra el servidor): viene en la
   // respuesta de /fight; /me la confirma con tick/trofeos.
   if(typeof res.energy==='number'){
-    energyState={energy:res.energy,nextInMin:res.energy_next_in_min||0};
+    setEnergyFromServer(res.energy, res.energy_next_in_min||0);
     updateHeader();
   }
   // Sincronizar $TICK, trofeos, victorias y nivel/XP reales desde el servidor.
@@ -1533,18 +1920,28 @@ function showServerBattleResult(fighter, res, p2Race) {
     PLAYER.trophies=Math.max(0,PLAYER.trophies+(win?25:draw?0:-10));
     updateHeader();
   });
-  refreshFighterFromServer(fighter);
+  refreshFighterFromServer(fighter).then(()=>{
+    // La XP tiene destino visible: barra de XP del gladiador, con sus
+    // stats ya sincronizados desde el servidor.
+    const el=document.getElementById('result-xp-detail');
+    if(!el) return;
+    const xpNeed=fighter.level>=MAX_LEVEL?'MAX':xpToNextLevel(fighter.level);
+    const pct=fighter.level>=MAX_LEVEL?100:Math.min(100,Math.round(fighter.xp/xpNeed*100));
+    el.innerHTML=`<div class="flex justify-between text-[10px]"><span class="text-muted">${fighter.race} · Lv${fighter.level}</span><span class="font-mono">${fighter.xp}/${xpNeed} XP</span></div><div class="xp-bar mt-0.5"><div class="xp-fill" style="width:${pct}%"></div></div>`;
+  });
   document.getElementById('battle-status').textContent = win?'⚔ ¡VICTORIA!':draw?'🤝 Empate':'💀 Derrota...';
   document.getElementById('arena-battle').classList.add('hidden');
   document.getElementById('arena-result').classList.remove('hidden');
   document.getElementById('result-icon').textContent=win?'🏆':draw?'🤝':'💀';
   document.getElementById('result-title').textContent=win?'¡VICTORIA!':draw?'EMPATE':'DERROTA';
   document.getElementById('result-title').className=`text-2xl font-extrabold mb-1 ${win?'text-bull':draw?'text-tick':'text-bear'}`;
-  document.getElementById('result-sub').textContent=`${res.rounds} rondas · vs ${p2Race}${res.leveled_up?' · ¡Subiste al Lv'+res.level_after+'! 🎉':''}`;
+  const oppInfo = res.opponent ? ` · ${res.opponent.rarity} Lv${res.opponent.level}` : '';
+  document.getElementById('result-sub').textContent=`${res.rounds} rondas · vs ${p2Race}${oppInfo}${res.leveled_up?' · ¡Subiste al Lv'+res.level_after+'! 🎉':''}`;
   document.getElementById('result-rewards').innerHTML=`
     <p class="text-[10px] text-muted font-bold tracking-widest mb-2">RECOMPENSAS (SERVIDOR)</p>
     <div class="flex justify-between text-xs"><span class="text-muted">$TICK</span><span class="text-tick font-mono font-bold">+${res.tick_reward}</span></div>
     <div class="flex justify-between text-xs"><span class="text-muted">XP</span><span class="text-purple-400 font-mono">+${res.xp_gained}</span></div>
+    <div id="result-xp-detail"></div>
     <div class="flex justify-between text-xs"><span class="text-muted">Trofeos</span><span class="${win?'text-bull':'text-bear'} font-mono">${win?'+25':draw?'0':'-10'}</span></div>`;
 }
 
@@ -1602,6 +1999,7 @@ function packResultCard(nft,i){
 }
 // Reclamo real del Paquete Recluta en el servidor: 5 NFTs en la BD con
 // sorteos reales + 100 $TICK; el primero en Lv25. Una sola vez por cuenta.
+function setPackTitle(text){ const t=document.getElementById('pack-result-title'); if(t) t.textContent=text; }
 async function claimStarterPack(){
   try{
     const res=await apiFetch('/api/market/packs/recluta',{method:'POST'});
@@ -1612,6 +2010,8 @@ async function claimStarterPack(){
     const container=document.getElementById('pack-result-cards');
     container.innerHTML='';
     res.gladiators.forEach((doc,i)=>{ container.innerHTML+=packResultCard(doc,i); });
+    setPackTitle('¡PAQUETE RECLUTA!');
+    bumpMission('boxes');
     openModal('modal-pack-result');
   }catch(e){
     if(e.message.includes('Ya reclamaste')){ starterPackClaimed=true; updateReclutaButton(); }
@@ -1639,6 +2039,9 @@ function openPackModal(type) {
     if(first){first.level=25;first.xp=0;}
   }
   updateHeader();
+  // El título del modal decía "¡PAQUETE ABIERTO!" para cualquier caja.
+  setPackTitle(type==='recluta'?'¡PAQUETE RECLUTA!':'¡CAJA ABIERTA!');
+  bumpMission('boxes');
   openModal('modal-pack-result');
 }
 function rollNFT(guaranteePlataPlus=false) {
@@ -1716,7 +2119,7 @@ function renderSellPanel() {
     </div>`;
   }).join('');
   document.getElementById('p2p-my-listings').innerHTML = playerListings.length===0 ? '' :
-    '<p class="text-[10px] text-muted font-bold tracking-widest mb-2 mt-3">TUS ANUNCIOS</p>' +
+    `<p class="text-[10px] text-muted font-bold tracking-widest mb-2 mt-3">${playerListings.length===1?'TU ANUNCIO':'TUS ANUNCIOS'} (${playerListings.length})</p>` +
     playerListings.map(l=>`<div class="bg-panel2 border border-gray-700 rounded-xl p-2 flex items-center justify-between">
       <p class="text-xs">${l.nft.race}/${l.nft.lineage} · <span class="text-bull font-bold">${l.price} USDT</span></p>
       <button onclick="cancelListing('${l.id}')" class="text-bear text-[10px] font-bold px-2 py-1 rounded border border-bear">CANCELAR</button>
@@ -1760,7 +2163,7 @@ function updateBuyPreview() {
 }
 function updateSellPreview() {
   const ticks=parseFloat(document.getElementById('sell-tick-input').value)||0;
-  document.getElementById('sell-tick-preview').textContent=`→ Recibirás ${(ticks*0.08).toFixed(2)} USDT`;
+  document.getElementById('sell-tick-preview').textContent=`→ Recibirás ${(ticks*0.08).toFixed(2)} USDT (comisión del 20% ya aplicada)`;
 }
 function buyTick() {
   const usdt=parseFloat(document.getElementById('buy-tick-input').value)||0;
@@ -1782,7 +2185,7 @@ function sellTick() {
   updateHeader(); renderTickDisplay();
   document.getElementById('sell-tick-input').value='';
   document.getElementById('sell-tick-preview').textContent='→ Recibirás 0.00 USDT';
-  alert(`✅ Vendiste ${ticks.toLocaleString()} $TICK\n+${usdt} USDT`);
+  alert(`✅ Vendiste ${ticks.toLocaleString()} $TICK\n+${usdt} USDT (comisión del 20% ya aplicada)`);
 }
 
 // =============================================
@@ -1794,6 +2197,9 @@ function closeModal(id){document.getElementById(id)?.classList.add('hidden');}
 window.addEventListener('load',()=>{
   document.getElementById('app-header').classList.add('hidden');
   document.getElementById('app-nav').classList.add('hidden');
+  loadMissions(); // misiones diarias (estado real, reinicio diario)
+  renderTicker(); // "Cargando precios…" hasta que llegue el oráculo
+  startEnergyTicker(); // la cuenta atrás de energía avanza sola
   showView('view-login');
   loadOracleMultipliers(); // el oráculo es público: se carga aunque no haya login
   // Restaurar sesión si hay un JWT guardado y sigue válido.
