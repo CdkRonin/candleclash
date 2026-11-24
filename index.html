@@ -713,6 +713,7 @@ async function syncProfileFromServer(){
     starterPackClaimed=!!u.starter_pack_claimed;
     updateReclutaButton();
     updateHeader(); updateFightButton();
+    refreshServerMissions(); // misiones reales: progreso/reclamo del servidor
   } catch(e) { /* sin conexión: se queda el estado local */ }
 }
 function updateFightButton(){
@@ -1046,17 +1047,51 @@ function copyWallet(){
 // =============================================
 // MISIONES DIARIAS
 // =============================================
-// Antes eran estáticas: las barras estaban fijas en el HTML (33%/0%/0%)
-// y nada las actualizaba — "Ganar 3 batallas" parecía avanzar por el
-// 33% fijo, y "Abrir 1 caja" nunca contaba. Ahora hay estado real en
-// localStorage (se reinicia cada día) y cada acción suma su progreso
-// y abona el premio cuando se completa.
+// CON SESIÓN las misiones son REALES: el progreso y el reclamo
+// viven en el servidor (GET /api/missions/status, POST
+// /api/missions/claim) y el premio se acredita con $inc en el
+// saldo del servidor. Antes el premio se sumaba a PLAYER.tick en
+// local y el siguiente sync con /me lo sobrescribía: se perdía.
+// Ahora con sesión NUNCA se suma $TICK local por misiones.
+// 'boxes' es la excepción: las cajas siguen siendo demo, así que
+// su progreso es local y su reclamo es por confianza (beta); el
+// servidor solo garantiza "una vez al día". Sin sesión (invitado)
+// el flujo local de siempre queda intacto, con su aviso de demo.
+// El día es UTC, como en el servidor.
 const MISSIONS = [
   {key:'battles', target:3, reward:10, label:'Ganar 3 batallas'},
   {key:'boxes',   target:1, reward:5,  label:'Abrir 1 caja'},
   {key:'forge',   target:1, reward:15, label:'Usar la Forja'},
 ];
 let missionState = {date:'', battles:0, boxes:0, forge:0, done:{}};
+let serverMissions = {}; // key -> {progress, completed, claimed, ...}
+async function refreshServerMissions(){
+  if(!apiToken) return;
+  try{
+    const res=await apiFetch('/api/missions/status');
+    serverMissions={};
+    (res.missions||[]).forEach(m=>{ serverMissions[m.mission_id]=m; });
+  }catch(e){ /* sin conexión: se queda el estado anterior */ }
+  renderMissions();
+}
+function refreshMissions(){
+  if(apiToken) refreshServerMissions();
+  else { loadMissions(); renderMissions(); }
+}
+async function claimMission(key){
+  if(!apiToken) return;
+  const m=MISSIONS.find(x=>x.key===key); if(!m) return;
+  try{
+    const res=await apiFetch('/api/missions/claim',{method:'POST',
+      body:JSON.stringify({mission_id:key})});
+    await syncProfileFromServer(); // el premio ya está en el saldo real
+    await refreshServerMissions();
+    alert(`🎯 ¡Misión completada: ${m.label}!\n+${res.tick_awarded} $TICK acreditados a tu saldo.`);
+  }catch(e){
+    alert('No se pudo reclamar: '+e.message);
+    refreshServerMissions();
+  }
+}
 function loadMissions(){
   try {
     const saved = JSON.parse(localStorage.getItem('cc_missions')||'null');
@@ -1071,15 +1106,66 @@ function renderMissions(){
   if(!missionState.date) loadMissions();
   MISSIONS.forEach((m,i)=>{
     const n=i+1;
-    const val=Math.min(missionState[m.key]||0, m.target);
+    let val, claimed, completed;
+    if(apiToken){
+      const s=serverMissions[m.key];
+      claimed=!!(s&&s.claimed);
+      if(m.key==='boxes'){ // progreso local: las cajas aún son demo
+        val=Math.min(missionState.boxes||0, m.target);
+        completed=val>=m.target;
+      } else { // progreso verificado por el servidor
+        val=Math.min((s&&s.progress)||0, m.target);
+        completed=!!(s&&s.completed);
+      }
+    } else {
+      val=Math.min(missionState[m.key]||0, m.target);
+      claimed=!!missionState.done[m.key];
+      completed=claimed;
+    }
     const bar=document.getElementById('m'+n+'-bar');
     if(bar) bar.style.width=Math.round(val/m.target*100)+'%';
     const cnt=document.getElementById('m'+n+'-count');
-    if(cnt) cnt.textContent = missionState.done[m.key] ? '✓ Completada' : val+'/'+m.target;
+    if(!cnt) return;
+    if(claimed){
+      cnt.textContent='✓ Completada';
+      cnt.onclick=null; cnt.style.cursor='';
+      cnt.classList.remove('text-tick','font-bold');
+      cnt.classList.add('text-muted');
+    } else if(completed){ // lista para reclamar en el servidor
+      cnt.textContent='🎯 RECLAMAR +'+m.reward;
+      cnt.onclick=()=>claimMission(m.key);
+      cnt.style.cursor='pointer';
+      cnt.classList.remove('text-muted');
+      cnt.classList.add('text-tick','font-bold');
+    } else {
+      cnt.textContent=val+'/'+m.target;
+      cnt.onclick=null; cnt.style.cursor='';
+      cnt.classList.remove('text-tick','font-bold');
+      cnt.classList.add('text-muted');
+    }
   });
 }
-function bumpMission(key){
+async function bumpMission(key){
   const m=MISSIONS.find(x=>x.key===key); if(!m) return;
+  // CON SESIÓN: el premio es del servidor; aquí solo se actualiza
+  // el progreso y se avisa de que la misión está lista para reclamar.
+  // Nunca se suma $TICK local: el siguiente sync lo borraría.
+  if(apiToken){
+    if(key==='boxes'){
+      missionState.boxes=Math.min((missionState.boxes||0)+1, m.target);
+      saveMissions(); renderMissions();
+      const s=serverMissions.boxes;
+      if(missionState.boxes>=m.target && !(s&&s.claimed))
+        alert(`🎯 ¡Misión completada: ${m.label}!\nToca "RECLAMAR +${m.reward}" en el Lobby (Misiones).\nNota: las cajas aún son demo; el reclamo es por confianza (beta).`);
+      return;
+    }
+    await refreshServerMissions();
+    const s=serverMissions[key];
+    if(s && s.completed && !s.claimed)
+      alert(`🎯 ¡Misión completada: ${m.label}!\nToca "RECLAMAR +${m.reward}" en el Lobby (Misiones).`);
+    return;
+  }
+  // DEMO sin sesión: como antes, en local.
   if(missionState.done[key]) return;
   missionState[key]=Math.min((missionState[key]||0)+1, m.target);
   if(missionState[key]>=m.target){
