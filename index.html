@@ -72,6 +72,13 @@
 .stage-fighter{position:relative;z-index:2;width:clamp(150px,42vw,240px);flex:none;text-align:center}
 .stage-art{width:100%;aspect-ratio:3/4;overflow:visible}
 .fighter-svg{width:100%;height:100%;display:block}
+/* Sprites de Flow (sprites/<raza>-<pose>.webp): la escena usa la
+   imagen de la pose en vez del SVG. El rival va espejado con la
+   propiedad `scale` (no `transform`) para no chocar con la animación
+   de respiración. La pose KO ya viene tumbada en la imagen. */
+.fighter-sprite{width:100%;height:100%;object-fit:contain;object-position:center bottom;display:block;animation:idleBob 2.4s ease-in-out infinite}
+.fighter-sprite.sprite-p2{scale:-1 1}
+.fighter-sprite.sprite-ko{animation:none}
 /* Peleador SVG articulado: las extremidades rotan sobre sus
    articulaciones (transform-origin en unidades del viewBox). La
    embestida/sacudida del div padre se conserva; las poses del SVG
@@ -771,6 +778,39 @@ function buildFighterSVG(race, side){
   const body=side==='p2'?`<g transform="translate(120,0) scale(-1,1)">${inner}</g>`:inner;
   return `<svg viewBox="0 0 120 160" class="fighter-svg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${body}</svg>`;
 }
+// Sprites de Flow: una imagen por raza y pose en sprites/ (WebP con
+// fondo transparente, generados en Google Flow y recortados con PIL).
+// La escena de batalla usa el sprite cuando existe; si una raza no
+// tiene sprite, cae al SVG de arriba. La carpeta es el nombre de la
+// raza en minúsculas sin acentos ni puntos.
+const SPRITE_FOLDER = {
+  'Humano':'humano','Elfo':'elfo','Enano':'enano','Orco':'orco','Goblin':'goblin',
+  'Mediano':'mediano','Gnomo':'gnomo','Dracónido':'draconido','Tiefling':'tiefling',
+  'H.Lagarto':'lagarto','Tabaxi':'tabaxi','Minotauro':'minotauro','Forjado':'forjado',
+  'Cíborg':'ciborg','Alienígena':'alienigena',
+};
+const SPRITE_POSES = ['idle','punch','kick','jump','block','ko'];
+// Clase de pose SVG -> pose del sprite (la cura no tiene sprite
+// propio: se queda en idle y el destello verde + el número ya la
+// comunican; el crítico usa el salto).
+const SPRITE_POSE = {'f-punch':'punch','f-kick':'kick','f-crit':'jump','f-guard':'block','f-heal':'idle','f-ko':'ko'};
+function spritePath(race, pose){ const f=SPRITE_FOLDER[race]; return f ? `sprites/${f}-${pose}.webp` : null; }
+// Si un sprite no existe o no carga (p. ej. aún no subido al repo),
+// la escena cae al SVG de esa raza en vez de dejar la imagen rota.
+function spriteImgFallback(img){
+  const art=img.parentElement; if(!art) return;
+  art.innerHTML=buildFighterSVG(img.dataset.spriteRace, img.dataset.spriteSide);
+}
+function buildFighterArt(race, side){
+  const idle = spritePath(race, 'idle');
+  if(idle) return `<img src="${idle}" data-sprite-race="${race}" data-sprite-side="${side}" onerror="spriteImgFallback(this)" class="fighter-sprite${side==='p2'?' sprite-p2':''}" alt="">`;
+  return buildFighterSVG(race, side);
+}
+// Precarga las 6 poses de una raza para que el cambio de pose en
+// mitad de la pelea no espere a la descarga (~20 KB por imagen).
+function preloadFighterSprites(race){
+  SPRITE_POSES.forEach(p=>{ const u=spritePath(race,p); if(u){ const im=new Image(); im.src=u; } });
+}
 // Poses del peleador SVG en la escena: pone la clase en el <svg> y la
 // quita a los ms (salvo keep=true, para el KO, que queda tumbado hasta
 // stageReset). No anima nada si SALTAR está activo.
@@ -779,6 +819,17 @@ let fighterMoveAlt={p1:0,p2:0};
 function fighterPose(side,cls,ms,keep){
   if(stageSkip) return;
   const art=document.getElementById('battle-'+side+'-art'); if(!art) return;
+  // Sprite de Flow: cambiar de pose es cambiar la imagen (idle al
+  // terminar, salvo keep=true para el KO, que queda tumbado).
+  const img=art.querySelector('img.fighter-sprite');
+  if(img){
+    const pose=SPRITE_POSE[cls]; if(!pose) return;
+    const race=img.dataset.spriteRace;
+    img.src=spritePath(race,pose);
+    img.classList.toggle('sprite-ko', cls==='f-ko');
+    if(!keep) setTimeout(()=>{ img.src=spritePath(race,'idle'); img.classList.remove('sprite-ko'); },ms);
+    return;
+  }
   const svg=art.querySelector('svg.fighter-svg'); if(!svg) return;
   svg.classList.remove(cls); void svg.offsetWidth; svg.classList.add(cls);
   if(!keep) setTimeout(()=>svg.classList.remove(cls),ms);
@@ -2332,8 +2383,9 @@ function runDemoBattle(opp) {
   const s1=getStats(selectedFighter), s2=getStats(opp);
   battleState={p1:{...selectedFighter,curHp:s1.hp,maxHp:s1.hp,stats:s1,cd:0,block_next:false,reduce_next:false},
                p2:{...opp,curHp:s2.hp,maxHp:s2.hp,stats:s2,cd:0,block_next:false,reduce_next:false},round:0,done:false,step:0,firstP1:true};
-  document.getElementById('battle-p1-art').innerHTML=buildFighterSVG(selectedFighter.race,'p1');
-  document.getElementById('battle-p2-art').innerHTML=buildFighterSVG(opp.race,'p2');
+  document.getElementById('battle-p1-art').innerHTML=buildFighterArt(selectedFighter.race,'p1');
+  document.getElementById('battle-p2-art').innerHTML=buildFighterArt(opp.race,'p2');
+  preloadFighterSprites(selectedFighter.race); preloadFighterSprites(opp.race);
   document.getElementById('p1-name').textContent=gladiatorName(selectedFighter);
   document.getElementById('p2-name').textContent=gladiatorName(opp);
   document.getElementById('p1-hp').textContent=s1.hp.toLocaleString();
@@ -2609,6 +2661,8 @@ function stageReset(){
     if(el) el.classList.remove('fighter-ability','fighter-ko');
     const art=document.getElementById('battle-'+s+'-art');
     if(art){ art.classList.remove('fighter-lunge-p1','fighter-lunge-p2','fighter-hit');
+      const img=art.querySelector('img.fighter-sprite');
+      if(img){ img.src=spritePath(img.dataset.spriteRace,'idle'); img.classList.remove('sprite-ko'); }
       const svg=art.querySelector('svg.fighter-svg');
       if(svg) svg.classList.remove(...FIGHTER_POSES); }
     const l=document.getElementById(s+'-float'); if(l) l.innerHTML='';
@@ -2686,8 +2740,9 @@ function playServerBattle(fighter, res) {
   const p1Max = s1.hp;
   const p2Race = (res.opponent && res.opponent.race) || (res.log.map(e=>e.attacker).find(r=>r!==fighter.race)) || 'Rival';
   const p2Name = (res.opponent && res.opponent.display_name) || (res.opponent && res.opponent.lineage ? defaultName(res.opponent) : p2Race);
-  document.getElementById('battle-p1-art').innerHTML=buildFighterSVG(fighter.race,'p1');
-  document.getElementById('battle-p2-art').innerHTML=buildFighterSVG(p2Race,'p2');
+  document.getElementById('battle-p1-art').innerHTML=buildFighterArt(fighter.race,'p1');
+  document.getElementById('battle-p2-art').innerHTML=buildFighterArt(p2Race,'p2');
+  preloadFighterSprites(fighter.race); preloadFighterSprites(p2Race);
   document.getElementById('p1-name').textContent=gladiatorName(fighter);
   document.getElementById('p2-name').textContent=p2Name;
   document.getElementById('p1-stage-name').textContent=gladiatorName(fighter);
