@@ -229,13 +229,13 @@
     <div class="bg-panel border border-tick rounded-xl p-4 relative shadow-[0_0_12px_rgba(255,215,0,.15)]">
       <div class="absolute top-0 right-0 bg-tick text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">Requisito: gladiador Lv25+</div>
       <h3 class="text-tick font-bold text-sm mb-1">🏆 Gran Torneo Semanal</h3>
-      <p class="text-xs text-muted mb-3">Premio: <span class="text-bull font-bold">500 USDT</span> · 128/256 participantes</p>
+      <p class="text-xs text-muted mb-3">Premio por anunciar · Se publicará cuando se abra la inscripción</p>
       <button id="gran-torneo-btn" onclick="explainGranTorneo()" class="w-full bg-gray-800 text-muted font-bold py-2 rounded-lg text-sm">🔒 BLOQUEADO</button>
       <p id="gran-torneo-note" class="text-[10px] text-muted text-center mt-2"></p>
     </div>
     <div class="bg-panel border border-gray-800 rounded-xl p-4">
       <h3 class="text-white font-bold text-sm mb-1">⚔️ Torneo de Liga</h3>
-      <p class="text-xs text-muted mb-3">Premio: <span class="text-bull font-bold">50 USDT</span> · Clasificatorio diario · <span class="text-yellow-300">Próximamente</span></p>
+      <p class="text-xs text-muted mb-3">Clasificatorio diario · <span class="text-yellow-300">Próximamente</span></p>
       <button onclick="showView('view-arena')" class="w-full bg-bull text-black font-bold py-2 rounded-lg text-sm">⚔ PRACTICAR EN LA ARENA</button>
       <p class="text-[10px] text-muted text-center mt-2">El Torneo de Liga aún no está activo. Tus batallas en la Arena son de práctica por ahora.</p>
     </div>
@@ -377,6 +377,14 @@
       <div id="arena-fighter-grid" class="grid grid-cols-2 gap-3 mb-4"></div>
       <p id="arena-selected-label" class="text-center text-xs font-bold text-bull mb-2"></p>
       <p id="arena-energy" class="text-center text-xs font-mono font-bold text-yellow-300 mb-2">⚡ Energía: 10/10</p>
+      <!-- Modo de batalla: automática (el servidor simula todo) o duelo
+           táctico (eliges la acción en cada ronda). El táctico necesita
+           sesión: es un duelo en el servidor, ronda a ronda. -->
+      <div class="flex gap-1 bg-panel2 rounded-xl p-1 mb-2">
+        <button id="mode-auto" onclick="setBattleMode('auto')" class="flex-1 text-xs font-bold py-2 rounded-lg tab-active-bull">🤖 Automática</button>
+        <button id="mode-duel" onclick="setBattleMode('duel')" class="flex-1 text-xs font-bold py-2 rounded-lg text-muted">🎮 Duelo táctico</button>
+      </div>
+      <p id="mode-note" class="text-center text-[10px] text-muted mb-2">La batalla automática se simula sola en el servidor.</p>
       <button onclick="startBattle()" id="arena-fight-btn" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base opacity-40 cursor-not-allowed" disabled>BUSCAR OPONENTE</button>
     </div>
     <!-- Vista previa del rival: se muestra antes de gastar energía -->
@@ -418,7 +426,14 @@
       </div>
       <div id="battle-ability" class="text-center text-sm font-bold text-purple-400 h-5 mb-2"></div>
       <div id="battle-log" class="bg-panel2 rounded-xl p-3 flex-1 overflow-y-auto space-y-1 text-xs font-mono"></div>
-      <button onclick="skipBattle()" class="mt-3 w-full bg-panel2 border border-gray-700 text-muted font-bold py-2 rounded-xl text-xs">⏩ SALTAR AL RESULTADO</button>
+      <!-- Acciones del duelo táctico: solo se ven durante un duelo; en
+           la batalla automática el servidor decide todo. -->
+      <div id="duel-actions" class="hidden mt-3 grid grid-cols-3 gap-2">
+        <button id="duel-atk" onclick="duelAct('attack')" class="bg-bull text-black font-bold py-3 rounded-xl text-sm">⚔️ Atacar</button>
+        <button id="duel-abi" onclick="duelAct('ability')" class="bg-purple-500 text-white font-bold py-3 rounded-xl text-sm">✨ Habilidad</button>
+        <button id="duel-def" onclick="duelAct('defend')" class="bg-panel2 border border-gray-700 text-white font-bold py-3 rounded-xl text-sm">🛡️ Defender</button>
+      </div>
+      <button id="battle-skip-btn" onclick="skipBattle()" class="mt-3 w-full bg-panel2 border border-gray-700 text-muted font-bold py-2 rounded-xl text-xs">⏩ SALTAR AL RESULTADO</button>
     </div>
     <div id="arena-result" class="hidden flex flex-col items-center py-6">
       <div id="result-icon" class="text-6xl mb-3"></div>
@@ -1131,7 +1146,7 @@ function updateFightButton(){
   btn.classList.toggle('cursor-not-allowed',!canFight);
   btn.textContent = noEnergy
     ? 'SIN ENERGÍA · PRÓXIMA EN '+Math.max(1,energyState.nextInMin||0)+' MIN'
-    : 'BUSCAR OPONENTE';
+    : battleMode==='duel' ? 'INICIAR DUELO' : 'BUSCAR OPONENTE';
   const eEl=document.getElementById('arena-energy');
   if(eEl) eEl.textContent = energyState.energy<ENERGY_MAX
     ? `⚡ Energía: ${energyState.energy}/${ENERGY_MAX} · +1 en ${Math.max(1,energyState.nextInMin||0)} min`
@@ -1690,8 +1705,8 @@ function explainGranTorneo(){
   const maxLv=inventory.length?Math.max(...inventory.map(n=>n.level)):0;
   const has25=inventory.some(n=>n.level>=25);
   alert(has25
-    ? '🏆 Gran Torneo Semanal — Premio 500 USDT.\nAún no está activo: se anunciará cuando se abra la inscripción.'
-    : `🏆 Gran Torneo Semanal — Premio 500 USDT.\nEstá bloqueado porque necesitas un gladiador en Nivel 25 o más.\nTu máximo ahora es Lv${maxLv}.`);
+    ? '🏆 Gran Torneo Semanal.\nAún no está activo: el premio se anunciará cuando se abra la inscripción.'
+    : `🏆 Gran Torneo Semanal.\nEstá bloqueado porque necesitas un gladiador en Nivel 25 o más.\nTu máximo ahora es Lv${maxLv}.`);
 }
 
 // =============================================
@@ -2432,6 +2447,25 @@ function cancelPreview(){
   document.getElementById('arena-select').classList.remove('hidden');
 }
 function confirmBattle(){ runDemoBattle(previewOpponentNft); }
+// Modo de batalla: 'auto' (el servidor simula todo) o 'duel' (por
+// turnos, eliges la acción en cada ronda). El duelo táctico necesita
+// sesión: vive en el servidor, ronda a ronda.
+let battleMode='auto';
+function setBattleMode(m){
+  if(m==='duel' && !apiToken){
+    alert('El duelo táctico necesita sesión: inicia sesión con MetaMask para jugar por turnos.');
+    return;
+  }
+  battleMode=m;
+  const a=document.getElementById('mode-auto'), d=document.getElementById('mode-duel');
+  if(a){ a.classList.toggle('tab-active-bull', m==='auto'); a.classList.toggle('text-muted', m!=='auto'); }
+  if(d){ d.classList.toggle('tab-active-bull', m==='duel'); d.classList.toggle('text-muted', m!=='duel'); }
+  const note=document.getElementById('mode-note');
+  if(note) note.textContent = m==='duel'
+    ? 'Duelo táctico: eliges Atacar, Habilidad o Defender en cada ronda. 1 energía.'
+    : 'La batalla automática se simula sola en el servidor.';
+  updateFightButton();
+}
 function startBattle() {
   if(!selectedFighter) return;
   if(energyState.energy<1){ alert('Sin energía. Próxima energía en '+Math.max(1,energyState.nextInMin||0)+' min.'); return; }
@@ -2444,7 +2478,7 @@ function startBattle() {
     return;
   }
   // Gladiador real: la batalla se simula en el servidor.
-  if(selectedFighter.fromApi && apiToken) { startBattleReal(); return; }
+  if(selectedFighter.fromApi && apiToken) { if(battleMode==='duel'){ startDuelReal(); return; } startBattleReal(); return; }
   // Invitado (demo): primero se muestra el rival para confirmar.
   previewOpponent();
 }
@@ -2670,7 +2704,13 @@ function showBattleResult() {
     ${fighter?`<div class="mt-1"><div class="flex justify-between text-[10px]"><span class="text-muted">${escHtml(gladiatorName(fighter))} · Lv${fighter.level}</span><span class="font-mono">${fighter.xp}/${xpNeed} XP</span></div><div class="xp-bar mt-0.5"><div class="xp-fill" style="width:${xpPct}%"></div></div></div>`:''}
     <div class="flex justify-between text-xs"><span class="text-muted">Trofeos</span><span class="${win?'text-bull':'text-bear'} font-mono">${win?'+25':'-10'}</span></div>`;
 }
-function resetArena(){renderArenaSelect();}
+function resetArena(){
+  duelBattle=null; serverBattle=null;
+  if(serverBattleTimer) clearTimeout(serverBattleTimer);
+  document.getElementById('duel-actions')?.classList.add('hidden');
+  document.getElementById('battle-skip-btn')?.classList.remove('hidden');
+  renderArenaSelect();
+}
 
 // =============================================
 // ESCENA DE ARENA (VISUAL)
@@ -2775,6 +2815,168 @@ async function startBattleReal() {
   }
 }
 
+// =============================================
+// DUELO TÁCTICO (por turnos, en el servidor)
+// =============================================
+// Estado del duelo en curso. serverBattle se reutiliza con la forma
+// que entiende applyServerBattleEntry, para que cada ronda se anime
+// igual que una batalla automática (1 s por entrada del log).
+let duelBattle=null;
+
+async function startDuelReal() {
+  const fighter = selectedFighter;
+  battleResultApplied=false;
+  duelBattle=null; serverBattle=null;
+  document.getElementById('arena-select').classList.add('hidden');
+  document.getElementById('arena-battle').classList.remove('hidden');
+  document.getElementById('duel-actions').classList.add('hidden');
+  document.getElementById('battle-skip-btn').classList.add('hidden');
+  stageReset();
+  document.getElementById('battle-status').textContent = 'Buscando oponente en el servidor...';
+  document.getElementById('battle-log').innerHTML = '';
+  try {
+    const res = await apiFetch('/api/battle/duel/start', {method:'POST',
+      body: JSON.stringify({gladiator_id: fighter.token_id})});
+    // La energía se cobra al empezar el duelo: se refleja ya.
+    if(typeof res.energy==='number') setEnergyFromServer(res.energy, res.energy_next_in_min||0);
+    const s1 = getStats(fighter);
+    const p2Max = (res.opponent && (res.opponent.max_hp || res.opponent.vida)) || 1;
+    const p2Race = (res.opponent && res.opponent.race) || 'Rival';
+    const p2Name = (res.opponent && res.opponent.display_name) || p2Race;
+    document.getElementById('battle-p1-art').innerHTML=buildFighterArt(fighter.race,'p1');
+    document.getElementById('battle-p2-art').innerHTML=buildFighterArt(p2Race,'p2');
+    preloadFighterSprites(fighter.race); preloadFighterSprites(p2Race);
+    document.getElementById('p1-name').textContent=gladiatorName(fighter);
+    document.getElementById('p2-name').textContent=p2Name;
+    document.getElementById('p1-stage-name').textContent=gladiatorName(fighter);
+    document.getElementById('p2-stage-name').textContent=p2Name;
+    document.getElementById('p1-hp').textContent=s1.hp.toLocaleString();
+    document.getElementById('p2-hp').textContent=p2Max.toLocaleString();
+    document.getElementById('p1-bar').style.width='100%';
+    document.getElementById('p2-bar').style.width='100%';
+    document.getElementById('battle-round').textContent='RONDA 1';
+    document.getElementById('battle-status').textContent=`Duelo táctico · Rival: ${p2Name} · ${res.opponent.rarity} Lv${res.opponent.level} · Elige tu acción`;
+    stageReset();
+    duelBattle={duel_id:res.duel_id,fighter,p2Name,p1Hp:s1.hp,p2Hp:p2Max,p1Max:s1.hp,p2Max,
+      curRound:1,ability:res.p1.ability,cd:res.p1.cd,playing:false,done:false,
+      isP1Hit:e=>e.side?e.side==='p1':e.attacker===fighter.race};
+    document.getElementById('duel-actions').classList.remove('hidden');
+    updateDuelButtons();
+  } catch(e) {
+    alert('El duelo falló: '+e.message);
+    syncProfileFromServer();
+    renderArenaSelect();
+  }
+}
+
+// Botones de acción del duelo: la habilidad muestra su nombre y el
+// enfriamiento, y se desactiva mientras está en enfriamiento o
+// mientras se anima la ronda.
+function updateDuelButtons(){
+  const db=duelBattle; if(!db) return;
+  const abi=document.getElementById('duel-abi');
+  if(abi){
+    abi.textContent = db.cd>0
+      ? `✨ ${db.ability.nombre} (${db.cd})`
+      : `✨ ${db.ability.nombre}`;
+    abi.disabled = db.cd>0 || db.playing || db.done;
+    abi.classList.toggle('opacity-40', abi.disabled);
+    abi.classList.toggle('cursor-not-allowed', abi.disabled);
+  }
+  ['duel-atk','duel-def'].forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){ b.disabled=db.playing||db.done; b.classList.toggle('opacity-40', b.disabled); b.classList.toggle('cursor-not-allowed', b.disabled); }
+  });
+}
+
+async function duelAct(action){
+  const db=duelBattle; if(!db||db.playing||db.done) return;
+  db.playing=true; updateDuelButtons();
+  try {
+    const res = await apiFetch('/api/battle/duel/act', {method:'POST',
+      body: JSON.stringify({duel_id: db.duel_id, action})});
+    db.ability=res.p1.ability; db.cd=res.p1.cd;
+    playDuelRound(res.round_log||[], ()=>{
+      // La vida final de la ronda la manda el servidor (autoridad):
+      // corrige cualquier deriva del log.
+      db.p1Hp=res.p1.hp; db.p2Hp=res.p2.hp;
+      const setHp=(side,hp,max)=>{ document.getElementById(side+'-hp').textContent=hp.toLocaleString(); document.getElementById(side+'-bar').style.width=Math.round(hp/max*100)+'%'; };
+      setHp('p1',db.p1Hp,db.p1Max); setHp('p2',db.p2Hp,db.p2Max);
+      if(res.status==='finished'){
+        db.done=true; db.playing=false;
+        showDuelResult(db, res);
+      } else {
+        db.curRound=res.round; db.playing=false;
+        document.getElementById('battle-round').textContent='RONDA '+db.curRound;
+        document.getElementById('battle-status').textContent=`RONDA ${db.curRound} · Elige tu acción`;
+        updateDuelButtons();
+      }
+    });
+  } catch(e) {
+    db.playing=false; updateDuelButtons();
+    alert('No se pudo jugar la ronda: '+e.message);
+  }
+}
+
+// Reproduce las entradas de UNA ronda con la misma cadencia que la
+// batalla automática (~1 s por entrada) y llama a onDone al final.
+function playDuelRound(entries, onDone){
+  const db=duelBattle; if(!db) return;
+  serverBattle={fighter:db.fighter,res:{log:entries},p2Name:db.p2Name,p1Hp:db.p1Hp,p2Hp:db.p2Hp,p1Max:db.p1Max,p2Max:db.p2Max,i:0,curRound:db.curRound,done:false,isP1Hit:db.isP1Hit};
+  const step=()=>{
+    const sb=serverBattle; if(!sb) return;
+    if(sb.i>=entries.length){ db.p1Hp=sb.p1Hp; db.p2Hp=sb.p2Hp; db.curRound=sb.curRound; onDone(); return; }
+    applyServerBattleEntry(entries[sb.i++], true);
+    serverBattleTimer=setTimeout(step, 1000);
+  };
+  serverBattleTimer=setTimeout(step, 300);
+}
+
+function showDuelResult(db, res) {
+  const fighter=db.fighter;
+  const win=res.winner==='p1', draw=res.winner==='draw';
+  const rw=res.rewards||{};
+  // Historial local del lobby (la lista en sí sigue siendo simulada).
+  // Se aplica una sola vez (ver showBattleResult).
+  if(!battleResultApplied){
+    battleResultApplied=true;
+    if(win){PLAYER.wins++;PLAYER.battleHistory.unshift({result:'WIN',rival:db.p2Name,rarity:'',reward:`+${rw.tick_reward||0} $TICK`}); bumpMission('battles');}
+    else if(!draw){PLAYER.losses++;PLAYER.battleHistory.unshift({result:'LOSS',rival:db.p2Name,rarity:'',reward:''});}
+    if(PLAYER.battleHistory.length>5) PLAYER.battleHistory.pop();
+  }
+  // Sincronizar $TICK, trofeos, victorias y nivel/XP reales desde el servidor.
+  apiFetch('/api/auth/me').then(u=>{
+    PLAYER.tick=u.tick_balance; PLAYER.trophies=u.trophies;
+    PLAYER.wins=u.wins; PLAYER.losses=u.losses;
+    updateHeader();
+  }).catch(()=>{ // sin conexión: aplicar las recompensas del resultado localmente
+    PLAYER.tick+=rw.tick_reward||0;
+    PLAYER.trophies=Math.max(0,PLAYER.trophies+(rw.trophies_delta||0));
+    updateHeader();
+  });
+  refreshFighterFromServer(fighter).then(()=>{
+    const el=document.getElementById('result-xp-detail');
+    if(!el) return;
+    const xpNeed=fighter.level>=MAX_LEVEL?'MAX':xpToNextLevel(fighter.level);
+    const pct=fighter.level>=MAX_LEVEL?100:Math.min(100,Math.round(fighter.xp/xpNeed*100));
+    el.innerHTML=`<div class="flex justify-between text-[10px]"><span class="text-muted">${escHtml(gladiatorName(fighter))} · Lv${fighter.level}</span><span class="font-mono">${fighter.xp}/${xpNeed} XP</span></div><div class="xp-bar mt-0.5"><div class="xp-fill" style="width:${pct}%"></div></div>`;
+  });
+  document.getElementById('battle-status').textContent = win?'⚔ ¡VICTORIA!':draw?'🤝 Empate':'💀 Derrota...';
+  document.getElementById('arena-battle').classList.add('hidden');
+  document.getElementById('arena-result').classList.remove('hidden');
+  document.getElementById('result-icon').textContent=win?'🏆':draw?'🤝':'💀';
+  document.getElementById('result-title').textContent=win?'¡VICTORIA!':draw?'EMPATE':'DERROTA';
+  document.getElementById('result-title').className=`text-2xl font-extrabold mb-1 ${win?'text-bull':draw?'text-tick':'text-bear'}`;
+  const oppInfo = res.opponent ? ` · ${res.opponent.rarity} Lv${res.opponent.level}` : '';
+  document.getElementById('result-sub').textContent=`Duelo táctico · ${res.round} rondas · vs ${db.p2Name}${oppInfo}${rw.leveled_up?' · ¡Subiste al Lv'+rw.level_after+'! 🎉':''}`;
+  document.getElementById('result-rewards').innerHTML=`
+    <p class="text-[10px] text-muted font-bold tracking-widest mb-2">RECOMPENSAS (SERVIDOR)</p>
+    <div class="flex justify-between text-xs"><span class="text-muted">$TICK</span><span class="text-tick font-mono font-bold">+${rw.tick_reward||0}</span></div>
+    <div class="flex justify-between text-xs"><span class="text-muted">XP</span><span class="text-purple-400 font-mono">+${rw.xp_gained||0}</span></div>
+    <div id="result-xp-detail"></div>
+    <div class="flex justify-between text-xs"><span class="text-muted">Trofeos</span><span class="${win?'text-bull':'text-bear'} font-mono">${(rw.trophies_delta||0)>0?'+'+rw.trophies_delta:rw.trophies_delta||0}</span></div>`;
+}
+
 // Una línea del log de batalla del servidor, en HTML. Mismo formato
 // que la batalla demo: atacante → defensor. Las entradas de habilidad
 // (type "ability") NO llevan damage: el daño, si lo hay, va en la
@@ -2797,13 +2999,19 @@ function formatServerLogLine(e, isP1) {
   // 'regen' y el HP curado en 'healed'; applyServerBattleEntry ya
   // aplica 'healed' a la barra, aquí solo falta la línea de texto.
   if(e.type === 'regen') return `${att} <span class="text-bull">💚 regenera +${(e.healed || 0).toLocaleString()} HP</span>`;
+  // Defender (duelo táctico): el luchador se guarda; el próximo ataque
+  // que reciba hará la mitad de daño.
+  if(e.type === 'defend') return `${att} <span class="text-muted">🛡 Se defiende · el próximo ataque le hará la mitad de daño</span>`;
   // Daño mágico (AVAX/TRX, Nv35): va dentro de 'damage' y se marca
   // con ✦ para que se vea que parte del golpe fue mágico.
   const mg = e.magic ? ` <span class="text-purple-400">✦ +${(e.magic || 0).toLocaleString()} mágico</span>` : '';
+  // Guardia (duelo táctico): el golpe ya viene a la mitad por la
+  // defensa del rival; se marca con 🛡 para que no parezca un golpe flojo.
+  const gd = e.guarded ? ' <span class="text-muted">🛡 guardia</span>' : '';
   if(e.type === 'block') return `${att} → ${def} <span class="text-muted">🛡 BLOQUEADO</span>`;
-  if(e.type === 'crit') return `${att} → ${def} <span class="text-tick font-bold">💥 CRÍTICO −${(e.damage || 0).toLocaleString()} HP</span>${mg}`;
-  if(e.type === 'reflect') return `${att} → ${def} <span class="text-purple-400">−${(e.damage || 0).toLocaleString()} HP · ${def} refleja −${(e.reflected || 0).toLocaleString()} HP</span>${mg}`;
-  return `${att} → ${def} <span class="${defCls}">−${(e.damage || 0).toLocaleString()} HP</span>${mg}`;
+  if(e.type === 'crit') return `${att} → ${def} <span class="text-tick font-bold">💥 CRÍTICO −${(e.damage || 0).toLocaleString()} HP</span>${mg}${gd}`;
+  if(e.type === 'reflect') return `${att} → ${def} <span class="text-purple-400">−${(e.damage || 0).toLocaleString()} HP · ${def} refleja −${(e.reflected || 0).toLocaleString()} HP</span>${mg}${gd}`;
+  return `${att} → ${def} <span class="${defCls}">−${(e.damage || 0).toLocaleString()} HP</span>${mg}${gd}`;
 }
 
 // Estado de la batalla real en curso (para SALTAR: aplica el resto del
@@ -2819,10 +3027,11 @@ function playServerBattle(fighter, res) {
   // por raza solo queda como respaldo para logs viejos sin side.
   const isP1Hit = e => e.side ? e.side==='p1' : e.attacker===fighter.race;
   const dmgToP2 = res.log.filter(e=>isP1Hit(e)&&e.damage).reduce((a,e)=>a+e.damage,0);
-  // El HP máximo del rival es el REAL del servidor (res.opponent.vida);
+  // El HP máximo del rival es el REAL del servidor (res.opponent.max_hp,
+  // con res.opponent.vida como respaldo para respuestas viejas);
   // antes se estimaba con el daño total recibido, por eso la barra y
   // la vida final no cuadraban con el log.
-  const p2Max = (res.opponent && res.opponent.vida) || Math.max(1, dmgToP2);
+  const p2Max = (res.opponent && (res.opponent.max_hp || res.opponent.vida)) || Math.max(1, dmgToP2);
   const p1Max = s1.hp;
   const p2Race = (res.opponent && res.opponent.race) || (res.log.map(e=>e.attacker).find(r=>r!==fighter.race)) || 'Rival';
   const p2Name = (res.opponent && res.opponent.display_name) || (res.opponent && res.opponent.lineage ? defaultName(res.opponent) : p2Race);
@@ -2882,16 +3091,18 @@ function applyServerBattleEntry(e, withStage){
     }
   } else if(e.type==='block'){
     if(withStage){ stageLunge(attSide); fighterPose(defSide,'f-guard',520); stageFloat(defSide,'🛡 BLOQUEADO','dmg-block'); }
+  } else if(e.type==='defend'){
+    if(withStage){ fighterPose(attSide,'f-guard',520); stageFloat(attSide,'🛡 GUARDIA','dmg-block'); }
   } else if(e.type==='crit'){
-    if(withStage){ fighterPose(attSide,'f-crit',560); stageLunge(attSide); stageShake(defSide); stageFloat(defSide,'💥 CRÍTICO −'+(e.damage||0).toLocaleString()+' HP','dmg-crit'); }
+    if(withStage){ fighterPose(attSide,'f-crit',560); stageLunge(attSide); stageShake(defSide); stageFloat(defSide,'💥 CRÍTICO −'+(e.damage||0).toLocaleString()+' HP'+(e.guarded?' 🛡':''),'dmg-crit'); }
   } else if(e.type==='reflect'){
     if(withStage){
       stageLunge(attSide); fighterPose(defSide,'f-guard',520); stageShake(defSide);
-      stageFloat(defSide,'−'+(e.damage||0).toLocaleString()+' HP','dmg-normal');
+      stageFloat(defSide,'−'+(e.damage||0).toLocaleString()+' HP'+(e.guarded?' 🛡':''),'dmg-normal');
       if(e.reflected){ stageShake(attSide); stageFloat(attSide,'−'+e.reflected.toLocaleString()+' HP · REFLEJO','dmg-reflect'); }
     }
   } else if(e.type==='normal' && e.damage){
-    if(withStage){ fighterPose(attSide, fighterNextMove(attSide), 520); stageLunge(attSide); stageShake(defSide); stageFloat(defSide,'−'+(e.damage||0).toLocaleString()+' HP','dmg-normal'); }
+    if(withStage){ fighterPose(attSide, fighterNextMove(attSide), 520); stageLunge(attSide); stageShake(defSide); stageFloat(defSide,'−'+(e.damage||0).toLocaleString()+' HP'+(e.guarded?' 🛡':''),'dmg-normal'); }
   }
   // Números (siempre, con o sin animación): la barra y la vida final
   // deben cuadrar con el log aunque se salte la animación.
