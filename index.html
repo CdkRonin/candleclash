@@ -335,7 +335,7 @@
       <div class="bg-panel2 border border-gray-700 rounded-xl p-3 mb-4 w-full max-w-xs text-xs space-y-1">
         <p class="text-tick font-bold text-center mb-2">🔄 ¿Qué es el Renacimiento?</p>
         <p class="text-muted">• Requisito: un gladiador en Nivel 50 y una copia idéntica (misma raza y linaje) también en Nivel 50.</p>
-        <p class="text-muted">• Al renacer vuelve al Nivel 1 con +20% permanente en todos sus stats.</p>
+        <p class="text-muted">• Al renacer vuelve al Nivel 1 con +50% permanente en todos sus stats.</p>
         <p class="text-muted">• Se puede renacer hasta 5 veces.</p>
         <p class="text-muted">Costo: <span class="text-tick font-bold">100 $TICK</span></p>
       </div>
@@ -931,7 +931,7 @@ function getStats(nft) {
   };
   const rMult = RARITIES[nft.rarity]?.mult || 1;
   const lMult = 1 + (nft.level - 1) * 0.07;
-  const rebBonus = 1 + (nft.rebirths || 0) * 0.20;
+  const rebBonus = 1 + (nft.rebirths || 0) * 0.50;
   const m = rMult * lMult * rebBonus;
   return {
     hp:  Math.round((nft.baseHp  || 500) * raceMult(nft.race, 'vida') * m),
@@ -946,7 +946,7 @@ function getStats(nft) {
 // demo, y se bloquean por debajo de su nivel de desbloqueo.
 function fullStats(nft) {
   if(nft.stats) return {...nft.stats};
-  const m = (RARITIES[nft.rarity]?.mult || 1) * (1 + (nft.level - 1) * 0.07) * (1 + (nft.rebirths || 0) * 0.20);
+  const m = (RARITIES[nft.rarity]?.mult || 1) * (1 + (nft.level - 1) * 0.07) * (1 + (nft.rebirths || 0) * 0.50);
   const out = {};
   for(const meta of STATS_META) {
     const k = meta.key;
@@ -2240,7 +2240,7 @@ function checkForgeRenReady() {
   prev.classList.remove('hidden');
   const rebirthsAfter=(main.rebirths||0)+1;
   if(valid&&rebirthsAfter<=MAX_REBIRTHS){
-    document.getElementById('ren-preview-text').innerHTML=`${main.race}/${main.lineage} renacerá al Lv1 con +${rebirthsAfter*20}% stats permanente`;
+    document.getElementById('ren-preview-text').innerHTML=`${main.race}/${main.lineage} renacerá al Lv1 con +${rebirthsAfter*50}% stats permanente`;
     btn.disabled=false; btn.classList.remove('opacity-40','cursor-not-allowed');
   } else if(rebirthsAfter>MAX_REBIRTHS){
     document.getElementById('ren-preview-text').innerHTML=`<span class="text-bear">Máximo de renacimientos (${MAX_REBIRTHS}) alcanzado</span>`;
@@ -2255,7 +2255,7 @@ async function executeRebirth() {
   if(!main||!sac) return;
   // REAL con sesión: POST /api/forge/rebirth {main_id, sacrifice_id}.
   // Cuesta 100 $TICK; ambos Lv50, misma raza+linaje (la rareza no
-  // tiene que coincidir). El principal vuelve a Lv1 con +20% por renacimiento.
+  // tiene que coincidir). El principal vuelve a Lv1 con +50% por renacimiento.
   if(apiToken){
     try{
       const res=await apiFetch('/api/forge/rebirth',{method:'POST',
@@ -2276,7 +2276,7 @@ async function executeRebirth() {
   const target=inventory.find(n=>n.id===main.id);
   if(target){target.level=1;target.xp=0;target.rebirths=(target.rebirths||0)+1;}
   updateHeader(); resetAllForge(); bumpMission('forge');
-  alert(`🔄 ¡RENACIMIENTO COMPLETADO!\n${main.race}/${main.lineage} volvió al Lv1\n+${target.rebirths*20}% stats permanente\n−100 $TICK`);
+  alert(`🔄 ¡RENACIMIENTO COMPLETADO!\n${main.race}/${main.lineage} volvió al Lv1\n+${target.rebirths*50}% stats permanente\n−100 $TICK`);
   showView('view-barracks');
 }
 
