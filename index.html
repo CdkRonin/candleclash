@@ -656,6 +656,39 @@ const RACE_MODIFIERS = {
   'Alienígena':{reflejo:1.20, prob_critico:1.20, defensa:0.90},
 };
 function raceMult(race, stat){ return (RACE_MODIFIERS[race]||{})[stat] || 1; }
+// Nivel de desbloqueo de cada stat: MISMA TABLA que STAT_UNLOCK_LEVEL
+// en backend/config.py. Por debajo de su nivel el stat vale 0 en pelea
+// y la tarjeta lo muestra gris con candado (🔒 NvX).
+const STAT_UNLOCK_LEVEL = {
+  vida:1, atq_fisico:1, prob_critico:1, prob_bloqueo:1, reflejo:1,
+  prob_reflejo:5, defensa:10, critico:15, prioridad:20, vel_ataque:25,
+  atq_magico:30, def_magica:35, bloqueo:40, recuperacion:45, vel_recup:50,
+};
+// Los 15 stats, en el orden en que se desbloquean. crypto = la cripto
+// del linaje que sube ese stat con el precio en vivo (ver
+// CRYPTO_ATTRIBUTE_MAP en el backend). max = tope de la barra en la ficha.
+const STATS_META = [
+  {key:'vida',         label:'HP',          crypto:'ETH',  max:15000},
+  {key:'atq_fisico',   label:'ATQ',         crypto:'BTC',  max:5000},
+  {key:'prob_critico', label:'Prob. crít.', crypto:'ADA',  prob:true},
+  {key:'prob_bloqueo', label:'Prob. bloq.', crypto:'SUI',  prob:true},
+  {key:'reflejo',      label:'Reflejo',     crypto:'SHIB', max:3000},
+  {key:'prob_reflejo', label:'Prob. refl.', crypto:'DOT',  prob:true},
+  {key:'defensa',      label:'DEF',         crypto:'BNB',  max:3000},
+  {key:'critico',      label:'Crítico',     crypto:'LINK', max:3000},
+  {key:'prioridad',    label:'Prioridad',   crypto:'XRP',  max:3000},
+  {key:'vel_ataque',   label:'VEL',         crypto:'SOL',  max:2000},
+  {key:'atq_magico',   label:'ATQ mág.',    crypto:'AVAX', max:5000},
+  {key:'def_magica',   label:'DEF mág.',    crypto:'TRX',  max:3000},
+  {key:'bloqueo',      label:'Bloqueo',     crypto:'XAU',  max:3000},
+  {key:'recuperacion', label:'Recuperación',crypto:'DOGE', max:3000},
+  {key:'vel_recup',    label:'Vel. recup.', crypto:'LTC',  max:3000},
+];
+// Bases por defecto del modelo GladiatorStats (backend/models/gladiator.py):
+// los gladiadores de demostración no traen stats del servidor, así que
+// la tarjeta los calcula con estos valores, igual que hace el mint.
+const BASE_DEFAULTS = {vida:500, atq_fisico:95, defensa:45, vel_ataque:30, recuperacion:25, vel_recup:20, prioridad:15, critico:10, prob_critico:0.15, reflejo:8, prob_reflejo:0.08, atq_magico:30, def_magica:25, bloqueo:20, prob_bloqueo:0.10};
+const PROB_CAPS = {prob_critico:0.80, prob_reflejo:0.60, prob_bloqueo:0.50};
 // Habilidades por raza: MISMA TABLA que RACE_ABILITIES en
 // backend/config.py. SOLO para mostrarla y para la batalla demo de
 // invitado; en batallas reales manda el servidor, nunca se calculan
@@ -906,6 +939,46 @@ function getStats(nft) {
     def: nft.level >= 10 ? Math.round((nft.baseDef || 45) * raceMult(nft.race, 'defensa') * m) : 0,
     vel: nft.level >= 25 ? Math.round((nft.baseVel || 30) * raceMult(nft.race, 'vel_ataque') * m) : 0,
   };
+}
+// Los 15 stats efectivos de un gladiador. Con sesión, son los
+// computed_stats del servidor (los bloqueados ya vienen en 0). Como
+// invitado, se calculan con las bases por defecto, igual que el motor
+// demo, y se bloquean por debajo de su nivel de desbloqueo.
+function fullStats(nft) {
+  if(nft.stats) return {...nft.stats};
+  const m = (RARITIES[nft.rarity]?.mult || 1) * (1 + (nft.level - 1) * 0.07) * (1 + (nft.rebirths || 0) * 0.20);
+  const out = {};
+  for(const meta of STATS_META) {
+    const k = meta.key;
+    if(nft.level < STAT_UNLOCK_LEVEL[k]) { out[k] = 0; continue; }
+    const base = k==='vida' ? (nft.baseHp||500) : k==='atq_fisico' ? (nft.baseAtq||95)
+      : k==='defensa' ? (nft.baseDef||45) : k==='vel_ataque' ? (nft.baseVel||30) : BASE_DEFAULTS[k];
+    if(meta.prob) out[k] = Math.round(Math.min(PROB_CAPS[k], base * raceMult(nft.race, k)) * 1000) / 1000;
+    else out[k] = Math.max(1, Math.round(base * raceMult(nft.race, k) * m));
+  }
+  return out;
+}
+// Filas compactas (2 columnas) con los 15 stats para la tarjeta de
+// Barracas: el bloqueado va en gris con candado y el nivel que lo abre.
+function statRowsHtml(nft) {
+  const fs = fullStats(nft);
+  return STATS_META.map(meta=>{
+    const locked = nft.level < STAT_UNLOCK_LEVEL[meta.key];
+    if(locked) return `<div class="flex justify-between text-[9px] text-gray-600"><span>${meta.label}</span><span class="font-mono">🔒 Nv${STAT_UNLOCK_LEVEL[meta.key]}</span></div>`;
+    const val = meta.prob ? (fs[meta.key]*100).toFixed(0)+'%' : fs[meta.key].toLocaleString();
+    return `<div class="flex justify-between text-[9px]"><span class="text-muted">${meta.label}</span><span class="font-mono">${val}</span></div>`;
+  }).join('');
+}
+// Lista completa para la ficha: barra para los números, % para las
+// probabilidades y línea de candado para los bloqueados.
+function fichaStatsHtml(nft) {
+  const fs = fullStats(nft);
+  return STATS_META.map(meta=>{
+    const locked = nft.level < STAT_UNLOCK_LEVEL[meta.key];
+    if(locked) return `<p class="text-[10px] text-muted">🔒 ${meta.label} — Requiere Lv${STAT_UNLOCK_LEVEL[meta.key]} · ${meta.crypto}</p>`;
+    if(meta.prob) return `<div class="flex justify-between text-[10px]"><span class="text-muted">${meta.label} <span class="text-[8px]">· ${meta.crypto}</span></span><span class="font-mono">${(fs[meta.key]*100).toFixed(1)}%</span></div>`;
+    return sbar(meta.label, fs[meta.key], meta.max, '#00C853');
+  }).join('');
 }
 function addXP(nft, xpGained) {
   // Returns {levelsGained, leveledUp}
@@ -1344,6 +1417,10 @@ function nftCard(nft, opts={}) {
           ${nft.level>=10?`<div class="flex justify-between text-[9px]"><span class="text-bull">DEF</span><span class="font-mono">${s.def.toLocaleString()}</span></div>`:''}
           ${nft.level>=25?`<div class="flex justify-between text-[9px]"><span class="text-tick">VEL</span><span class="font-mono">${s.vel.toLocaleString()}</span></div>`:''}
         </div>
+        <details class="mt-1.5" onclick="event.stopPropagation()">
+          <summary class="text-[8px] text-muted cursor-pointer select-none">Ver los 15 stats</summary>
+          <div class="grid grid-cols-2 gap-x-2 mt-1">${statRowsHtml(nft)}</div>
+        </details>
       </div>
     </div>`;
 }
@@ -1709,16 +1786,13 @@ function openNFTDetail(id) {
     </div>
     <div class="bg-panel2 rounded-xl p-3 space-y-1.5">
       <p class="text-[10px] text-muted font-bold tracking-widest mb-1">STATS ACTUALES</p>
-      ${sbar('HP', s.hp,15000,'#00C853')}
-      ${sbar('ATQ',s.atq,5000,'#FF3D00')}
-      ${nft.level>=10?sbar('DEF',s.def,3000,'#00C853'):'<p class="text-[10px] text-muted">🔒 DEF — Requiere Lv10</p>'}
-      ${nft.level>=25?sbar('VEL',s.vel,2000,'#FFD700'):'<p class="text-[10px] text-muted">🔒 VEL — Requiere Lv25</p>'}
+      ${fichaStatsHtml(nft)}
     </div>`;
   openModal('modal-nft');
 }
 function sbar(label,val,max,color){
   const pct=Math.min(100,Math.round(val/max*100));
-  return `<div class="flex items-center gap-2"><span class="text-[10px] w-8 text-muted">${label}</span><div class="flex-1 h-1.5 bg-gray-800 rounded"><div class="h-full rounded" style="width:${pct}%;background:${color}"></div></div><span class="text-[9px] font-mono w-10 text-right">${val.toLocaleString()}</span></div>`;
+  return `<div class="flex items-center gap-2"><span class="text-[10px] w-24 text-muted">${label}</span><div class="flex-1 h-1.5 bg-gray-800 rounded"><div class="h-full rounded" style="width:${pct}%;background:${color}"></div></div><span class="text-[9px] font-mono w-12 text-right">${val.toLocaleString()}</span></div>`;
 }
 
 // =============================================
