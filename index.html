@@ -2812,7 +2812,12 @@ let serverBattle=null, serverBattleTimer=null;
 
 function playServerBattle(fighter, res) {
   const s1 = getStats(fighter); // stats del servidor (computed_stats)
-  const isP1Hit = e => e.attacker===fighter.race; // si ambos tienen la misma raza, es ambiguo
+  // El bando se lee del log (side: "p1"/"p2"): NO se deduce por la raza,
+  // porque el rival puede ser de la misma raza que el jugador y entonces
+  // todos los golpes parecían del jugador (la barra del rival bajaba el
+  // doble de rápido y seguía recibiendo golpes tras morir). La comparación
+  // por raza solo queda como respaldo para logs viejos sin side.
+  const isP1Hit = e => e.side ? e.side==='p1' : e.attacker===fighter.race;
   const dmgToP2 = res.log.filter(e=>isP1Hit(e)&&e.damage).reduce((a,e)=>a+e.damage,0);
   // El HP máximo del rival es el REAL del servidor (res.opponent.vida);
   // antes se estimaba con el daño total recibido, por eso la barra y
