@@ -3341,7 +3341,7 @@ function renderP2PListings() {
           <div class="text-right flex-none">
             <p class="text-sm font-mono font-bold text-bull">${l.price} USDT</p>
             ${mine
-              ? '<p class="mt-1 text-[10px] font-bold text-tick">TU ANUNCIO</p>'
+              ? `<p class="mt-1 text-[10px] font-bold text-tick">TU ANUNCIO</p><button onclick="cancelListing('${l.id}')" class="mt-1 text-bear text-[10px] font-bold px-2 py-1 rounded border border-bear">CANCELAR</button>`
               : `<button onclick="buyListedNFT('${l.id}')" class="mt-1 bg-bull text-black font-bold py-1 px-3 rounded-lg text-[10px]">COMPRAR</button>`}
           </div>
         </div>`;
@@ -3394,18 +3394,16 @@ function renderSellPanel() {
     </div>`;
   }).join('');
   // Mis anuncios: con sesión vienen del servidor (seller == yo); sin
-  // sesión, de la lista local. El backend NO tiene cancelar: un anuncio
-  // real sigue activo hasta que alguien lo compre (se avisa en la UI).
+  // sesión, de la lista local. Un anuncio real se puede cancelar con
+  // DELETE /api/market/listings/{listing_id}: el NFT vuelve al inventario.
   const myListings = apiToken ? realListings.filter(isMyListing) : playerListings;
   document.getElementById('p2p-my-listings').innerHTML = myListings.length===0 ? '' :
     `<p class="text-[10px] text-muted font-bold tracking-widest mb-2 mt-3">${myListings.length===1?'TU ANUNCIO':'TUS ANUNCIOS'} (${myListings.length})</p>` +
     myListings.map(l=>`<div class="bg-panel2 border border-gray-700 rounded-xl p-2 flex items-center justify-between">
       <p class="text-xs">${l.nft.race}/${l.nft.lineage} · <span class="text-bull font-bold">${l.price} USDT</span></p>
-      ${apiToken
-        ? '<span class="text-[9px] text-muted">Sin cancelación todavía</span>'
-        : `<button onclick="cancelListing('${l.id}')" class="text-bear text-[10px] font-bold px-2 py-1 rounded border border-bear">CANCELAR</button>`}
+      <button onclick="cancelListing('${l.id}')" class="text-bear text-[10px] font-bold px-2 py-1 rounded border border-bear">CANCELAR</button>
     </div>`).join('') +
-    (apiToken && myListings.length>0 ? '<p class="text-[10px] text-yellow-300 mt-2">Los anuncios reales no se pueden cancelar todavía: seguirán activos hasta que alguien los compre. Al vender, recibes el precio menos 5% de comisión.</p>' : '');
+    (apiToken && myListings.length>0 ? '<p class="text-[10px] text-yellow-300 mt-2">Al vender, recibes el precio menos 5% de comisión. Puedes cancelar el anuncio cuando quieras: el NFT vuelve a tu inventario.</p>' : '');
 }
 function selectP2PNFT(id) {
   selectedP2PNFT=inventory.find(n=>n.id===id);
@@ -3429,7 +3427,7 @@ async function listNFTForSale() {
       selectedP2PNFT=null;
       await loadMyGladiators();
       await loadRealListings();
-      alert(`📋 NFT publicado por ${price.toFixed(2)} USDT\nRecibirás ${((price*0.95).toFixed(2))} USDT al venderse (5% de comisión).\nNo se puede cancelar todavía: el anuncio seguirá activo hasta que alguien lo compre.`);
+      alert(`📋 NFT publicado por ${price.toFixed(2)} USDT\nRecibirás ${((price*0.95).toFixed(2))} USDT al venderse (5% de comisión).\nPuedes cancelarlo cuando quieras desde "Tus anuncios".`);
       renderSellPanel(); renderP2PListings();
     }catch(e){ alert('No se pudo publicar: '+e.message); }
     return;
@@ -3441,10 +3439,24 @@ async function listNFTForSale() {
   alert(`📋 NFT publicado por ${price.toFixed(2)} USDT`);
   renderSellPanel(); renderP2PListings();
 }
-function cancelListing(id) {
-  // Sin endpoint de cancelar en el backend: un anuncio real no se
-  // puede retirar desde el juego (sigue activo hasta que se venda).
-  if(apiToken){ alert('Los anuncios reales aún no se pueden cancelar: el anuncio seguirá activo hasta que alguien lo compre.'); return; }
+async function cancelListing(id) {
+  // REAL con sesión: DELETE /api/market/listings/{listing_id}. Solo el
+  // vendedor puede cancelar su anuncio y solo si sigue activo; el NFT
+  // vuelve a is_listed=False y reaparece en tu inventario.
+  if(apiToken){
+    const l=realListings.find(x=>x.id===id);
+    if(!l){ alert('Anuncio no disponible'); return; }
+    if(!confirm(`¿Cancelar el anuncio de ${l.nft.race}/${l.nft.lineage} ${l.nft.rarity} Lv${l.nft.level} por ${l.price} USDT?\nEl NFT volverá a tu inventario.`)) return;
+    try{
+      await apiFetch('/api/market/listings/'+encodeURIComponent(id),{method:'DELETE'});
+      await loadMyGladiators();
+      await loadRealListings();
+      renderSellPanel(); renderP2PListings();
+      alert('✅ Anuncio cancelado. El NFT volvió a tu inventario.');
+    }catch(e){ alert('No se pudo cancelar: '+e.message); }
+    return;
+  }
+  // DEMO sin sesión: como antes, en local.
   const l=playerListings.find(x=>x.id===id); if(!l) return;
   inventory.push({...l.nft,id:nextId++});
   playerListings=playerListings.filter(x=>x.id!==id);
