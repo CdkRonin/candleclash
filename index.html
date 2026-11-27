@@ -561,6 +561,16 @@
           <button onclick="sellTick()" class="bg-bear text-white font-bold py-2 px-4 rounded-lg text-sm">VENDER</button>
         </div>
         <p id="sell-tick-preview" class="text-xs text-muted font-mono">→ Recibirás 0.00 USDT</p>
+        <p class="text-[11px] text-muted mt-1">El $TICK ganado se vende hasta 17 al día (tope duro). La ventana mensual es un proceso aparte, abajo.</p>
+      </div>
+      <div class="bg-panel border border-gray-800 rounded-xl p-4">
+        <p class="text-xs font-bold mb-3 text-tick">USAR VENTANA MENSUAL</p>
+        <div class="flex gap-2 mb-2">
+          <input id="sell-window-input" type="number" min="10" step="10" placeholder="$TICK ganado a vender" class="flex-1 bg-panel2 border border-gray-600 rounded-lg px-3 py-2 text-sm font-mono text-white focus:border-bear outline-none" oninput="updateWindowPreview()"/>
+          <button onclick="sellTickWindow()" class="bg-tick text-black font-bold py-2 px-4 rounded-lg text-sm">USAR VENTANA</button>
+        </div>
+        <p id="sell-window-preview" class="text-xs text-muted font-mono">→ Recibirás 0.00 USDT</p>
+        <p class="text-[11px] text-muted mt-1">Vende solo $TICK ganado, hasta lo que te queda de ventana este mes (500). No toca el tope diario ni el $TICK comprado.</p>
       </div>
     </div>
   </div>
@@ -3592,7 +3602,7 @@ function renderTickDisplay() {
   const lim=document.getElementById('tick-limits-display');
   if(lim){
     lim.textContent=(typeof PLAYER.earnedDailyRemaining==='number')
-      ? `Venta de ganado: quedan ${PLAYER.earnedDailyRemaining} hoy · ventana mensual ${PLAYER.windowRemaining}`
+      ? `Venta de ganado: quedan ${PLAYER.earnedDailyRemaining} hoy · Ventana mensual: ${PLAYER.windowRemaining} (proceso aparte)`
       : '';
   }
 }
@@ -3643,7 +3653,7 @@ async function sellTick() {
       document.getElementById('sell-tick-preview').textContent='→ Recibirás 0.00 USDT';
       let msg=`✅ Vendiste ${res.tick_sold.toLocaleString()} $TICK\n+${res.usdt_received} USDT (comisión del 20% ya aplicada)`;
       if(typeof res.sold_from_bought==='number')
-        msg+=`\nComprado: ${res.sold_from_bought} · Ganado: ${res.sold_from_earned_daily+res.sold_from_earned_window} (día ${res.sold_from_earned_daily} + ventana ${res.sold_from_earned_window})`;
+        msg+=`\nComprado: ${res.sold_from_bought} · Ganado (tope diario): ${res.sold_from_earned_daily}`;
       alert(msg);
     }catch(e){ alert('No se pudo vender $TICK: '+e.message); }
     return;
@@ -3656,6 +3666,27 @@ async function sellTick() {
   document.getElementById('sell-tick-input').value='';
   document.getElementById('sell-tick-preview').textContent='→ Recibirás 0.00 USDT';
   alert(`✅ Vendiste ${ticks.toLocaleString()} $TICK\n+${usdt} USDT (comisión del 20% ya aplicada)`);
+}
+
+function updateWindowPreview() {
+  const ticks=parseFloat(document.getElementById('sell-window-input').value)||0;
+  document.getElementById('sell-window-preview').textContent=`→ Recibirás ${(ticks*0.08).toFixed(2)} USDT (comisión del 20% ya aplicada)`;
+}
+async function sellTickWindow() {
+  const ticks=parseFloat(document.getElementById('sell-window-input').value)||0;
+  if(ticks<10){alert('Mínimo 10 $TICK');return;}
+  // La ventana mensual es un proceso aparte: solo con sesión.
+  if(!apiToken){alert('La ventana mensual necesita sesión: entra con MetaMask para usarla.');return;}
+  // REAL con sesión: POST /api/market/tick/sell-window {tick_amount}.
+  // Solo vende $TICK ganado, hasta lo que queda de ventana (500/mes).
+  try{
+    const res=await apiFetch('/api/market/tick/sell-window',{method:'POST',body:JSON.stringify({tick_amount:Math.floor(ticks)})});
+    await syncProfileFromServer();
+    renderTickDisplay();
+    document.getElementById('sell-window-input').value='';
+    document.getElementById('sell-window-preview').textContent='→ Recibirás 0.00 USDT';
+    alert(`✅ Vendiste ${res.tick_sold.toLocaleString()} $TICK con la ventana mensual\n+${res.usdt_received} USDT (comisión del 20% ya aplicada)\nVentana restante este mes: ${res.window_remaining}`);
+  }catch(e){ alert('No se pudo vender con la ventana: '+e.message); }
 }
 
 // =============================================
