@@ -377,15 +377,27 @@
       <div id="arena-fighter-grid" class="grid grid-cols-2 gap-3 mb-4"></div>
       <p id="arena-selected-label" class="text-center text-xs font-bold text-bull mb-2"></p>
       <p id="arena-energy" class="text-center text-xs font-mono font-bold text-yellow-300 mb-2">⚡ Energía: 10/10</p>
-      <!-- Modo de batalla: automática (el servidor simula todo) o duelo
-           táctico (eliges la acción en cada ronda). El táctico necesita
-           sesión: es un duelo en el servidor, ronda a ronda. -->
+      <!-- Modo de batalla: automática (el servidor simula todo), duelo
+           táctico (eliges la acción en cada ronda) o duelo con entrada
+           (10 $TICK: ganas 18, el empate te devuelve la entrada).
+           Los dos tácticos necesitan sesión: viven en el servidor. -->
       <div class="flex gap-1 bg-panel2 rounded-xl p-1 mb-2">
         <button id="mode-auto" onclick="setBattleMode('auto')" class="flex-1 text-xs font-bold py-2 rounded-lg tab-active-bull">🤖 Automática</button>
         <button id="mode-duel" onclick="setBattleMode('duel')" class="flex-1 text-xs font-bold py-2 rounded-lg text-muted">🎮 Duelo táctico</button>
+        <button id="mode-paid" onclick="setBattleMode('paid')" class="flex-1 text-xs font-bold py-2 rounded-lg text-muted">💰 Con entrada</button>
       </div>
       <p id="mode-note" class="text-center text-[10px] text-muted mb-2">La batalla automática se simula sola en el servidor.</p>
       <button onclick="startBattle()" id="arena-fight-btn" class="w-full bg-bull text-black font-bold py-4 rounded-xl text-base opacity-40 cursor-not-allowed" disabled>BUSCAR OPONENTE</button>
+      <!-- Coliseo táctico: evento de 24 h, cupo 50, entrada 10 $TICK.
+           Cada victoria en duelo táctico suma 1 punto; al cerrar, el
+           pozo se reparte entre el top 10. Se carga desde el servidor
+           (con sesión); sin sesión solo se muestra el aviso. -->
+      <div id="coliseum-card" class="bg-panel border-2 border-tick rounded-xl p-3 mt-3">
+        <p class="text-xs font-bold text-center mb-1">🏟️ Coliseo · Premio al top 10</p>
+        <p id="coliseum-status" class="text-[10px] text-muted text-center">Cargando coliseo...</p>
+        <div id="coliseum-table" class="mt-2"></div>
+        <button id="coliseum-enter-btn" onclick="enterColiseum()" class="w-full bg-tick text-black font-bold py-2 rounded-xl text-xs mt-2 opacity-40 cursor-not-allowed" disabled>ENTRAR AL COLISEO (10 $TICK)</button>
+      </div>
     </div>
     <!-- Vista previa del rival: se muestra antes de gastar energía -->
     <div id="arena-preview" class="hidden flex flex-col items-center">
@@ -1147,12 +1159,16 @@ function updateFightButton(){
   const btn=document.getElementById('arena-fight-btn');
   if(!btn) return;
   const noEnergy = energyState.energy<1;
-  const canFight = !!selectedFighter && !noEnergy;
+  // Duelo con entrada: además de energía, hacen falta 10 $TICK.
+  const noTick = battleMode==='paid' && apiToken && PLAYER.tick<10;
+  const canFight = !!selectedFighter && !noEnergy && !noTick;
   btn.disabled=!canFight;
   btn.classList.toggle('opacity-40',!canFight);
   btn.classList.toggle('cursor-not-allowed',!canFight);
   btn.textContent = noEnergy
     ? 'SIN ENERGÍA · PRÓXIMA EN '+Math.max(1,energyState.nextInMin||0)+' MIN'
+    : noTick ? 'FALTAN $TICK · NECESITAS 10 PARA LA ENTRADA'
+    : battleMode==='paid' ? 'DUELO CON ENTRADA (10 $TICK)'
     : battleMode==='duel' ? 'INICIAR DUELO' : 'BUSCAR OPONENTE';
   const eEl=document.getElementById('arena-energy');
   if(eEl) eEl.textContent = energyState.energy<ENERGY_MAX
@@ -2353,6 +2369,7 @@ function renderArenaSelect() {
   if(!apiToken) energyState=guestEnergyState(); // invitado: regenerar en local
   fillArenaControls();
   updateFightButton(); // habilita solo con luchador elegido Y energía > 0
+  loadColiseum(); // refresca la tarjeta del coliseo (solo con sesión)
   // Con sesión, la arena SOLO lista gladiadores REALES (del servidor).
   // Los de las cajas simuladas no pelean batallas reales ni gastan
   // energía: antes se mezclaban con los reales y pelear con uno de
@@ -2454,22 +2471,26 @@ function cancelPreview(){
   document.getElementById('arena-select').classList.remove('hidden');
 }
 function confirmBattle(){ runDemoBattle(previewOpponentNft); }
-// Modo de batalla: 'auto' (el servidor simula todo) o 'duel' (por
-// turnos, eliges la acción en cada ronda). El duelo táctico necesita
-// sesión: vive en el servidor, ronda a ronda.
+// Modo de batalla: 'auto' (el servidor simula todo), 'duel' (por
+// turnos, eliges la acción en cada ronda) o 'paid' (duelo táctico con
+// entrada de 10 $TICK: ganas 18, el empate te devuelve la entrada).
+// Los tácticos necesitan sesión: viven en el servidor, ronda a ronda.
 let battleMode='auto';
 function setBattleMode(m){
-  if(m==='duel' && !apiToken){
+  if((m==='duel'||m==='paid') && !apiToken){
     alert('El duelo táctico necesita sesión: inicia sesión con MetaMask para jugar por turnos.');
     return;
   }
   battleMode=m;
-  const a=document.getElementById('mode-auto'), d=document.getElementById('mode-duel');
-  if(a){ a.classList.toggle('tab-active-bull', m==='auto'); a.classList.toggle('text-muted', m!=='auto'); }
-  if(d){ d.classList.toggle('tab-active-bull', m==='duel'); d.classList.toggle('text-muted', m!=='duel'); }
+  [['mode-auto','auto'],['mode-duel','duel'],['mode-paid','paid']].forEach(([id,mode])=>{
+    const b=document.getElementById(id);
+    if(b){ b.classList.toggle('tab-active-bull', m===mode); b.classList.toggle('text-muted', m!==mode); }
+  });
   const note=document.getElementById('mode-note');
   if(note) note.textContent = m==='duel'
     ? 'Duelo táctico: eliges Atacar, Habilidad o Defender en cada ronda. 1 energía.'
+    : m==='paid'
+    ? 'Duelo con entrada: pagas 10 $TICK. Ganas 18 $TICK, el empate te devuelve la entrada. 1 energía.'
     : 'La batalla automática se simula sola en el servidor.';
   updateFightButton();
 }
@@ -2485,7 +2506,7 @@ function startBattle() {
     return;
   }
   // Gladiador real: la batalla se simula en el servidor.
-  if(selectedFighter.fromApi && apiToken) { if(battleMode==='duel'){ startDuelReal(); return; } startBattleReal(); return; }
+  if(selectedFighter.fromApi && apiToken) { if(battleMode==='duel'){ startDuelReal(false); return; } if(battleMode==='paid'){ startDuelReal(true); return; } startBattleReal(); return; }
   // Invitado (demo): primero se muestra el rival para confirmar.
   previewOpponent();
 }
@@ -2830,7 +2851,7 @@ async function startBattleReal() {
 // igual que una batalla automática (1 s por entrada del log).
 let duelBattle=null;
 
-async function startDuelReal() {
+async function startDuelReal(paid) {
   const fighter = selectedFighter;
   battleResultApplied=false;
   duelBattle=null; serverBattle=null;
@@ -2843,9 +2864,11 @@ async function startDuelReal() {
   document.getElementById('battle-log').innerHTML = '';
   try {
     const res = await apiFetch('/api/battle/duel/start', {method:'POST',
-      body: JSON.stringify({gladiator_id: fighter.token_id})});
-    // La energía se cobra al empezar el duelo: se refleja ya.
+      body: JSON.stringify({gladiator_id: fighter.token_id, paid: !!paid})});
+    // La energía se cobra al empezar el duelo: se refleja ya. La
+    // entrada (si es duelo pagado) también: se cobra al empezar.
     if(typeof res.energy==='number') setEnergyFromServer(res.energy, res.energy_next_in_min||0);
+    if(res.paid) syncProfileFromServer();
     const s1 = getStats(fighter);
     const p2Max = (res.opponent && (res.opponent.max_hp || res.opponent.vida)) || 1;
     const p2Race = (res.opponent && res.opponent.race) || 'Rival';
@@ -2862,10 +2885,10 @@ async function startDuelReal() {
     document.getElementById('p1-bar').style.width='100%';
     document.getElementById('p2-bar').style.width='100%';
     document.getElementById('battle-round').textContent='RONDA 1';
-    document.getElementById('battle-status').textContent=`Duelo táctico · Rival: ${p2Name} · ${res.opponent.rarity} Lv${res.opponent.level} · Elige tu acción`;
+    document.getElementById('battle-status').textContent=`Duelo táctico${res.paid?' con entrada (10 $TICK · ganas 18)':''} · Rival: ${p2Name} · ${res.opponent.rarity} Lv${res.opponent.level} · Elige tu acción`;
     stageReset();
     duelBattle={duel_id:res.duel_id,fighter,p2Name,p1Hp:s1.hp,p2Hp:p2Max,p1Max:s1.hp,p2Max,
-      curRound:1,ability:res.p1.ability,cd:res.p1.cd,playing:false,done:false,
+      curRound:1,ability:res.p1.ability,cd:res.p1.cd,playing:false,done:false,paid:!!res.paid,
       isP1Hit:e=>e.side?e.side==='p1':e.attacker===fighter.race};
     document.getElementById('duel-actions').classList.remove('hidden');
     updateDuelButtons();
@@ -2978,13 +3001,93 @@ function showDuelResult(db, res) {
   document.getElementById('result-title').textContent=win?'¡VICTORIA!':draw?'EMPATE':'DERROTA';
   document.getElementById('result-title').className=`text-2xl font-extrabold mb-1 ${win?'text-bull':draw?'text-tick':'text-bear'}`;
   const oppInfo = res.opponent ? ` · ${res.opponent.rarity} Lv${res.opponent.level}` : '';
-  document.getElementById('result-sub').textContent=`Duelo táctico · ${res.round} rondas · vs ${db.p2Name}${oppInfo}${rw.leveled_up?' · ¡Subiste al Lv'+rw.level_after+'! 🎉':''}`;
+  document.getElementById('result-sub').textContent=`Duelo táctico${db.paid?' con entrada':''} · ${res.round} rondas · vs ${db.p2Name}${oppInfo}${rw.leveled_up?' · ¡Subiste al Lv'+rw.level_after+'! 🎉':''}`;
+  // Duelo con entrada: desglose de la entrada y el premio (el
+  // tick_reward ya es el neto: 18 si ganas, 10 si empatas, 0 si pierdes).
+  const paidLine = rw.paid
+    ? `<div class="flex justify-between text-xs"><span class="text-muted">Entrada</span><span class="text-bear font-mono">−${rw.entry_tick||10} $TICK</span></div>` +
+      (draw
+        ? `<div class="flex justify-between text-xs"><span class="text-muted">Entrada devuelta</span><span class="text-tick font-mono font-bold">+${rw.entry_refunded||0} $TICK</span></div>`
+        : win
+        ? `<div class="flex justify-between text-xs"><span class="text-muted">Premio del duelo</span><span class="text-tick font-mono font-bold">+${rw.prize_tick||0} $TICK</span></div>`
+        : '')
+    : '';
   document.getElementById('result-rewards').innerHTML=`
     <p class="text-[10px] text-muted font-bold tracking-widest mb-2">RECOMPENSAS (SERVIDOR)</p>
+    ${paidLine}
     <div class="flex justify-between text-xs"><span class="text-muted">$TICK</span><span class="text-tick font-mono font-bold">+${rw.tick_reward||0}</span></div>
     <div class="flex justify-between text-xs"><span class="text-muted">XP</span><span class="text-purple-400 font-mono">+${rw.xp_gained||0}</span></div>
     <div id="result-xp-detail"></div>
     <div class="flex justify-between text-xs"><span class="text-muted">Trofeos</span><span class="${win?'text-bull':'text-bear'} font-mono">${(rw.trophies_delta||0)>0?'+'+rw.trophies_delta:rw.trophies_delta||0}</span></div>`;
+  loadColiseum(); // refrescar puntos del coliseo tras el duelo
+}
+
+// Coliseo táctico: evento de 24 h, cupo 50, entrada 10 $TICK.
+// Cada victoria en duelo táctico suma 1 punto; al cerrar, el pozo
+// se reparte entre el top 10. Solo con sesión.
+let coliseumData=null;
+function shortWallet(w){ return w ? w.slice(0,6)+'…'+w.slice(-4) : ''; }
+async function loadColiseum(){
+  const card=document.getElementById('coliseum-card'); if(!card) return;
+  const statusEl=document.getElementById('coliseum-status');
+  if(!apiToken){
+    if(statusEl) statusEl.textContent='Inicia sesión con MetaMask para entrar al coliseo.';
+    const b=document.getElementById('coliseum-enter-btn'); if(b){ b.disabled=true; }
+    return;
+  }
+  try {
+    coliseumData=await apiFetch('/api/battle/coliseum/active');
+    renderColiseum();
+  } catch(e) {
+    if(statusEl) statusEl.textContent='No se pudo cargar el coliseo.';
+  }
+}
+function renderColiseum(){
+  const d=coliseumData; if(!d) return;
+  const statusEl=document.getElementById('coliseum-status');
+  const tableEl=document.getElementById('coliseum-table');
+  const btn=document.getElementById('coliseum-enter-btn');
+  const mins=Math.floor((d.seconds_left||0)/60), hrs=Math.floor(mins/60);
+  const left = d.status==='active' ? (hrs>0 ? `${hrs} h ${mins%60} min` : `${mins} min`) : 'cerrado';
+  if(statusEl) statusEl.textContent = d.status==='active'
+    ? `Abierto · ${d.players}/${d.max_players} inscritos · cierra en ${left} · pozo ${d.players*10} $TICK${d.enrolled?` · Tu puesto: #${d.my_rank||'—'} (${d.my_points||0} pts)`:''}`
+    : `Cerrado (${d.closed_reason==='full'?'lleno':'tiempo'}) · ${d.players} inscritos · pozo de premios ${d.prize_pool} $TICK${d.enrolled?` · Tu puesto: #${d.my_rank||'—'} (${d.my_points||0} pts)`:''}`;
+  if(tableEl){
+    const rows=(d.standings||[]).map(s=>`<div class="flex justify-between text-xs py-0.5">
+      <span class="${s.wallet===apiWallet?'text-bull font-bold':'text-muted'}">#${s.rank} ${escHtml(shortWallet(s.wallet))}${s.wallet===apiWallet?' (tú)':''}</span>
+      <span class="font-mono">${s.points} pts${d.status==='closed'&&s.prize?` · <span class="text-tick font-bold">+${s.prize} $TICK</span>`:''}</span>
+    </div>`).join('');
+    tableEl.innerHTML = rows || '<p class="text-[10px] text-muted text-center">Aún no hay puntos: gana duelos tácticos para sumar.</p>';
+  }
+  if(btn){
+    const canEnter = d.status==='active' && !d.enrolled && !!selectedFighter && PLAYER.tick>=10;
+    btn.disabled=!canEnter;
+    btn.classList.toggle('opacity-40',!canEnter);
+    btn.classList.toggle('cursor-not-allowed',!canEnter);
+    btn.textContent = d.status!=='active' ? 'COLISEO CERRADO'
+      : d.enrolled ? 'YA ESTÁS INSCRITO'
+      : !selectedFighter ? 'ELIGE UN GLADIADOR PARA ENTRAR'
+      : PLAYER.tick<10 ? 'FALTAN $TICK · NECESITAS 10'
+      : 'ENTRAR AL COLISEO (10 $TICK)';
+  }
+}
+async function enterColiseum(){
+  if(!apiToken){ alert('Inicia sesión con MetaMask para entrar al coliseo.'); return; }
+  if(!selectedFighter){ alert('Elige un gladiador primero.'); return; }
+  if(!selectedFighter.fromApi){ alert('Elige uno de tus gladiadores reales.'); return; }
+  if(PLAYER.tick<10){ alert('Necesitas 10 $TICK para entrar al coliseo.'); return; }
+  try {
+    coliseumData=await apiFetch('/api/battle/coliseum/enter', {method:'POST',
+      body: JSON.stringify({gladiator_id: selectedFighter.token_id})});
+    syncProfileFromServer();
+    renderColiseum();
+    alert(coliseumData.status==='closed'
+      ? '¡Entraste y el coliseo se llenó! Se cerró y se pagaron los premios.'
+      : '¡Inscrito en el coliseo! Gana duelos tácticos para sumar puntos.');
+  } catch(e) {
+    alert('No se pudo entrar al coliseo: '+e.message);
+    loadColiseum();
+  }
 }
 
 // Una línea del log de batalla del servidor, en HTML. Mismo formato
