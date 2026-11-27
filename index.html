@@ -525,6 +525,8 @@
         <p class="text-xs text-muted">Tu saldo actual</p>
         <p class="text-2xl font-mono font-bold text-tick mt-1" id="tick-balance-display">1000 $TICK</p>
         <p class="text-xs text-muted">≈ <span id="tick-usdt-equiv">100</span> USDT en valor</p>
+        <p class="text-[11px] text-muted mt-1" id="tick-split-display">Comprado: 0 · Ganado: 0</p>
+        <p class="text-[11px] text-muted" id="tick-limits-display"></p>
       </div>
       <div class="bg-panel2 border border-gray-700 rounded-xl p-3 text-xs space-y-1">
         <p class="text-tick font-bold mb-2">💡 Precio fijo anti-inflación</p>
@@ -1129,6 +1131,11 @@ async function syncProfileFromServer(){
     const u=await apiFetch('/api/auth/me');
     PLAYER.tick=u.tick_balance; PLAYER.usdt=u.usdt_balance; PLAYER.trophies=u.trophies;
     PLAYER.wins=u.wins; PLAYER.losses=u.losses;
+    // Separación $TICK comprado vs ganado + límites de venta
+    // (el servidor los calcula; invitados no los tienen).
+    PLAYER.tickBought=u.tick_bought||0; PLAYER.tickEarned=u.tick_earned||0;
+    PLAYER.earnedDailyRemaining=u.earned_daily_remaining;
+    PLAYER.windowRemaining=u.window_remaining;
     if(typeof u.energy==='number') setEnergyFromServer(u.energy, u.energy_next_in_min||0);
     starterPackClaimed=!!u.starter_pack_claimed;
     updateReclutaButton();
@@ -2948,6 +2955,9 @@ function showDuelResult(db, res) {
   apiFetch('/api/auth/me').then(u=>{
     PLAYER.tick=u.tick_balance; PLAYER.trophies=u.trophies;
     PLAYER.wins=u.wins; PLAYER.losses=u.losses;
+    PLAYER.tickBought=u.tick_bought||0; PLAYER.tickEarned=u.tick_earned||0;
+    PLAYER.earnedDailyRemaining=u.earned_daily_remaining;
+    PLAYER.windowRemaining=u.window_remaining;
     updateHeader();
   }).catch(()=>{ // sin conexión: aplicar las recompensas del resultado localmente
     PLAYER.tick+=rw.tick_reward||0;
@@ -3155,6 +3165,9 @@ function showServerBattleResult(fighter, res, p2Race) {
   apiFetch('/api/auth/me').then(u=>{
     PLAYER.tick=u.tick_balance; PLAYER.trophies=u.trophies;
     PLAYER.wins=u.wins; PLAYER.losses=u.losses;
+    PLAYER.tickBought=u.tick_bought||0; PLAYER.tickEarned=u.tick_earned||0;
+    PLAYER.earnedDailyRemaining=u.earned_daily_remaining;
+    PLAYER.windowRemaining=u.window_remaining;
     updateHeader();
   }).catch(()=>{ // sin conexión: aplicar las recompensas del resultado localmente
     PLAYER.tick+=res.tick_reward;
@@ -3469,6 +3482,16 @@ function renderTickDisplay() {
   const eq=document.getElementById('tick-usdt-equiv');
   if(el) el.textContent=PLAYER.tick.toLocaleString()+' $TICK';
   if(eq) eq.textContent=(PLAYER.tick*0.08).toFixed(2);
+  // Separación comprado vs ganado + límites de venta (solo con sesión;
+  // el invitado no tiene estos campos y la línea queda en 0).
+  const split=document.getElementById('tick-split-display');
+  if(split) split.textContent=`Comprado: ${(PLAYER.tickBought||0).toLocaleString()} · Ganado: ${(PLAYER.tickEarned||0).toLocaleString()}`;
+  const lim=document.getElementById('tick-limits-display');
+  if(lim){
+    lim.textContent=(typeof PLAYER.earnedDailyRemaining==='number')
+      ? `Venta de ganado: quedan ${PLAYER.earnedDailyRemaining} hoy · ventana mensual ${PLAYER.windowRemaining}`
+      : '';
+  }
 }
 function updateBuyPreview() {
   const usdt=parseFloat(document.getElementById('buy-tick-input').value)||0;
@@ -3515,7 +3538,10 @@ async function sellTick() {
       renderTickDisplay();
       document.getElementById('sell-tick-input').value='';
       document.getElementById('sell-tick-preview').textContent='→ Recibirás 0.00 USDT';
-      alert(`✅ Vendiste ${res.tick_sold.toLocaleString()} $TICK\n+${res.usdt_received} USDT (comisión del 20% ya aplicada)`);
+      let msg=`✅ Vendiste ${res.tick_sold.toLocaleString()} $TICK\n+${res.usdt_received} USDT (comisión del 20% ya aplicada)`;
+      if(typeof res.sold_from_bought==='number')
+        msg+=`\nComprado: ${res.sold_from_bought} · Ganado: ${res.sold_from_earned_daily+res.sold_from_earned_window} (día ${res.sold_from_earned_daily} + ventana ${res.sold_from_earned_window})`;
+      alert(msg);
     }catch(e){ alert('No se pudo vender $TICK: '+e.message); }
     return;
   }
